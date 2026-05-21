@@ -1,0 +1,76 @@
+@font-face {
+    font-family: 'TT Norms Pro';
+    src: url('./TTNormsPro-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'TT Norms Pro Mono';
+    src: url('./TT-Norms-Pro-Mono/TTNormsProMono-Rg.ttf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Ivy Ora';
+    src: url('./IvyOraDisplay-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root {
+    /* Colors — brand-defined */
+    --color-black: #000000;
+    --color-white: #FFFFFF;
+    --color-off-white: #FFFDF9;
+
+    /* Colors — practical UI additions */
+    --color-near-black: #1A1A1A;
+    --color-grey-muted: #5A5A56;
+    --color-border: #E8E8E4;
+    --color-border-subtle: #F2F2F0;
+
+    /* Backgrounds */
+    --bg-page: var(--color-off-white);
+    --bg-surface: var(--color-white);
+    --bg-inverse: var(--color-black);
+
+    /* Typography */
+    --font-display: "Ivy Ora", serif;
+    --font-ui: "TT Norms Pro Mono", monospace;
+    /* nav, subheadings, labels */
+    --font-body: "TT Norms Pro", sans-serif;
+    /* paragraphs */
+
+    /* Borders */
+    --border-thin: 0.5px solid var(--color-border);
+    --border-standard: 1px solid var(--color-border);
+
+    /* Radius — brand is zero-radius */
+    --radius: 0px;
+
+    /* Spacing */
+    --space-4: 4px;
+    --space-8: 8px;
+    --space-16: 16px;
+    --space-24: 24px;
+    --space-32: 32px;
+    --space-40: 40px;
+    --space-64: 64px;
+    --space-80: 80px;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--bg-page);
+    color: var(--color-black);
+}
+
+.nav-blur {
+    backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--bg-page) 85%, transparent);
+}

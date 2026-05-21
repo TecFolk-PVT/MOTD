@@ -1,0 +1,108 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "TT Norms Pro";
+  src: url("/fonts/TTNormsPro-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "TT Norms Pro Mono";
+  src: url("/fonts/TT-Norms-Pro-Mono/TTNormsProMono-Rg.ttf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Ivy Ora";
+  src: url("/fonts/IvyOraDisplay-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Colors — brand-defined */
+  --color-black: #000000;
+  --color-white: #ffffff;
+  --color-off-white: #fffdf9;
+
+  /* Colors — practical UI additions */
+  --color-near-black: #1a1a1a;
+  --color-grey-muted: #5a5a56;
+  --color-border: #e8e8e4;
+  --color-border-subtle: #f2f2f0;
+
+  /* Backgrounds */
+  --bg-page: var(--color-off-white);
+  --bg-surface: var(--color-white);
+  --bg-inverse: var(--color-black);
+
+  /* Typography */
+  --font-display: "Ivy Ora", serif;
+  --font-ui: "TT Norms Pro Mono", monospace;
+  --font-body: "TT Norms Pro", sans-serif;
+
+  /* Borders */
+  --border-thin: 0.5px solid var(--color-border);
+  --border-standard: 1px solid var(--color-border);
+
+  /* Radius — brand is zero-radius */
+  --radius: 0px;
+
+  /* Spacing */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-40: 40px;
+  --space-64: 64px;
+  --space-80: 80px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-page);
+  color: var(--color-black);
+}
+
+.nav-blur {
+  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--bg-page) 85%, transparent);
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined", sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .carousel-touch {
+    touch-action: pan-y;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
