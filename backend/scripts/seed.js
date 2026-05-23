@@ -31,6 +31,7 @@ export const seedContext = {
   pendingTailor: null,
   fabricStores: [],
   platformSettings: null,
+  readyMadeProducts: [],
 };
 
 function hashPassword(password) {
@@ -141,7 +142,74 @@ async function seedUsersAndSettings() {
 }
 
 async function seedReadyMadeProducts() {
-  // L-11: 2–3 ready-made items
+  const products = await ReadyMadeProduct.insertMany([
+    {
+      name: 'Emirati Silver Kandura',
+      nameAr: 'كندورة إماراتية فضية',
+      slug: 'emirati-silver-kandura',
+      description:
+        'Classic white kandura crafted from premium Egyptian cotton. Perfect for daily wear and formal occasions.',
+      descriptionAr:
+        'كندura بيضاء كلاسيكية من قطن مصري فاخر. مثالية للارتداء اليومي والمناسبات الرسمية.',
+      images: ['/images/fab-1.png'],
+      price: 850,
+      size: '54',
+      style: 'kandura',
+      city: 'Dubai',
+      tag: 'BESTSELLER',
+      tagColor: 'bg-primary',
+      returnReason: 'size_issue',
+      condition: 'excellent',
+      countInStock: 1,
+    },
+    {
+      name: 'Luxury Orange Abaya',
+      nameAr: 'عباية برتقالية فاخرة',
+      slug: 'luxury-orange-abaya',
+      description:
+        'Elegant black abaya with subtle embroidery details. Made from lightweight crepe fabric.',
+      descriptionAr:
+        'عباية سوداء أنيقة بتفاصيل تطريز رقيقة. مصنوعة من قماش كريب خفيف الوزن.',
+      images: ['/images/fab-2.png'],
+      price: 1250,
+      size: 'M',
+      style: 'abaya',
+      city: 'Abu Dhabi',
+      tag: 'ARTISANAL',
+      tagColor: 'bg-[#C8A97E]',
+      returnReason: 'size_issue',
+      condition: 'like_new',
+      countInStock: 1,
+    },
+    {
+      name: 'Royal Blue Bisht',
+      nameAr: 'بشت أزرق ملكي',
+      slug: 'royal-blue-bisht',
+      description:
+        'Ceremonial bisht with gold zari work. Worn for weddings and official ceremonies.',
+      descriptionAr:
+        'بشت احتفالي بتطريز ذهبي. يُرتدى في الأعراس والمناسبات الرسمية.',
+      images: ['/images/fab-3.png'],
+      price: 3900,
+      size: '56',
+      style: 'bisht',
+      city: 'Sharjah',
+      tag: 'PREMIUM',
+      tagColor: 'bg-[#5B4A3A]',
+      returnReason: 'size_issue',
+      condition: 'excellent',
+      countInStock: 1,
+    },
+  ]);
+
+  seedContext.readyMadeProducts = products;
+
+  console.log('Seeded ready-made products (L-11):');
+  for (const product of products) {
+    console.log(
+      `  ${product.slug} — ${product.name} (${product.style}, size ${product.size}, AED ${product.price}, stock ${product.countInStock})`
+    );
+  }
 }
 
 async function seedFabrics() {
@@ -167,7 +235,7 @@ async function seed() {
   await seedFabrics();
   await seedTailorShopsAndDesigns();
 
-  console.log('Seed complete (L-11–L-13 still pending product/shop data)');
+  console.log('Seed complete (L-12–L-13 still pending fabric/shop data)');
 }
 
 seed()

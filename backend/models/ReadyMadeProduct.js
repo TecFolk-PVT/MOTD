@@ -42,7 +42,6 @@ const readyMadeProductSchema = new mongoose.Schema(
     sourceCustomOrderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'CustomOrder',
-      default: null,
     },
     condition: {
       type: String,
