@@ -611,6 +611,97 @@ async function seedTailorShopsAndDesigns() {
   );
 }
 
+const EXPECTED_COUNTS = {
+  users: 7,
+  platformSettings: 1,
+  readyMadeProducts: 3,
+  fabrics: 9,
+  tailorShops: 2,
+  designs: 7,
+  retailOrders: 0,
+  customOrders: 0,
+};
+
+async function verifySeed() {
+  const counts = {
+    users: await User.countDocuments(),
+    platformSettings: await PlatformSettings.countDocuments(),
+    readyMadeProducts: await ReadyMadeProduct.countDocuments(),
+    fabrics: await Fabric.countDocuments(),
+    tailorShops: await TailorShop.countDocuments(),
+    designs: await Design.countDocuments(),
+    retailOrders: await RetailOrder.countDocuments(),
+    customOrders: await CustomOrder.countDocuments(),
+  };
+
+  for (const [collection, expected] of Object.entries(EXPECTED_COUNTS)) {
+    const actual = counts[collection];
+    if (actual !== expected) {
+      throw new Error(
+        `Verify failed: ${collection} expected ${expected}, got ${actual}`
+      );
+    }
+  }
+
+  const pendingTailor = await User.findOne({
+    email: 'fatima@motd.test',
+    role: 'tailor',
+    approvalStatus: 'pending',
+  });
+  if (!pendingTailor) {
+    throw new Error('Verify failed: pending tailor fatima@motd.test not found');
+  }
+
+  const pendingShopCount = await TailorShop.countDocuments({
+    ownerId: pendingTailor._id,
+  });
+  if (pendingShopCount !== 0) {
+    throw new Error('Verify failed: pending tailor must not have a shop');
+  }
+
+  const approvedTailorCount = await User.countDocuments({
+    role: 'tailor',
+    approvalStatus: 'approved',
+  });
+  if (approvedTailorCount !== 2) {
+    throw new Error(
+      `Verify failed: expected 2 approved tailors, got ${approvedTailorCount}`
+    );
+  }
+
+  const shopsForApproved = await TailorShop.countDocuments({
+    ownerId: { $in: seedContext.approvedTailors.map((t) => t._id) },
+  });
+  if (shopsForApproved !== 2) {
+    throw new Error(
+      `Verify failed: expected 2 shops for approved tailors, got ${shopsForApproved}`
+    );
+  }
+
+  const invalidReadyMade = await ReadyMadeProduct.countDocuments({
+    $or: [
+      { returnReason: { $ne: 'size_issue' } },
+      { countInStock: { $ne: 1 } },
+    ],
+  });
+  if (invalidReadyMade !== 0) {
+    throw new Error(
+      'Verify failed: all ready-made products must have returnReason size_issue and countInStock 1'
+    );
+  }
+
+  if (!bcrypt.compareSync(SEED_PASSWORD, seedContext.admin.password)) {
+    throw new Error('Verify failed: admin password hash does not match seed password');
+  }
+
+  console.log('Verification passed (L-14):');
+  for (const [collection, count] of Object.entries(counts)) {
+    console.log(`  ${collection}: ${count}`);
+  }
+  console.log('  Pending tailor has no shop; 2 approved tailors each have a shop');
+  console.log('  Handoff: docs/seed-handoff.md');
+}
+
 async function seed() {
   if (env.nodeEnv === 'production') {
     throw new Error('Refusing to seed when NODE_ENV=production');
@@ -625,6 +716,7 @@ async function seed() {
   await seedReadyMadeProducts();
   await seedFabrics();
   await seedTailorShopsAndDesigns();
+  await verifySeed();
 
   console.log('Seed complete');
 }
