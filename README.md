@@ -56,7 +56,15 @@ Copy `.env.example` to `backend/.env` and set at least:
 | `CORS_ORIGIN` | Frontend origin (default `http://localhost:3000`) |
 | `PORT` | API port (default `5000`) |
 
-The backend validates required variables on startup. There is no demo seed or Firebase — auth is JWT + MongoDB only.
+The backend validates required variables on startup. Auth is JWT + MongoDB only.
+
+4. Seed local MongoDB with test data (optional, for API/FE integration):
+
+   ```bash
+   cd backend && npm run seed
+   ```
+
+   Test logins, sample slugs, and expected counts: [`docs/seed-handoff.md`](docs/seed-handoff.md). Schema reference: [`docs/schema.md`](docs/schema.md).
 
 ### Auth API
 
