@@ -1,0 +1,21 @@
+{
+    "login": {
+        "pageTitle": "MOTD - تسجيل الدخول",
+        "imageText" : " ترف هادئ  • التراث الإماراتي",
+        "subTitle": "مرحباً بعودتك",
+        "title": "تسجيل الدخول",
+        "description": "الوصول إلى ورشتك الشخصية.  استكشف الطلبات المخصصة والمجموعات الحصرية.",
+        "emailLabel": "عنوان البريد الإلكتروني",
+        "passwordLabel": "كلمة المرور",
+        "forgetPassword" : "نسيت كلمة المرور",
+        "buttonLabel": "تسجيل الدخول",
+        "buttonProgressLabel": "إنشاء حساب",
+        "or": "أو",
+        "alreadyLabel": "جديد في MOTD",
+        "signupLabel": "سجل الآن",
+        "privacyLabel": "الخصوصية",
+        "termsLabel": "الشروط",
+        "copyrightLabel": "© 2026 MOTD BESPOKE • الإمارات العربية المتحدة",
+        "successMessage": "تم تسجيل الدخول بنجاح! "
+    }
+}

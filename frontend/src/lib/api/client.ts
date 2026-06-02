@@ -10,6 +10,10 @@ interface RequestOptions extends RequestInit {
     headers?: Record<string, string>;
 }
 
+// We assume getToken returns the stored JWT (or null).
+// Import your token helper at the top:
+import { getToken } from '@/lib/auth/token';
+
 class ApiClient {
     private baseUrl: string;
 
@@ -26,6 +30,12 @@ class ApiClient {
         const defaultHeaders: Record<string, string> = {
             'Content-Type': 'application/json',
         };
+
+        // Attach JWT token if present
+        const token = getToken();
+        if (token) {
+            defaultHeaders['Authorization'] = `Bearer ${token}`;
+        }
 
         const config: RequestInit = {
             ...options,
@@ -75,33 +85,22 @@ class ApiClient {
 
     private getDefaultErrorMessage(status: number): string {
         switch (status) {
-            case 400:
-                return 'Bad request. Please check your input.';
-            case 401:
-                return 'Unauthorized. Please log in.';
-            case 403:
-                return 'Forbidden. You don\'t have permission.';
-            case 404:
-                return 'Not found. The requested resource doesn\'t exist.';
-            case 409:
-                return 'Conflict. This resource already exists.';
-            case 422:
-                return 'Validation failed. Please check your data.';
-            case 429:
-                return 'Too many requests. Please try again later.';
-            case 500:
-                return 'Internal server error. Please try again later.';
-            default:
-                return `Request failed with status ${status}`;
+            case 400: return 'Bad request. Please check your input.';
+            case 401: return 'Unauthorized. Please log in.';
+            case 403: return 'Forbidden. You don\'t have permission.';
+            case 404: return 'Not found. The requested resource doesn\'t exist.';
+            case 409: return 'Conflict. This resource already exists.';
+            case 422: return 'Validation failed. Please check your data.';
+            case 429: return 'Too many requests. Please try again later.';
+            case 500: return 'Internal server error. Please try again later.';
+            default: return `Request failed with status ${status}`;
         }
     }
 
-    // GET request
     async get<T = any>(endpoint: string, headers?: Record<string, string>): Promise<T> {
         return this.request<T>(endpoint, { method: 'GET', headers });
     }
 
-    // POST request with JSON body
     async post<T = any>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
         return this.request<T>(endpoint, {
             method: 'POST',
@@ -110,7 +109,6 @@ class ApiClient {
         });
     }
 
-    // PUT request with JSON body
     async put<T = any>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
         return this.request<T>(endpoint, {
             method: 'PUT',
@@ -119,7 +117,6 @@ class ApiClient {
         });
     }
 
-    // PATCH request with JSON body
     async patch<T = any>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
         return this.request<T>(endpoint, {
             method: 'PATCH',
@@ -128,14 +125,10 @@ class ApiClient {
         });
     }
 
-    // DELETE request
     async delete<T = any>(endpoint: string, headers?: Record<string, string>): Promise<T> {
         return this.request<T>(endpoint, { method: 'DELETE', headers });
     }
 }
 
-// Export a singleton instance
 export const api = new ApiClient();
-
-// Export type for error handling
 export type { ApiError };

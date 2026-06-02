@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
+import { GlobalProgressBar } from "../shared/GlobalProgressBar";
 
 const NAV_LINKS = [
   { key: "fabrics", href: "/fabrics/fabricStore" },
@@ -28,14 +29,14 @@ const navLinkClass =
 const mobileNavLinkClass =
   "text-[11px] xs:text-[12px] sm:text-[13px] uppercase tracking-[0.22em] [font-family:var(--font-ui)] hover:opacity-50 transition";
 
-const langLinkClass = (active: boolean, size: "en" | "ar") =>
-  [
-    "lang-btn uppercase tracking-wider hover:opacity-70 transition px-1",
-    size === "en"
-      ? "text-[9px] xs:text-[10px] lg:text-[11px]"
-      : "text-[11px] xs:text-[12px] lg:text-[13px]",
-    active ? "font-medium opacity-100" : "opacity-70",
-  ].join(" ");
+// const langLinkClass = (active: boolean, size: "en" | "ar") =>
+//   [
+//     "lang-btn uppercase tracking-wider hover:opacity-70 transition px-1",
+//     size === "en"
+//       ? "text-[9px] xs:text-[10px] lg:text-[11px]"
+//       : "text-[11px] xs:text-[12px] lg:text-[13px]",
+//     active ? "font-medium opacity-100" : "opacity-70",
+//   ].join(" ");
 
 // SVG Icons matching the first code chunk exactly
 const SearchIcon = ({ className }: { className?: string }) => (
@@ -67,8 +68,6 @@ const UserIcon = ({ className }: { className?: string }) => (
 
 export function Navbar() {
   const t = useTranslations("Navbar");
-  const locale = useLocale();
-  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -184,7 +183,7 @@ export function Navbar() {
         {/* RIGHT ICONS - exact gap classes from first code chunk */}
         <div className="flex items-center gap-1 xs:gap-1.5 sm:gap-2 md:gap-2 lg:gap-3 xl:gap-3 2xl:gap-4">
           {/* Language switcher — links avoid extension-injected button attrs (e.g. fdprocessedid) */}
-          <div
+          {/* <div
             className="language-switcher flex items-center gap-1 border-l border-r border-(--color-border) px-2 xs:px-2.5 sm:px-3 py-1"
             suppressHydrationWarning
           >
@@ -207,7 +206,7 @@ export function Navbar() {
             >
               عربي
             </Link>
-          </div>
+          </div> */}
 
           {/* Search Icon */}
           <button
@@ -340,6 +339,9 @@ export function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Global Progress Bar */}
+      <GlobalProgressBar />
     </nav>
   );
 }
