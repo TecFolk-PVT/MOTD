@@ -1,16 +1,16 @@
 {
   "Metadata": {
-    "title": "MOTD",
-    "description": "UAE/GCC marketplace for ready-made clothes and custom tailoring"
+    "title": "MOTD — Mukhawar of the Day",
+    "description": "Mukhawar of the Day — UAE/GCC marketplace for ready-made clothes and custom tailoring"
   },
   "HomePage": {
-    "title": "MOTD",
-    "description": "UAE/GCC marketplace for ready-made clothes and custom tailoring.",
+    "title": "MOTD — Mukhawar of the Day",
+    "description": "Mukhawar of the Day — UAE/GCC marketplace for ready-made clothes and custom tailoring.",
     "samplePrice": "Sample price (AED)"
   },
   "Navbar": {
     "ariaLabel": "Main navigation",
-    "logoAlt": "MOTD",
+    "logoAlt": "MOTD — Mukhawar of the Day",
     "links": {
       "fabrics": "Fabrics",
       "collections": "Collections",
@@ -30,7 +30,7 @@
   "HeroSection": {
     "ariaLabel": "Featured hero",
     "imageAlt": "Embroidered fabric from UAE tailor",
-    "eyebrow": "Mukhawara of the Day",
+    "eyebrow": "Mukhawar of the Day",
     "headlineLine1": "Rooted in Tradition.",
     "headlineLine2": "Worn Today.",
     "body": "We curate exceptional embroidered fabrics from trusted tailors across the Emirates — transforming a months-long journey into a seamless, considered experience.",
@@ -97,7 +97,7 @@
     "subscribe": "Subscribe"
   },
   "Footer": {
-    "logoAlt": "MOTD Logo",
+    "logoAlt": "MOTD — Mukhawar of the Day",
     "tagline": "Bespoke Eastern luxury tailored for the modern world.",
     "description": "A refined destination connecting discerning clients with exceptional fabrics, master tailoring houses, and elevated craftsmanship inspired by contemporary Gulf elegance.",
     "quickLinks": "Quick Links",
