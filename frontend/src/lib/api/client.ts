@@ -1,5 +1,7 @@
 // frontend/src/lib/api/client.ts
 
+import { getToken } from '@/lib/auth/token';
+
 interface ApiError {
     status: number;
     message: string;
@@ -30,6 +32,7 @@ class ApiClient {
         const defaultHeaders: Record<string, string> = {
             'Content-Type': 'application/json',
         };
+
 
         // Attach JWT token if present
         const token = getToken();
