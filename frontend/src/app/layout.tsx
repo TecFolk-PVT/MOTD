@@ -5,8 +5,8 @@ import { AuthProvider } from "@/context/AuthContext";
 import ToggleLanguage from "../components/shared/ToggleLanguage";
 
 export const metadata: Metadata = {
-  title: "MOTD - Master of the Day",
-  description: "Bespoke Eastern luxury tailored for the modern world",
+  title: "MOTD — Mukhawar of the Day",
+  description: "Mukhawar of the Day — bespoke Eastern luxury tailored for the modern world",
 };
 
 export default function RootLayout({

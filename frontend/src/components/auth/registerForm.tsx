@@ -71,7 +71,7 @@ export default function RegisterPage() {
             <section className="hidden md:sticky md:top-0 md:block md:w-[55%] h-screen overflow-hidden">
                 <Image
                     src={images.des7}
-                    alt="Elite Mukhawara editorial background"
+                    alt="Elite Mukhawar editorial background"
                     fill
                     className="object-cover object-center"
                     priority
@@ -109,7 +109,7 @@ export default function RegisterPage() {
                         <div className="md:hidden flex justify-center mb-10 fade-in">
                             <Image
                                 src={logoBlack}
-                                alt="MOTD Logo"
+                                alt="MOTD — Mukhawar of the Day"
                                 height={35}
                                 width={100}
                                 className="h-auto w-auto object-contain"

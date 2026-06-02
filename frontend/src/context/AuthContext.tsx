@@ -11,13 +11,35 @@ import {
 import { api } from '@/lib/api/client';
 import { getToken, saveToken, clearToken } from '@/lib/auth/token';
 
-// User type based on backend response
+/** Backend signin/profile payload (see sendUserResponse in userRoutes.js) */
+interface ApiUserResponse {
+    _id: string;
+    name: string;
+    email: string;
+    role: string;
+    isAdmin?: boolean;
+    approvalStatus?: string;
+    token?: string;
+}
+
 export interface User {
     id: string;
     email: string;
-    name?: string;
-    role?: 'user' | 'admin' | 'tailor';
-    avatar?: string;
+    name: string;
+    role: string;
+    isAdmin?: boolean;
+    approvalStatus?: string;
+}
+
+function mapApiUser(data: ApiUserResponse): User {
+    return {
+        id: data._id,
+        email: data.email,
+        name: data.name,
+        role: data.role,
+        isAdmin: data.isAdmin,
+        approvalStatus: data.approvalStatus,
+    };
 }
 
 interface AuthContextType {
@@ -39,7 +61,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Load user on first app mount
     useEffect(() => {
         const loadUser = async () => {
             const token = getToken();
@@ -51,13 +72,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
             }
 
             try {
-                // IMPORTANT: assumes api client automatically attaches token
-                const profile = await api.get<User>('/api/users/profile');
-
-                // FIX: handle both axios and direct response cases safely
-                const userData = (profile as any)?.data ?? profile;
-
-                setUser(userData);
+                const profile = await api.get<ApiUserResponse>('/api/users/profile');
+                setUser(mapApiUser(profile));
             } catch (error) {
                 console.error('Failed to load user profile:', error);
                 clearToken();
@@ -70,30 +86,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
         loadUser();
     }, []);
 
-    // LOGIN
     const login = async (email: string, password: string) => {
         setIsLoading(true);
 
         try {
-            const response = await api.post<{
-                token: string;
-                user: User;
-            }>('/api/users/signin', {
+            const response = await api.post<ApiUserResponse>('/api/users/signin', {
                 email,
                 password,
             });
 
-            // handle axios vs direct response
-            const data = (response as any)?.data ?? response;
-
-            saveToken(data.token);
-            setUser(data.user);
-        } catch (error) {
-            throw error;
+            saveToken(response.token!);
+            setUser(mapApiUser(response));
         } finally {
             setIsLoading(false);
         }
     };
+
 
     // SIGN UP
     const register = async (name: string, email: string, password: string) => {
@@ -118,7 +126,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     };
 
-    // LOGOUT
     const logout = () => {
         clearToken();
         setUser(null);
@@ -130,7 +137,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         login,
         register,
         logout,
-        isAuthenticated: !!user && !isLoading,
+        isAuthenticated: !!user,
     };
 
     return (
@@ -140,7 +147,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     );
 }
 
-// Hook
 export function useAuth() {
     const context = useContext(AuthContext);
 

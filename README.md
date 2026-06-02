@@ -1,6 +1,6 @@
 # MOTD Platform
 
-Hybrid UAE/GCC marketplace (AED) with two customer journeys:
+**MOTD** stands for **Mukhawar of the Day** — a hybrid UAE/GCC marketplace (AED) with two customer journeys:
 
 - **Ready-made** — standard e-commerce for finished clothes
 - **Custom tailoring** — fabric selection, tailor shop, design, and measurements

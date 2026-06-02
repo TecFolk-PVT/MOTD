@@ -1,4 +1,4 @@
-# MOTD — MongoDB Schema Handoff
+# MOTD (Mukhawar of the Day) — MongoDB Schema Handoff
 
 Reference for backend API and frontend integration work. All models live under `backend/models/` and use Mongoose with `timestamps: true` (`createdAt`, `updatedAt` on every collection).
 

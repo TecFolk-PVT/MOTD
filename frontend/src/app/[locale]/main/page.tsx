@@ -15,7 +15,7 @@ import FadeInSection from "@/components/shared/fadeInSection";
 export default function HomePage() {
   return (
     <>
-      {/* 2. Hero — Mukhawara of the Day */}
+      {/* 2. Hero — Mukhawar of the Day */}
       <FadeInSection>
         <HeroSection />
       </FadeInSection>
