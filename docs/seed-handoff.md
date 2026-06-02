@@ -1,4 +1,4 @@
-# MOTD — Seed Data Handoff
+# MOTD (Mukhawar of the Day) — Seed Data Handoff
 
 Local dev database populated by `npm run seed` in `backend/`. Schema reference: [`docs/schema.md`](schema.md).
 
