@@ -1,11 +1,11 @@
 {
     "signup": {
-        "pageTitle" : "MOTD - التسجيل",
-        "imageText" : " ترف هادئ  • التراث الإماراتي",
+        "pageTitle": "MOTD - التسجيل",
+        "imageText": " ترف هادئ  • التراث الإماراتي",
         "subTitle": "انضم إلى بيت MOTD",
         "title": "سجل الآن",
         "description": "أنشئ ملفك الشخصي في الأتيليه.  الوصول إلى المجموعات المصممة حسب الطلب والتواصل مع الحرفيين المتميزين.",
-        "usernameLabel": "اسم المستخدم",
+        "nameLabel": "اسم المستخدم",
         "emailLabel": "عنوان البريد الإلكتروني",
         "passwordLabel": "كلمة المرور",
         "confirmPasswordLabel": "تأكيد كلمة المرور",
@@ -17,6 +17,8 @@
         "signInLabel": "تسجيل الدخول",
         "privacyLabel": "الخصوصية",
         "termsLabel": "الشروط",
-        "copyrightLabel": "© 2026 MOTD BESPOKE • الإمارات العربية المتحدة"
+        "copyrightLabel": "© 2026 MOTD BESPOKE • الإمارات العربية المتحدة",
+        "passwordMismatch": "كلمات المرور غير متطابقة.",
+        "successMessage": "تم إنشاء الحساب بنجاح! جارٍ التحويل..."
     }
 }
