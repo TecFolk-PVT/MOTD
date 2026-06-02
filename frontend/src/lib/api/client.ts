@@ -12,9 +12,6 @@ interface RequestOptions extends RequestInit {
     headers?: Record<string, string>;
 }
 
-// We assume getToken returns the stored JWT (or null).
-// Import your token helper at the top:
-import { getToken } from '@/lib/auth/token';
 
 class ApiClient {
     private baseUrl: string;
