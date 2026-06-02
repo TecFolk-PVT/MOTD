@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { EXTENSION_HYDRATION_GUARD_SCRIPT } from "@/lib/extension-hydration-guard";
 import { AuthProvider } from "@/context/AuthContext";
+import ToggleLanguage from "../components/shared/ToggleLanguage";
 
 export const metadata: Metadata = {
   title: "MOTD — Mukhawar of the Day",
@@ -28,6 +29,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
+          <ToggleLanguage />
         </AuthProvider>
       </body>
     </html>
