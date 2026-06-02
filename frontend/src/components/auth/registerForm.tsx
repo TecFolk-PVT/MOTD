@@ -1,15 +1,20 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import logoBlack from "../../../public/PNG/Black/MOTD_Wordmark_Black.png";
 import * as images from "../../../public/images/ImageIndex";
 import { motion } from "framer-motion";
+import { getTranslation } from "@/lib/getTranslation";
 
 export default function RegisterPage() {
+    const params = useParams();
+    const localeParam = params.locale as string;
+    const t = getTranslation(localeParam);
+
     const router = useRouter();
     const locale = useLocale();
     const [username, setUsername] = useState("");
@@ -36,7 +41,9 @@ export default function RegisterPage() {
     };
 
     return (
-        <main className="min-h-screen w-full flex flex-col md:flex-row bg-[#FFFDF9]">
+        <main
+            className="min-h-screen w-full flex flex-col md:flex-row bg-[#FFFDF9]"
+        >
             {/* Left Side - Image Section - Fixed */}
             <section className="hidden md:sticky md:top-0 md:block md:w-[55%] h-screen overflow-hidden">
                 <Image
@@ -65,7 +72,7 @@ export default function RegisterPage() {
                 {/* Branding Content - Bottom Left */}
                 <div className="absolute bottom-7.5 left-7.5 hidden md:block fade-in">
                     <p className="font-label-sm text-[11px] md:text-[12px] text-white/50 uppercase tracking-[0.3em]">
-                        QUIET LUXURY • EMIRATI HERITAGE
+                        {t.signup.imageText}
                     </p>
                 </div>
             </section>
@@ -94,15 +101,17 @@ export default function RegisterPage() {
                         <header className="mb-10 md:mb-12 fade-in md:mt-6 lg:mt-8">
                             <div className="flex items-center gap-2 mb-4">
                                 <span className="block w-8 h-px bg-black/20"></span>
-                                <span className="font-label-sm text-[11px] md:text-[12px] tracking-[0.3em] text-black/40 uppercase">
-                                    JOIN THE HOUSE OF MOTD
+                                <span
+                                    className="font-label-sm text-[11px] md:text-[12px] tracking-[0.3em] text-black/40 uppercase"
+                                >
+                                    {t.signup.subTitle}
                                 </span>
                             </div>
                             <h2 className="font-headline-lg text-[32px] sm:text-[36px] md:text-[40px] lg:text-[44px] uppercase mb-3 tracking-[-0.01em] text-black">
-                                SIGN UP
+                                {t.signup.title}
                             </h2>
                             <p className="font-body-md text-[14px] sm:text-[15px] md:text-[15px] text-black/50 leading-relaxed">
-                                Create your atelier profile. Access bespoke collections and connect with master artisans.
+                                {t.signup.description}
                             </p>
                         </header>
 
@@ -111,7 +120,7 @@ export default function RegisterPage() {
                             {/* Username Field */}
                             <div className="space-y-2">
                                 <label htmlFor="username" className="font-label-sm text-[11px] md:text-[12px] text-black/60 uppercase tracking-[0.2em] block">
-                                    USERNAME
+                                    {t.signup.usernameLabel}
                                 </label>
                                 <input
                                     id="username"
@@ -127,7 +136,7 @@ export default function RegisterPage() {
                             {/* Email Field */}
                             <div className="space-y-2">
                                 <label htmlFor="email" className="font-label-sm text-[11px] md:text-[12px] text-black/60 uppercase tracking-[0.2em] block">
-                                    EMAIL ADDRESS
+                                    {t.signup.emailLabel}
                                 </label>
                                 <input
                                     id="email"
@@ -144,7 +153,7 @@ export default function RegisterPage() {
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center">
                                     <label htmlFor="password" className="font-label-sm text-[11px] md:text-[12px] text-black/60 uppercase tracking-[0.2em] block">
-                                        PASSWORD
+                                        {t.signup.passwordLabel}
                                     </label>
                                 </div>
                                 <div className="relative">
@@ -179,7 +188,7 @@ export default function RegisterPage() {
 
                             {/* Password Hint */}
                             <p className="font-label-sm text-[11px] md:text-[12px] text-black/30 tracking-widest -mt-1">
-                                Use 8+ characters with letters & numbers
+                                {t.signup.passwordInstruction}
                             </p>
 
                             {/* Submit Button */}
@@ -194,10 +203,10 @@ export default function RegisterPage() {
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        CREATING ACCOUNT
+                                        {t.signup.buttonLabel}
                                     </span>
                                 ) : (
-                                    "CREATE ACCOUNT"
+                                    `${t.signup.buttonProgressLabel}`
                                 )}
                             </button>
 
@@ -205,7 +214,7 @@ export default function RegisterPage() {
                             <div className="relative py-3 flex items-center">
                                 <div className="grow border-t border-black/10"></div>
                                 <span className="shrink mx-3 md:mx-4 font-label-sm text-[10px] md:text-[11px] text-black/40 uppercase tracking-[0.2em]">
-                                    OR
+                                    {t.signup.or}
                                 </span>
                                 <div className="grow border-t border-black/10"></div>
                             </div>
@@ -255,21 +264,21 @@ export default function RegisterPage() {
                         {/* Login Link */}
                         <footer className="mt-10 md:mt-12 pt-6 border-t border-black/10 text-center fade-in">
                             <p className="font-body-md text-[12px] md:text-[13px] text-black/50 uppercase tracking-[0.15em]">
-                                Already have an account?
+                                {t.signup.alreadyLabel}
                                 <Link href="/auth/login" className="text-black font-medium hover:underline underline-offset-4 ml-2">
-                                    SIGN IN
+                                    {t.signup.signInLabel}
                                 </Link>
                             </p>
                             <div className="flex justify-center gap-5 md:gap-6 mt-4">
                                 <Link href={`/${locale}/privacy`} className="font-label-sm text-[9px] md:text-[10px] text-black/30 uppercase tracking-[0.15em] hover:text-black/60 transition-colors">
-                                    Privacy
+                                    {t.signup.privacyLabel}
                                 </Link>
                                 <Link href={`/${locale}/terms`} className="font-label-sm text-[9px] md:text-[10px] text-black/30 uppercase tracking-[0.15em] hover:text-black/60 transition-colors">
-                                    Terms
+                                    {t.signup.termsLabel}
                                 </Link>
                             </div>
                             <p className="font-label-sm text-[9px] md:text-[10px] text-black/20 mt-4 tracking-widest">
-                                © 2024 MOTD BESPOKE • UAE
+                                {t.signup.copyrightLabel}
                             </p>
                         </footer>
                     </motion.div>
