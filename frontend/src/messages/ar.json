@@ -19,12 +19,13 @@
       "about": "حول"
     },
     "actions": {
-      "search": "Search",
-      "account": "Account",
-      "wishlist": "Wishlist",
-      "cart": "Cart",
-      "openMenu": "Open menu",
-      "closeMenu": "Close menu"
+      "search": "بحث",
+      "login": "تسجيل الدخول",
+      "account": "الحساب",
+      "wishlist": "المفضلة",
+      "cart": "السلة",
+      "openMenu": "فتح القائمة",
+      "closeMenu": "إغلاق القائمة"
     }
   },
   "BannerCarousel": {

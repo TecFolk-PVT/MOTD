@@ -4,10 +4,16 @@
 import { motion, useScroll, useSpring } from "framer-motion";
 import { usePathname } from "next/navigation";
 
-const EXCLUDED_PAGES = [
-    "/auth/login",
-    "/auth/register"
-];
+const EXCLUDED_AUTH_SEGMENTS = ["/auth/login", "/auth/register"];
+
+function isExcludedAuthPath(pathname: string | null): boolean {
+    if (!pathname) return false;
+    const withoutLocale = pathname.replace(/^\/(en|ar)(?=\/|$)/, "");
+    return EXCLUDED_AUTH_SEGMENTS.some(
+        (segment) =>
+            withoutLocale === segment || withoutLocale.startsWith(segment + "/")
+    );
+}
 
 export const GlobalProgressBar = () => {
     const pathname = usePathname();
@@ -18,9 +24,7 @@ export const GlobalProgressBar = () => {
         restDelta: 0.001,
     });
 
-    const shouldShow = !EXCLUDED_PAGES.some(
-        (page) => pathname === page || pathname?.startsWith(page + "/")
-    );
+    const shouldShow = !isExcludedAuthPath(pathname);
 
     if (!shouldShow) return null;
 

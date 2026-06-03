@@ -65,6 +65,12 @@ export function Navbar() {
   const menuRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const { user, isLoading } = useAuth();
+  const accountHref = isLoading
+    ? undefined
+    : user
+      ? "/account/userAccount"
+      : "/auth/login";
+  const accountLabel = user ? t("actions.account") : t("actions.login");
 
   // Toggle menu with animation
   const toggleMenu = useCallback(() => {
@@ -206,13 +212,23 @@ export function Navbar() {
           </Link>
 
           {/* User Icon */}
-          <Link
-            href={user ? '/account/userAccount' : '/auth/login'}
-            className="hidden lg:flex p-1.5 lg:p-2 hover:opacity-50 transition items-center justify-center"
-            aria-label={t("actions.account")}
-          >
-            <UserIcon className="w-4 h-4 xs:w-4 sm:w-4 md:w-4 lg:w-5 xl:w-5 2xl:w-6" />
-          </Link>
+          {accountHref ? (
+            <Link
+              href={accountHref}
+              className="hidden lg:flex p-1.5 lg:p-2 hover:opacity-50 transition items-center justify-center"
+              aria-label={accountLabel}
+            >
+              <UserIcon className="w-4 h-4 xs:w-4 sm:w-4 md:w-4 lg:w-5 xl:w-5 2xl:w-6" />
+            </Link>
+          ) : (
+            <span
+              className="hidden lg:flex p-1.5 lg:p-2 items-center justify-center opacity-50"
+              aria-label={t("actions.account")}
+              aria-busy="true"
+            >
+              <UserIcon className="w-4 h-4 xs:w-4 sm:w-4 md:w-4 lg:w-5 xl:w-5 2xl:w-6" />
+            </span>
+          )}
 
           {/* MOBILE HAMBURGER - exact classes from first code chunk */}
           <button
@@ -259,6 +275,10 @@ export function Navbar() {
             ))}
           </ul>
 
+          <div className="flex justify-center mb-5 xs:mb-6 sm:mb-7">
+            <LocaleSwitcher />
+          </div>
+
           {/* Mobile bottom icons grid - exact match from first code chunk */}
           <div className="grid grid-cols-4 gap-2 border-t border-(--color-border) pt-4 xs:pt-5">
             <button
@@ -273,16 +293,30 @@ export function Navbar() {
               </span>
             </button>
 
-            <Link
-              href={user ? "/account/userAccount" : "/auth/login"}
-              className="flex flex-col items-center gap-1 group hover:opacity-50 transition"
-              onClick={closeMenu}
-            >
-              <UserIcon className="w-4.5 h-4.5 xs:w-[20px] xs:h-[20px] sm:w-5.5 sm:h-5.5" />
-              <span className="text-[8px] xs:text-[9px] uppercase tracking-[0.18em] [font-family:var(--font-ui)]">
-                {t("actions.account")}
+            {accountHref ? (
+              <Link
+                href={accountHref}
+                className="flex flex-col items-center gap-1 group hover:opacity-50 transition"
+                aria-label={accountLabel}
+                onClick={closeMenu}
+              >
+                <UserIcon className="w-4.5 h-4.5 xs:w-[20px] xs:h-[20px] sm:w-5.5 sm:h-5.5" />
+                <span className="text-[8px] xs:text-[9px] uppercase tracking-[0.18em] [font-family:var(--font-ui)]">
+                  {accountLabel}
+                </span>
+              </Link>
+            ) : (
+              <span
+                className="flex flex-col items-center gap-1 opacity-50"
+                aria-label={t("actions.account")}
+                aria-busy="true"
+              >
+                <UserIcon className="w-4.5 h-4.5 xs:w-[20px] xs:h-[20px] sm:w-5.5 sm:h-5.5" />
+                <span className="text-[8px] xs:text-[9px] uppercase tracking-[0.18em] [font-family:var(--font-ui)]">
+                  {t("actions.account")}
+                </span>
               </span>
-            </Link>
+            )}
 
             <Link
               href="/cart"
