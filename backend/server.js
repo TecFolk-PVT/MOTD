@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import { env } from './config/env.js';
 import userRouter from './routes/userRoutes.js';
 import readyMadeRoutes from './routes/readyMadeRoutes.js';
+import orderRoutes from './routes/orderRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -31,6 +32,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/users', userRouter);
 app.use('/api/ready-made', readyMadeRoutes); // for getting all ready made products
+app.use('/api/orders', orderRoutes); // for orders
 app.use(notFound);
 app.use(errorHandler);
 
