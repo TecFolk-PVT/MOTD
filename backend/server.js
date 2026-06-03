@@ -30,8 +30,7 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/users', userRouter);
-app.use('/api/ready-made', readyMadeRoutes);
-
+app.use('/api/ready-made', readyMadeRoutes); // for getting all ready made products
 app.use(notFound);
 app.use(errorHandler);
 

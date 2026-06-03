@@ -39,4 +39,34 @@ readyMadeRoutes.get("/", async (req, res) => {
     }
 })
 
+// GET ready-made by slug : fetch products by slug means by name, id or etc....
+readyMadeRoutes.get("/:slug", async (req, res) => {
+    try {
+        const { slug } = req.params;
+
+        const product = await ReadyMadeProduct.findOne({
+            slug: slug.toLowerCase(),
+            isActive: true
+        })
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "Product not found"
+            })
+        }
+
+        res.json({
+            success: true,
+            item: product
+        })
+    } catch (error) {
+        console.error("GET /api/ready-made/:slug error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Server error while fetching product"
+        });
+    }
+})
+
 export default readyMadeRoutes;
