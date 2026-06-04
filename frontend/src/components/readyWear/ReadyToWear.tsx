@@ -214,7 +214,7 @@ export function ReadyToWearSection() {
                                         key={item._id}
                                         className={`flex-[0_0_calc(100%-8px)] xs:flex-[0_0_calc(66.666%-12px)] sm:flex-[0_0_calc(50%-16px)] md:flex-[0_0_calc(40%-20px)] lg:flex-[0_0_calc(33.333%-24px)] xl:flex-[0_0_calc(28.571%-28px)] 2xl:flex-[0_0_calc(25%-32px)] group overflow-hidden rounded-lg`}
                                     >
-                                        <Link href={`/${localeParams}/ready-made/${item.slug}`}>
+                                        <Link href={`/ready-made/${item.slug}`}>
                                             {/* Card container – matching premiumFabrics style */}
                                             <div className="bg-(--bg-page) border border-(--color-border) overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col">
                                                 {/* Image with aspect ratio and hover zoom */}
