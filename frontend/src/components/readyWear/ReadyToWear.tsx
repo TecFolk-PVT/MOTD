@@ -193,17 +193,30 @@ export function ReadyToWearSection() {
                                         key={item._id}
                                         className="flex-[0_0_calc(100%-8px)] xs:flex-[0_0_calc(66.666%-12px)] sm:flex-[0_0_calc(50%-16px)] md:flex-[0_0_calc(40%-20px)] lg:flex-[0_0_calc(33.333%-24px)] xl:flex-[0_0_calc(28.571%-28px)] 2xl:flex-[0_0_calc(25%-32px)] group overflow-hidden rounded-lg"
                                     >
-                                        <Link
-                                            href={`/ready-made/${item.slug}`}
-                                            className="bg-(--bg-page) border border-(--color-border) overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col"
-                                        >
-                                            <div className="aspect-9/9 relative overflow-hidden">
-                                                <img
-                                                    src={image}
-                                                    alt={title}
-                                                    className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
-                                                />
-                                            </div>
+
+                                        <Link href={`/ready-made/${item.slug}`}>
+                                            {/* Card container – matching premiumFabrics style */}
+                                            <div className="bg-(--bg-page) border border-(--color-border) overflow-hidden transition-all duration-300 hover:shadow-lg h-full flex flex-col">
+                                                {/* Image with aspect ratio and hover zoom */}
+                                                <div className="aspect-9/9 relative overflow-hidden">
+                                                    <img
+                                                        src={image}
+                                                        alt={title}
+                                                        className="w-full h-full object-cover transition-all duration-700 hover:scale-105"
+                                                    />
+                                                </div>
+
+                                                {/* Content area */}
+                                                <div className="p-3 xs:p-4 sm:p-5 md:p-6 lg:p-(--space-24) flex flex-col grow">
+                                                    {/* Title & Price row (stacked) */}
+                                                    <div className="flex flex-col justify-between items-start gap-2 mb-1 xs:mb-1.5 sm:mb-2">
+                                                        <h3 className="[font-family:var(--font-display)] text-[16px] xs:text-[18px] sm:text-[20px] md:text-[20px] lg:text-[22px] xl:text-[24px] 2xl:text-[26px] font-normal leading-[1.2] xs:leading-[1.25] tracking-[-0.01em] text-black mb-1 line-clamp-2">
+                                                            {title}
+                                                        </h3>
+                                                        <span className="[font-family:var(--font-ui)] text-[12px] xs:text-[13px] sm:text-[14px] md:text-[13px] lg:text-[14px] xl:text-[15px] 2xl:text-[16px] tracking-[0.24em] text-black font-normal whitespace-nowrap">
+                                                            {item.price} AED
+                                                        </span>
+                                                    </div>
 
                                             <div className="p-3 xs:p-4 sm:p-5 md:p-6 lg:p-(--space-24) flex flex-col grow">
                                                 <div className="flex flex-col justify-between items-start gap-2 mb-1 xs:mb-1.5 sm:mb-2">
