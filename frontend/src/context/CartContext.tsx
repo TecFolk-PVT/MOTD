@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export type CartItem = {
     id: string;
@@ -56,10 +57,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
             return [...prev, { ...item, quantity: 1 }];
         });
+        toast.success(`${item.name} added to cart`);
     };
 
     // REMOVE ITEM
     const removeItem = (id: string) => {
+        const removedItem = items.find((p) => p.id === id);
+        if (removedItem) {
+            toast.success(`${removedItem.name} removed from cart`);
+        }
         setItems((prev) => prev.filter((p) => p.id !== id));
     };
 

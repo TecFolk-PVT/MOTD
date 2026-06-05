@@ -14,7 +14,7 @@ export default function ReadyMadeDetailPage() {
     const router = useRouter();
     const slug = params.slug as string;
     const locale = params.locale as string;
-    const { addItem, items, totalItems } = useCart();
+    const { addItem } = useCart();
 
     const [product, setProduct] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);

@@ -3,6 +3,7 @@ import "./globals.css";
 import { EXTENSION_HYDRATION_GUARD_SCRIPT } from "@/lib/extension-hydration-guard";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "MOTD — Mukhawar of the Day",
@@ -30,6 +31,24 @@ export default function RootLayout({
         <AuthProvider>
           <CartProvider>
             {children}
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: '#000',
+                  color: '#fff',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: '12px',
+                  letterSpacing: '0.24em',
+                  textTransform: 'uppercase',
+                  borderRadius: '0',
+                  padding: '12px 16px',
+                  border: '1px solid #333',
+                },
+                success: { iconTheme: { primary: '#fff', secondary: '#000' } },
+                error: { iconTheme: { primary: '#ff4444', secondary: '#000' } },
+              }}
+            />
           </CartProvider>
         </AuthProvider>
       </body>
