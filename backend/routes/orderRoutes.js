@@ -2,9 +2,84 @@ import express from "express";
 import mongoose from "mongoose";
 import RetailOrder from "../models/RetailOrder.js";
 import ReadyMadeProduct from "../models/ReadyMadeProduct.js";
+import { FABRIC_SOURCES } from "../models/CustomOrder.js";
 import { isAuth } from "../middleware/auth.js";
+import {
+    getCustomOrderPricing,
+    PricingValidationError,
+} from "../services/pricingService.js";
 
 const orderRoutes = express.Router();
+
+orderRoutes.post("/custom/preview", async (req, res) => {
+    try {
+        const { designId, fabricSource, fabricId, fabricMeters } = req.body;
+
+        if (!designId || !mongoose.Types.ObjectId.isValid(designId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid designId is required",
+            });
+        }
+
+        if (!fabricSource || !FABRIC_SOURCES.includes(fabricSource)) {
+            return res.status(400).json({
+                success: false,
+                message: `fabricSource must be one of: ${FABRIC_SOURCES.join(", ")}`,
+            });
+        }
+
+        if (
+            fabricSource === "storefront" &&
+            (!fabricId || !mongoose.Types.ObjectId.isValid(fabricId))
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid fabricId is required when fabricSource is storefront",
+            });
+        }
+
+        if (fabricSource === "self" && fabricId) {
+            return res.status(400).json({
+                success: false,
+                message: "fabricId must not be provided when fabricSource is self",
+            });
+        }
+
+        const meters = Number(fabricMeters);
+        if (!fabricMeters || Number.isNaN(meters) || meters <= 0) {
+            return res.status(400).json({
+                success: false,
+                message: "fabricMeters must be greater than 0",
+            });
+        }
+
+        const pricing = await getCustomOrderPricing({
+            designId,
+            fabricId: fabricSource === "storefront" ? fabricId : null,
+            fabricSource,
+            fabricMeters: meters,
+        });
+
+        res.json({
+            success: true,
+            pricing,
+        });
+    } catch (error) {
+        if (error instanceof PricingValidationError) {
+            return res.status(400).json({
+                success: false,
+                message: error.message,
+            });
+        }
+
+        console.error("POST /api/orders/custom/preview error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to calculate price preview",
+        });
+    }
+});
 
 orderRoutes.post("/retail", isAuth, async (req, res) => {
     try {
