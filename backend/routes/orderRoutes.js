@@ -305,6 +305,56 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
     }
 });
 
+orderRoutes.get("/custom/mine", isAuth, async (req, res) => {
+    try {
+        const orders = await CustomOrder.find({
+            userId: req.user._id,
+        })
+            .sort({ createdAt: -1 })
+            .populate("tailorShopId", "name nameAr slug")
+            .select(
+                "_id createdAt status fabricSource designSnapshot pricing tailorShopId userId"
+            );
+
+        const formatted = orders.map((order) => ({
+            id: order._id,
+            date: order.createdAt,
+            status: order.status,
+            fabricSource: order.fabricSource,
+            total: order.pricing?.total,
+            currency: order.pricing?.currency,
+            userId: order.userId,
+            design: order.designSnapshot
+                ? {
+                      name: order.designSnapshot.name,
+                      nameAr: order.designSnapshot.nameAr,
+                      slug: order.designSnapshot.slug,
+                      category: order.designSnapshot.category,
+                  }
+                : null,
+            tailorShop: order.tailorShopId
+                ? {
+                      _id: order.tailorShopId._id,
+                      name: order.tailorShopId.name,
+                      nameAr: order.tailorShopId.nameAr,
+                      slug: order.tailorShopId.slug,
+                  }
+                : null,
+        }));
+
+        res.json({
+            success: true,
+            orders: formatted,
+        });
+    } catch (error) {
+        console.error("GET /api/orders/custom/mine error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch custom orders",
+        });
+    }
+});
+
 orderRoutes.post("/retail", isAuth, async (req, res) => {
     try {
         const {
