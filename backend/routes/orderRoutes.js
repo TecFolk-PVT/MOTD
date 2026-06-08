@@ -355,6 +355,49 @@ orderRoutes.get("/custom/mine", isAuth, async (req, res) => {
     }
 });
 
+orderRoutes.get("/custom/:id", isAuth, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json({
+                success: false,
+                message: "Invalid order ID",
+            });
+        }
+
+        const order = await CustomOrder.findById(id).populate(
+            "tailorShopId",
+            "name nameAr slug logo city"
+        );
+
+        if (!order) {
+            return res.status(404).json({
+                success: false,
+                message: "Order not found",
+            });
+        }
+
+        if (order.userId.toString() !== req.user._id && !req.user.isAdmin) {
+            return res.status(403).json({
+                success: false,
+                message: "You are not allowed to view this order",
+            });
+        }
+
+        res.json({
+            success: true,
+            order,
+        });
+    } catch (error) {
+        console.error("GET /api/orders/custom/:id error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch custom order",
+        });
+    }
+});
+
 orderRoutes.post("/retail", isAuth, async (req, res) => {
     try {
         const {
