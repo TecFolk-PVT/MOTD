@@ -45,6 +45,23 @@
     "prevSlide": "اللافتة السابقة",
     "nextSlide": "اللافتة التالية"
   },
+  "FabricDetail": {
+    "loading": "جاري تحميل القماش...",
+    "error": "تعذر تحميل القماش",
+    "notFound": "القماش غير موجود",
+    "notFoundTitle": "القماش غير موجود",
+    "browseAll": "تصفح جميع الأقمشة",
+    "goBack": "رجوع",
+    "fabrics": "الأقمشة",
+    "material": "المادة",
+    "color": "اللون",
+    "city": "المدينة",
+    "perMeter": "السعر لكل متر",
+    "selectForCustomOrder": "اختر للطلب المخصص",
+    "storeTitle": "معروض من متجر أقمشة شريك",
+    "pickupLabel": "عنوان الاستلام من المتجر",
+    "partnerNote": "يتم بيع القماش واستلامه من متجر شريك MOTD."
+  },
   "PremiumFabrics": {
     "ariaLabel": "أقمشة فاخرة",
     "eyebrow": "جاهز للاستكشاف",
