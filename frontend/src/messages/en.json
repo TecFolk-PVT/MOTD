@@ -44,6 +44,23 @@
     "title": "Trending Designs",
     "exploreLink": "Browse All 500+ Designs →"
   },
+  "FabricDetail": {
+    "loading": "Loading fabric...",
+    "error": "Failed to load fabric",
+    "notFound": "Fabric not found",
+    "notFoundTitle": "Fabric Not Found",
+    "browseAll": "Browse All Fabrics",
+    "goBack": "Go Back",
+    "fabrics": "Fabrics",
+    "material": "Material",
+    "color": "Color",
+    "city": "City",
+    "perMeter": "Price per meter",
+    "selectForCustomOrder": "Select for Custom Order",
+    "storeTitle": "Listed by fabric store partner",
+    "pickupLabel": "Store pickup address",
+    "partnerNote": "Fabric sold and picked up from this MOTD partner store."
+  },
   "PremiumFabrics": {
     "ariaLabel": "Premium Fabrics",
     "eyebrow": "Ready to Explore",

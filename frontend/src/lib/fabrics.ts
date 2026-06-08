@@ -10,6 +10,20 @@ export type FabricMaterial =
 
 export type FabricFilter = "all" | FabricMaterial;
 
+export interface FabricStoreInfo {
+    _id: string;
+    name: string;
+    role?: string;
+}
+
+export interface FabricPickupAddress {
+    emirate: string;
+    city: string;
+    street?: string;
+    building?: string;
+    phone?: string;
+}
+
 export interface FabricListItem {
     _id: string;
     slug: string;
@@ -25,6 +39,11 @@ export interface FabricListItem {
     tagColor?: string;
     pricePerMeter: number;
     listedByStore?: string;
+}
+
+export interface FabricDetailItem extends FabricListItem {
+    storePickupAddress: FabricPickupAddress;
+    listedByStore: FabricStoreInfo | null;
 }
 
 const LEGACY_IMAGE_PATHS: Record<string, string> = {
@@ -81,3 +100,31 @@ export const FABRIC_FILTER_OPTIONS: FabricMaterial[] = [
     "cashmere",
     "cotton",
 ];
+
+export function formatMaterialLabel(material: string, locale: Locale): string {
+    const labels: Record<FabricMaterial, { en: string; ar: string }> = {
+        wool: { en: "Wool", ar: "صوف" },
+        silk: { en: "Silk", ar: "حرير" },
+        linen: { en: "Linen", ar: "كتان" },
+        cashmere: { en: "Cashmere", ar: "كشمير" },
+        cotton: { en: "Cotton", ar: "قطن" },
+    };
+
+    const entry = labels[material as FabricMaterial];
+    if (!entry) return material;
+    return locale === "ar" ? entry.ar : entry.en;
+}
+
+export function formatPickupAddress(
+    address: FabricPickupAddress,
+    locale: Locale,
+): string {
+    const parts = [
+        address.building,
+        address.street,
+        address.city,
+        address.emirate,
+    ].filter((part) => part?.trim());
+
+    return parts.join(locale === "ar" ? "، " : ", ");
+}

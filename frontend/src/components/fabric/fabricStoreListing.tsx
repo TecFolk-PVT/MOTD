@@ -1,25 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { fabrics } from "../shared/fabricData";
-
-// Types
-interface Product {
-    id: number;
-    name: string;
-    price: number;
-    category: string;
-    color: string;
-    material: string;
-    inStock: boolean;
-    image: string;
-    description: string;
-    origin: string;
-}
-
-// Mock Products Data - Expanded to show pagination better
-const products = fabrics; // Using centralized fabric data store for consistency
+import { useMemo, useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { api, type ApiError } from "@/lib/api/client";
+import {
+    FABRIC_FILTER_OPTIONS,
+    type FabricListItem,
+    formatMaterialLabel,
+    getFabricDisplayFields,
+    resolveFabricImage,
+} from "@/lib/fabrics";
 
 const colorOptions = [
     { name: "Pearl Ivory", value: "ivory", bg: "#F5F0E8" },
@@ -35,18 +26,6 @@ const colorOptions = [
     { name: "Slate", value: "gray", bg: "#708090" },
 ];
 
-const categoryOptions = [
-    { id: "silk", label: "PURE SILK", count: 6 },
-    { id: "velvet", label: "VELVET", count: 3 },
-    { id: "cotton", label: "COTTON", count: 3 },
-    { id: "embroidered", label: "HAUTE EMBROIDERY", count: 3 },
-    { id: "linen", label: "LINEN", count: 1 },
-    { id: "chiffon", label: "CHIFFON", count: 1 },
-    { id: "wool", label: "WOOL", count: 2 },
-    { id: "organza", label: "ORGANZA", count: 1 },
-    { id: "crepe", label: "CREPE", count: 1 },
-    { id: "lace", label: "LACE", count: 1 },
-];
 
 const priceRanges = [
     { id: "under-500", label: "UNDER AED 500", min: 0, max: 500 },
@@ -205,11 +184,16 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: { currentPage: nu
 };
 
 export default function FabricStorePage() {
+    const params = useParams();
+    const locale = params.locale === "ar" ? "ar" : "en";
     const [mounted, setMounted] = useState(false);
+    const [fabrics, setFabrics] = useState<FabricListItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const [hoveredProduct, setHoveredProduct] = useState<number | null>(null);
+    const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-    const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+    const [quickViewProduct, setQuickViewProduct] = useState<FabricListItem | null>(null);
     const [sortBy, setSortBy] = useState("newest");
     const [filters, setFilters] = useState<FilterState>({
         categories: [],
@@ -223,32 +207,83 @@ export default function FabricStorePage() {
         setMounted(true);
     }, []);
 
+    useEffect(() => {
+        const fetchFabrics = async () => {
+            try {
+                setLoading(true);
+                setFetchError(null);
+
+                const data = await api.get<{ success: boolean; items: FabricListItem[] }>(
+                    "/api/fabrics?limit=100",
+                );
+
+                if (!data?.success) {
+                    throw new Error("Failed to load fabrics");
+                }
+
+                setFabrics(data.items || []);
+            } catch (err: unknown) {
+                const message =
+                    (err as ApiError)?.message ||
+                    (err instanceof Error ? err.message : "Failed to load fabrics");
+                setFetchError(message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchFabrics();
+    }, []);
+
+    const categoryOptions = useMemo(() => {
+        const counts = new Map<string, number>();
+        for (const fabric of fabrics) {
+            counts.set(fabric.material, (counts.get(fabric.material) || 0) + 1);
+        }
+
+        return FABRIC_FILTER_OPTIONS.map((material) => ({
+            id: material,
+            label: formatMaterialLabel(material, locale).toUpperCase(),
+            count: counts.get(material) || 0,
+        })).filter((category) => category.count > 0);
+    }, [fabrics, locale]);
+
     const productsPerPage = 12;
 
+    const matchesColorFilter = (fabricColor: string | undefined, selectedColors: string[]) => {
+        if (selectedColors.length === 0) return true;
+        const normalized = fabricColor?.toLowerCase() || "";
+        return selectedColors.some(
+            (value) => normalized.includes(value) || value.includes(normalized),
+        );
+    };
+
     // ── Filtering and Sorting ─────────────────────────────────────────────────────────────
-    let filteredProducts = products.filter(p => {
-        if (filters.categories.length > 0 && !filters.categories.includes(p.category)) return false;
-        if (filters.colors.length > 0 && !filters.colors.includes(p.color)) return false;
-        if (filters.priceRange) {
-            const range = priceRanges.find(r => r.id === filters.priceRange);
-            if (range && (p.price < range.min || p.price > range.max)) return false;
+    let filteredProducts = fabrics.filter((fabric) => {
+        if (filters.categories.length > 0 && !filters.categories.includes(fabric.material)) {
+            return false;
         }
-        if (filters.inStockOnly && !p.inStock) return false;
+        if (!matchesColorFilter(fabric.color, filters.colors)) return false;
+        if (filters.priceRange) {
+            const range = priceRanges.find((r) => r.id === filters.priceRange);
+            if (range && (fabric.pricePerMeter < range.min || fabric.pricePerMeter > range.max)) {
+                return false;
+            }
+        }
         return true;
     });
 
     // Sorting
     switch (sortBy) {
         case "price-low":
-            filteredProducts.sort((a, b) => a.price - b.price);
+            filteredProducts.sort((a, b) => a.pricePerMeter - b.pricePerMeter);
             break;
         case "price-high":
-            filteredProducts.sort((a, b) => b.price - a.price);
+            filteredProducts.sort((a, b) => b.pricePerMeter - a.pricePerMeter);
             break;
         case "newest":
         default:
-            // Assuming higher ID means newer for demo
-            filteredProducts.sort((a, b) => b.id - a.id);
+            filteredProducts = [...filteredProducts];
             break;
     }
 
@@ -495,7 +530,22 @@ export default function FabricStorePage() {
                 </aside>
 
                 <div className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8">
-                    {filteredProducts.length === 0 ? (
+                    {loading ? (
+                        <div className="flex items-center justify-center py-28">
+                            <p className="[font-family:var(--font-ui)] text-sm uppercase tracking-[0.2em] text-[#7A7A72]">
+                                Loading fabrics...
+                            </p>
+                        </div>
+                    ) : fetchError ? (
+                        <div className="flex flex-col items-center justify-center text-center py-28">
+                            <h3 className="text-[18px] md:text-[22px] uppercase tracking-widest text-black mb-3">
+                                Unable to Load Fabrics
+                            </h3>
+                            <p className="text-[#7A7A72] text-[13px] max-w-xs leading-relaxed">
+                                {fetchError}
+                            </p>
+                        </div>
+                    ) : filteredProducts.length === 0 ? (
                         <div className="flex flex-col items-center justify-center text-center py-28">
                             <SearchOffIcon />
                             <h3 className="text-[18px] md:text-[22px] uppercase tracking-widest text-black mb-3">No Fabrics Found</h3>
@@ -512,39 +562,46 @@ export default function FabricStorePage() {
                     ) : (
                         <>
                             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                                {paginatedProducts.map((product) => (
+                                {paginatedProducts.map((product) => {
+                                    const { title } = getFabricDisplayFields(product, locale);
+                                    const imageUrl = resolveFabricImage(product.images?.[0]);
+                                    const materialLabel = formatMaterialLabel(product.material, locale);
+
+                                    return (
                                     <div
-                                        key={product.id}
+                                        key={product._id}
                                         className="group"
-                                        onMouseEnter={() => setHoveredProduct(product.id)}
+                                        onMouseEnter={() => setHoveredProduct(product._id)}
                                         onMouseLeave={() => setHoveredProduct(null)}
                                     >
                                         <div className="relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-                                            {product.price > 1500 && (
+                                            {product.pricePerMeter > 500 && (
                                                 <span className="absolute top-4 left-4 z-10 bg-black text-white text-[8px] tracking-[0.16em] uppercase px-2.5 py-1 rounded-full">
                                                     Premium
                                                 </span>
                                             )}
 
                                             <div className="p-4 text-left">
-                                                <a href="#" className="block">
+                                                <Link href={`/fabrics/${product.slug}`} className="block">
                                                     <img
-                                                        src={product.image}
-                                                        alt={product.name}
+                                                        src={imageUrl}
+                                                        alt={title}
                                                         className="w-full h-full object-cover mb-4 transition-transform duration-300 group-hover:scale-105"
                                                     />
                                                     <h3 className="[font-family:var(--font-display)] text-xs xs:text-sm sm:text-base font-normal leading-relaxed tracking-tight text-black mb-1 line-clamp-2">
-                                                        {product.name}
+                                                        {title}
                                                     </h3>
-                                                </a>
+                                                </Link>
 
                                                 <div className="flex justify-start gap-2 mb-3">
                                                     <span className="[font-family:var(--font-ui)] text-[8px] tracking-[0.12em] uppercase bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                                                        {product.category}
+                                                        {materialLabel}
                                                     </span>
-                                                    <span className="[font-family:var(--font-ui)] text-[8px] tracking-[0.12em] uppercase bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                                                        {product.material.split(' ')[0]}
-                                                    </span>
+                                                    {product.color && (
+                                                        <span className="[font-family:var(--font-ui)] text-[8px] tracking-[0.12em] uppercase bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                                                            {product.color}
+                                                        </span>
+                                                    )}
                                                 </div>
 
                                                 <div className="border-t border-[#E4E0D8] my-3"></div>
@@ -552,13 +609,8 @@ export default function FabricStorePage() {
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-md font-normal text-black">
-                                                            AED {product.price.toLocaleString()}
+                                                            AED {product.pricePerMeter.toLocaleString()}/m
                                                         </span>
-                                                        {product.price > 1500 && (
-                                                            <span className="text-xs text-gray-400 line-through">
-                                                                AED {(product.price * 1.2).toLocaleString()}
-                                                            </span>
-                                                        )}
                                                     </div>
                                                     <div className="flex items-center gap-1">
                                                         <button
@@ -603,7 +655,8 @@ export default function FabricStorePage() {
                                             </div>
                                         </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             {/* Beautiful Pagination Component */}
@@ -629,21 +682,34 @@ export default function FabricStorePage() {
                         </button>
                         <div className="grid md:grid-cols-2 gap-6">
                             <div className="aspect-square bg-[#F0EBE3] rounded-2xl overflow-hidden">
-                                <img src={quickViewProduct.image} alt={quickViewProduct.name} className="w-full h-full object-cover" />
+                                <img
+                                    src={resolveFabricImage(quickViewProduct.images?.[0])}
+                                    alt={getFabricDisplayFields(quickViewProduct, locale).title}
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                             <div>
-                                <h2 className="[font-family:var(--font-display)] text-2xl mb-2">{quickViewProduct.name}</h2>
-                                <p className="text-[11px] tracking-[0.16em] uppercase text-[#8A8A80] [font-family:var(--font--ui)] mb-4">{quickViewProduct.material}</p>
-                                <p className="text-[16px] [font-family:var(--font-body)] mb-4">AED {quickViewProduct.price.toLocaleString()}</p>
-                                <p className="text-[13px] text-[#6A6A62] leading-relaxed mb-4 [font-family:var(--font-body)]">{quickViewProduct.description}</p>
+                                <h2 className="[font-family:var(--font-display)] text-2xl mb-2">
+                                    {getFabricDisplayFields(quickViewProduct, locale).title}
+                                </h2>
+                                <p className="text-[11px] tracking-[0.16em] uppercase text-[#8A8A80] [font-family:var(--font--ui)] mb-4">
+                                    {formatMaterialLabel(quickViewProduct.material, locale)}
+                                </p>
+                                <p className="text-[16px] [font-family:var(--font-body)] mb-4">
+                                    AED {quickViewProduct.pricePerMeter.toLocaleString()}/m
+                                </p>
+                                <p className="text-[13px] text-[#6A6A62] leading-relaxed mb-4 [font-family:var(--font-body)]">
+                                    {getFabricDisplayFields(quickViewProduct, locale).description}
+                                </p>
                                 <div className="space-y-2 mb-6">
-                                    <p><span className="text-[10px] tracking-[0.16em] uppercase [font-family:var(--font-body)]">Origin:</span> {quickViewProduct.origin}</p>
-                                    <p><span className="text-[10px] tracking-[0.16em] uppercase [font-family:var(--font-body)]">Availability:</span> {quickViewProduct.inStock ? "In Stock" : "Out of Stock"}</p>
+                                    <p>
+                                        <span className="text-[10px] tracking-[0.16em] uppercase [font-family:var(--font-body)]">City:</span>{" "}
+                                        {quickViewProduct.city || "UAE"}
+                                    </p>
                                 </div>
                                 <button
                                     onClick={() => {
-                                        console.log("Navigating to product details page for ID:", quickViewProduct.id);
-                                        router.push(`/fabrics/${quickViewProduct.id}`);
+                                        router.push(`/fabrics/${quickViewProduct.slug}`);
                                         setQuickViewProduct(null);
                                     }}
                                     className="w-full py-3 bg-black text-white text-[11px] tracking-[0.22em] uppercase rounded-full hover:bg-[#2A2A28] transition-colors hover:cursor-pointer [font-family:var(--font-body)]">
