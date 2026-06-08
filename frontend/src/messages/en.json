@@ -78,7 +78,12 @@
     "eyebrow": "Master Artisans of the UAE",
     "title": "Meet the Tailors",
     "description": "Discover the Emirates' most celebrated master tailors, preserving centuries-old heritage through exceptional craftsmanship",
-    "viewAll": "View All Master Tailors of the UAE"
+    "viewAll": "View All Master Tailors of the UAE",
+    "bookConsultation": "Book Consultation",
+    "reviews": "reviews",
+    "loading": "Loading tailors...",
+    "empty": "No tailor shops available",
+    "error": "Failed to load tailors"
   },
   "MeasurementGuide": {
     "eyebrow": "PERFECT FIT GUARANTEE",
