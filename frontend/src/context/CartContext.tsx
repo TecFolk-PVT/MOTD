@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 export type CartItem = {
     id: string;
@@ -15,7 +16,7 @@ export type CartItem = {
 
 type CartContextType = {
     items: CartItem[];
-    addItem: (item: Omit<CartItem, "quantity">) => void;
+    addItem: (item: Omit<CartItem, "quantity" | "maxStock"> & { maxStock: number }) => void;
     removeItem: (id: string) => void;
     updateQuantity: (id: string, quantity: number) => void;
     clearCart: () => void;
@@ -64,44 +65,52 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem(CART_KEY, JSON.stringify(items));
     }, [items, isHydrated]);
 
-    const addItem = (item: Omit<CartItem, "quantity">) => {
-        const maxStock = Math.max(1, item.maxStock);
-
+    // ADD ITEM
+    const addItem = (item: Omit<CartItem, "quantity" | "maxStock"> & { maxStock: number }) => {
         setItems((prev) => {
             const existing = prev.find((p) => p.id === item.id);
 
             if (existing) {
-                const nextQuantity = Math.min(existing.quantity + 1, maxStock);
-                if (nextQuantity === existing.quantity) return prev;
-
-                return prev.map((p) =>
-                    p.id === item.id
-                        ? { ...p, ...item, quantity: nextQuantity, maxStock }
-                        : p
-                );
+                // Check if we can increase quantity
+                if (existing.quantity < existing.maxStock) {
+                    setTimeout(() => toast.success(`${item.name} quantity increased to ${existing.quantity + 1}`), 0);
+                    return prev.map((p) =>
+                        p.id === item.id ? { ...p, quantity: p.quantity + 1 } : p
+                    );
+                } else {
+                    setTimeout(() => toast.error(`Only ${existing.maxStock} in stock`), 0);
+                    return prev; // no change
+                }
             }
 
-            return [...prev, { ...item, maxStock, quantity: 1 }];
+            // New item: quantity starts at 1, maxStock = item.maxStock
+            setTimeout(() => toast.success(`${item.name} added to cart`), 0);
+            return [...prev, { ...item, quantity: 1, maxStock: item.maxStock }];
         });
     };
 
     const removeItem = (id: string) => {
+        const removedItem = items.find((p) => p.id === id);
+        if (removedItem) {
+            toast.success(`${removedItem.name} removed from cart`);
+        }
         setItems((prev) => prev.filter((p) => p.id !== id));
     };
 
     const updateQuantity = (id: string, quantity: number) => {
+        const item = items.find(p => p.id === id);
+        if (!item) return;
+
+        if (quantity > item.maxStock) {
+            toast.error(`Only ${item.maxStock} in stock`);
+            return;
+        }
         if (quantity <= 0) {
-            setItems((prev) => prev.filter((p) => p.id !== id));
+            removeItem(id);
             return;
         }
 
-        setItems((prev) =>
-            prev.map((p) => {
-                if (p.id !== id) return p;
-                const capped = Math.min(quantity, p.maxStock);
-                return { ...p, quantity: capped };
-            })
-        );
+        setItems(prev => prev.map(p => p.id === id ? { ...p, quantity } : p));
     };
 
     const clearCart = () => setItems([]);

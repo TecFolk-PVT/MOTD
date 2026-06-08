@@ -14,11 +14,12 @@ export default function ReadyMadeDetailPage() {
     const router = useRouter();
     const slug = params.slug as string;
     const locale = params.locale as string;
-    const { addItem, items } = useCart();
+    const { addItem } = useCart();
 
     const [product, setProduct] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState<string>("");
     const [isWishlisted, setIsWishlisted] = useState(false);
 
@@ -50,21 +51,25 @@ export default function ReadyMadeDetailPage() {
     // ---------------------------
 
     const handleAddToCart = () => {
-        if (!product || product.countInStock < 1) return;
+        if (!product) return;
 
-        addItem({
-            id: product._id,
-            slug: product.slug,
-            name: product.name,
-            image: product.images?.[0],
-            price: product.price,
-            size: product.size,
-            maxStock: product.countInStock,
-        });
+        // Add the item with the selected quantity
+        for (let i = 0; i < quantity; i++) {
+            addItem({
+                id: product._id,
+                slug: product.slug,
+                name: product.name,
+                image: product.images?.[0] || "/placeholder.png",
+                price: product.price,
+                size: product.size,
+                maxStock: product.countInStock,
+            });
+        }
     };
 
     const handleBuyNow = () => {
-        handleAddToCart();
+        // Your buy now logic (e.g., redirect to checkout)
+        console.log("Buy now:", { product, quantity });
     };
 
     const toggleWishlist = () => setIsWishlisted(!isWishlisted);
@@ -128,9 +133,6 @@ export default function ReadyMadeDetailPage() {
     const images = product.images?.length ? product.images : ["/placeholder.png"];
     const sku = product.sku || product._id?.slice(-6) || "N/A";
     const category = product.style || product.category || "Ready-Made";
-    const cartQuantity =
-        items.find((item) => item.id === product._id)?.quantity ?? 0;
-    const isAtStockCap = cartQuantity >= product.countInStock;
 
     return (
         <MainLayout>
@@ -300,24 +302,24 @@ export default function ReadyMadeDetailPage() {
                                         <div className="flex-1 flex gap-3 w-full sm:w-auto">
                                             <button
                                                 onClick={handleAddToCart}
-                                                disabled={product.countInStock < 1 || isAtStockCap}
+                                                disabled={product.countInStock < 1}
                                                 className={`
                                                     flex-1 sm:flex-none py-3 px-6 border border-black text-[10px] xs:text-[11px] tracking-[0.24em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:cursor-pointer
-                                                    ${product.countInStock < 1 || isAtStockCap
+                                                    ${product.countInStock < 1
                                                         ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300"
                                                         : "bg-black text-white hover:bg-white hover:text-black hover:border-black"
                                                     }
                                                 `}
                                             >
-                                                {isAtStockCap ? "In cart" : "Add to Cart"}
+                                                Add to Cart
                                             </button>
                                             <button
                                                 onClick={handleBuyNow}
-                                                disabled={product.countInStock < 1 || isAtStockCap}
+                                                disabled={product.countInStock < 1}
                                                 className={`
                                                     flex-1 sm:flex-none py-3 px-6 border border-black bg-transparent text-[10px] xs:text-[11px] tracking-[0.24em] uppercase
                                                     [font-family:var(--font-ui)] transition-all duration-300
-                                                    ${product.countInStock < 1 || isAtStockCap
+                                                    ${product.countInStock < 1
                                                         ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300"
                                                         : "hover:bg-black hover:text-white"
                                                     }
@@ -346,10 +348,10 @@ export default function ReadyMadeDetailPage() {
                 <div className="flex gap-3">
                     <button
                         onClick={handleAddToCart}
-                        disabled={product.countInStock < 1 || isAtStockCap}
+                        disabled={product.countInStock < 1}
                         className="flex-1 bg-black text-white py-3 text-[10px] tracking-[0.24em] uppercase font-ui disabled:opacity-50"
                     >
-                        {isAtStockCap ? "In cart" : `Add to Cart – AED ${product.price}`}
+                        Add to Cart – AED {product.price * quantity}
                     </button>
                 </div>
             </div>

@@ -6,6 +6,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { GlobalProgressBar } from "../shared/GlobalProgressBar";
 import { useAuth } from "@/context/AuthContext";
 import LocaleSwitcher from "../shared/LocaleSwitcher";
+import { useCart } from "@/context/CartContext";
 
 const NAV_LINKS = [
   { key: "fabrics", href: "/fabrics/fabricStore" },
@@ -71,6 +72,8 @@ export function Navbar() {
       ? "/account/userAccount"
       : "/auth/login";
   const accountLabel = user ? t("actions.account") : t("actions.login");
+  const { items } = useCart();
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
   // Toggle menu with animation
   const toggleMenu = useCallback(() => {
@@ -204,11 +207,18 @@ export function Navbar() {
 
           {/* Cart Icon */}
           <Link
-            href={"/cart"}
+            href="/cart"
             className="hidden lg:flex p-1.5 lg:p-2 hover:opacity-50 transition items-center justify-center relative"
             aria-label={t("actions.cart")}
           >
-            <CartIcon className="w-4 h-4 xs:w-4 sm:w-4 md:w-4 lg:w-5 xl:w-5 2xl:w-6" />
+            <div className="relative">
+              <CartIcon className="w-4 h-4 xs:w-4 sm:w-4 md:w-4 lg:w-5 xl:w-5 2xl:w-6" />
+              {totalItems > 0 && (
+                <span className="absolute -top-2.5 -right-1 w-4 h-4 lg:w-4 lg:h-4 bg-black text-white text-[9px] lg:text-[10px] font-medium rounded-full flex items-center justify-center shadow-sm">
+                  {totalItems}
+                </span>
+              )}
+            </div>
           </Link>
 
           {/* User Icon */}
@@ -275,10 +285,6 @@ export function Navbar() {
             ))}
           </ul>
 
-          <div className="flex justify-center mb-5 xs:mb-6 sm:mb-7">
-            <LocaleSwitcher />
-          </div>
-
           {/* Mobile bottom icons grid - exact match from first code chunk */}
           <div className="grid grid-cols-4 gap-2 border-t border-(--color-border) pt-4 xs:pt-5">
             <button
@@ -323,9 +329,16 @@ export function Navbar() {
               className="flex flex-col items-center gap-1 group hover:opacity-50 transition relative"
               onClick={closeMenu}
             >
-              <CartIcon className="w-4.5 h-4.5 xs:w-[20px] xs:h-[20px] sm:w-5.5 sm:h-5.5" />
+              <div className="relative">
+                <CartIcon className="w-4.5 h-4.5 xs:w-[20px] xs:h-[20px] sm:w-5.5 sm:h-5.5" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 xs:w-5 xs:h-5 bg-black text-white text-[8px] xs:text-[10px] font-medium rounded-full flex items-center justify-center shadow-sm">
+                    {totalItems}
+                  </span>
+                )}
+              </div>
               <span className="text-[8px] xs:text-[9px] uppercase tracking-[0.18em] [font-family:var(--font-ui)]">
-                {t("actions.cart")}
+                Cart
               </span>
             </Link>
 
