@@ -114,8 +114,6 @@ export default function CheckoutPage() {
                         >
                             Continue Shopping
                         </button>
-                            {t.checkout.continueShopping}
-        </Link>
                     </div>
                 </div>
             </MainLayout>
