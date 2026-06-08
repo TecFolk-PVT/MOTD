@@ -35,9 +35,9 @@ export default function RootLayout({
               position="bottom-right"
               toastOptions={{
                 style: {
-                  background: '#000',
-                  color: '#fff',
-                  fontFamily: 'var(--font-ui)',
+                  background: '#fff',     // white
+                  color: '#000',          // black
+                  fontFamily: 'var(--font-body)',
                   fontSize: '12px',
                   letterSpacing: '0.24em',
                   textTransform: 'uppercase',
@@ -45,8 +45,8 @@ export default function RootLayout({
                   padding: '12px 16px',
                   border: '1px solid #333',
                 },
-                success: { iconTheme: { primary: '#fff', secondary: '#000' } },
-                error: { iconTheme: { primary: '#ff4444', secondary: '#000' } },
+                success: { iconTheme: { primary: '#000', secondary: '#fff' } },
+                error: { iconTheme: { primary: '#ff4444', secondary: '#fff' } },
               }}
             />
           </CartProvider>
