@@ -97,7 +97,7 @@ export default function SuccessModal({
                             {/* Order ID */}
                             {orderId && (
                                 <p className="[font-family:var(--font-ui)] text-[11px] tracking-[0.2em] text-black/60 mb-3">
-                                    {orderIdLabel}: <span className="font-medium">{orderId}</span>
+                                    {orderIdLabel}: <span className="font-medium">{orderId.slice(-8)}</span>
                                 </p>
                             )}
 

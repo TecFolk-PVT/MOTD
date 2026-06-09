@@ -422,7 +422,7 @@ export default function CheckoutPage() {
                 }}
                 title={t.checkout.successTitle}
                 message={t.checkout.successMessage}
-                orderId={lastOrderId ?? undefined}
+                orderId={lastOrderId?.slice(-8) ?? undefined}
                 orderIdLabel={t.checkout.orderIdLabel}
                 itemsInOrderLabel={t.checkout.itemsInOrder}
                 okLabel={t.checkout.okButton}
