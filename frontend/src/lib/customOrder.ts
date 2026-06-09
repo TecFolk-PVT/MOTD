@@ -290,6 +290,10 @@ export function isTailorStepComplete(draft: CustomOrderDraft): boolean {
     return Boolean(draft.tailor && draft.design);
 }
 
+export function isMetersStepComplete(draft: CustomOrderDraft): boolean {
+    return draft.fabricMeters !== null && draft.fabricMeters > 0;
+}
+
 export function buildCustomOrderPreviewPayload(
     draft: CustomOrderDraft,
 ): CustomOrderPreviewPayload | null {

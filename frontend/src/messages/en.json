@@ -114,6 +114,22 @@
     "empty": "There are no approved tailor shops available right now. Please check back soon.",
     "errorTitle": "Unable to Load Tailors"
   },
+  "CustomOrderMeters": {
+    "stepLabel": "Step {step} of {total}",
+    "title": "Fabric Meters",
+    "description": "Enter how many meters of fabric you need. We've suggested an amount based on your chosen design — adjust if needed.",
+    "loading": "Loading...",
+    "designLabel": "Selected design",
+    "suggestedLabel": "Suggested amount",
+    "inputLabel": "Fabric meters",
+    "inputPlaceholder": "e.g. 3.5",
+    "inputHint": "Enter a value greater than zero.",
+    "ownFabricNote": "You're using your own fabric. This amount helps your tailor plan the work; no platform fabric cost applies.",
+    "platformFabricNote": "Fabric cost at checkout is calculated per meter using your selected platform fabric.",
+    "backToTailor": "Back to tailor & design",
+    "continue": "Continue to Measurements",
+    "meters": "m"
+  },
   "CustomOrderTailor": {
     "stepLabel": "Step {step} of {total}",
     "title": "Choose Tailor & Design",
