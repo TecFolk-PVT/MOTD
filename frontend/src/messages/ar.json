@@ -497,6 +497,71 @@
       "fastDelivery": "توصيل سريع"
     }
   },
+  "OrdersPage": {
+    "title": "طلباتك",
+    "description": "تتبع مشتريات الألبسة الجاهزة وطلبات الخياطة المخصصة في مكان واحد.",
+    "loading": "جاري التحميل...",
+    "tabs": {
+      "custom": "الخياطة المخصصة",
+      "retail": "جاهز"
+    },
+    "custom": {
+      "loading": "جاري تحميل الطلبات المخصصة...",
+      "error": "تعذر تحميل الطلبات المخصصة.",
+      "detailError": "تعذر تحميل خط زمني الطلب.",
+      "emptyTitle": "لا توجد طلبات مخصصة بعد",
+      "emptyDescription": "ابدأ طلب خياطة مخصص لعرضه هنا.",
+      "startOrder": "ابدأ طلباً مخصصاً",
+      "orderId": "طلب #{id}",
+      "unknownDesign": "تصميم مخصص",
+      "viewTimeline": "عرض الخط الزمني",
+      "hideTimeline": "إخفاء الخط الزمني",
+      "loadingDetail": "جاري تحميل الخط الزمني...",
+      "timelineTitle": "تقدّم الطلب",
+      "statuses": {
+        "pending": "قيد الانتظار",
+        "confirmed": "مؤكد",
+        "fabric_pickup_scheduled": "جدولة استلام القماش",
+        "at_tailor": "عند الخياط",
+        "in_production": "قيد الإنتاج",
+        "ready": "جاهز",
+        "out_for_delivery": "في التوصيل",
+        "delivered": "تم التسليم"
+      }
+    },
+    "retail": {
+      "loading": "جاري تحميل الطلبات الجاهزة...",
+      "error": "تعذر تحميل الطلبات الجاهزة.",
+      "emptyTitle": "لا توجد طلبات جاهزة بعد",
+      "emptyDescription": "تصفح قطع الجاهز المعادة للمقاس في الصفحة الرئيسية.",
+      "browseReadyMade": "تصفح الجاهز",
+      "orderId": "طلب #{id}",
+      "unknownItem": "قطعة جاهزة",
+      "size": "المقاس",
+      "statuses": {
+        "pending": "قيد الانتظار",
+        "confirmed": "مؤكد",
+        "shipped": "تم الشحن",
+        "delivered": "تم التسليم",
+        "cancelled": "ملغى"
+      }
+    },
+    "timeline": {
+      "ariaLabel": "خط زمني لتقدّم الطلب المخصص",
+      "pending": "معلّق",
+      "inProgress": "قيد التنفيذ",
+      "statuses": {
+        "pending": { "title": "تم تقديم الطلب" },
+        "confirmed": { "title": "تأكيد الطلب" },
+        "fabric_pickup_scheduled": { "title": "جدولة استلام القماش" },
+        "at_tailor": { "title": "عند متجر الخياطة" },
+        "in_production": { "title": "قيد الإنتاج" },
+        "ready": { "title": "القطعة جاهزة" },
+        "out_for_delivery": { "title": "في التوصيل" },
+        "delivered": { "title": "تم التسليم" }
+      }
+    }
+  },
   "Footer": {
     "ariaLabel": "تذييل الموقع",
     "logoAlt": "MOTD — مخوّر اليوم",

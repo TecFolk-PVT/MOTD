@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "../../../../context/AuthContext";
 import { User, Mail, Save, Edit2, X } from "lucide-react";
 
@@ -211,12 +212,12 @@ export default function AccountPage() {
                                 <p className="text-gray-500 font-['TT_Norms_Pro'] text-sm">
                                     You haven't placed any orders yet.
                                 </p>
-                                <button
-                                    disabled
-                                    className="w-full mt-4 px-4 py-2 border border-gray-200 text-gray-500 text-sm font-['TT_Norms_Pro'] cursor-not-allowed"
+                                <Link
+                                    href="/orders"
+                                    className="block w-full mt-4 px-4 py-2 bg-black text-white text-sm font-['TT_Norms_Pro'] text-center hover:bg-gray-900 transition-colors"
                                 >
                                     View all orders
-                                </button>
+                                </Link>
                             </div>
                         </div>
 
