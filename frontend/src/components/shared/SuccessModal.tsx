@@ -10,6 +10,9 @@ interface SuccessModalProps {
     title?: string;
     message?: string;
     orderId?: string;
+    orderIdLabel?: string;
+    itemsInOrderLabel?: string;
+    okLabel?: string;
     orderName?: string;
     orderItems?: Array<{ name: string; id: string }>;
 }
@@ -20,6 +23,9 @@ export default function SuccessModal({
     title = "Order Placed Successfully!",
     message = "Your order has been confirmed.",
     orderId,
+    orderIdLabel = "Order ID",
+    itemsInOrderLabel = "Items in this order:",
+    okLabel = "OK",
     orderName,
     orderItems,
 }: SuccessModalProps) {
@@ -91,7 +97,7 @@ export default function SuccessModal({
                             {/* Order ID */}
                             {orderId && (
                                 <p className="[font-family:var(--font-ui)] text-[11px] tracking-[0.2em] text-black/60 mb-3">
-                                    Order ID: <span className="font-medium">{orderId}</span>
+                                    {orderIdLabel}: <span className="font-medium">{orderId}</span>
                                 </p>
                             )}
 
@@ -99,7 +105,7 @@ export default function SuccessModal({
                             {orderItems && orderItems.length > 0 && (
                                 <div className="mt-2 mb-4 text-left max-h-40 overflow-y-auto">
                                     <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.2em] text-(--color-grey-muted) mb-2">
-                                        Items in this order:
+                                        {itemsInOrderLabel}
                                     </p>
                                     <ul className="space-y-1.5">
                                         {orderItems.map((item, idx) => (
@@ -124,7 +130,7 @@ export default function SuccessModal({
                                 onClick={onClose}
                                 className="mt-2 px-6 py-2 bg-black text-white text-[11px] uppercase tracking-[0.24em] [font-family:var(--font-ui)] hover:bg-white hover:text-black border border-black transition hover:cursor-pointer"
                             >
-                                OK
+                                {okLabel}
                             </button>
                         </motion.div>
                     </div>

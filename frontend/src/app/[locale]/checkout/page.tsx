@@ -91,10 +91,10 @@ export default function CheckoutPage() {
                             <ShoppingBag className="w-10 h-10 text-[#5A5A56]" />
                         </div>
                         <h1 className="[font-family:var(--font-display)] text-[28px] xs:text-[32px] sm:text-[36px] text-black mb-3">
-                            Your cart is empty
+                            {t.checkout.emptyCartTitle}
                         </h1>
                         <p className="text-[13px] xs:text-[14px] text-[#5A5A56] mb-6">
-                            Looks like you haven't added any ready‑made items yet.
+                            {t.checkout.emptyCartMessage}
                         </p>
                         <button
                             onClick={() => {
@@ -112,7 +112,7 @@ export default function CheckoutPage() {
                             }}
                             className="inline-block px-6 py-3 bg-black text-white text-[10px] xs:text-[11px] tracking-[0.22em] uppercase hover:bg-[#1A1A1A] transition duration-300 cursor-pointer"
                         >
-                            Continue Shopping
+                            {t.checkout.continueShopping}
                         </button>
                     </div>
                 </div>
@@ -179,12 +179,10 @@ export default function CheckoutPage() {
                 emirate: formData.emirate,
                 city: formData.city,
                 street: formData.street,
-                deliveryNotes: formData.deliveryNotes,
+                notes: formData.deliveryNotes,
             },
             paymentMethod: "COD",
         };
-
-        console.log("Final payload:", JSON.stringify(payload, null, 2));
 
         try {
             const response = await api.post("/api/orders/retail", payload);
@@ -400,7 +398,7 @@ export default function CheckoutPage() {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                                             </svg>
-                                            Processing...
+                                            {t.checkout.processing}
                                         </span>
                                     ) : (
                                         `${t.checkout.placeOrder} AED ${total.toFixed(2)}`
@@ -422,10 +420,13 @@ export default function CheckoutPage() {
                     setShowSuccessModal(false);
                     router.push(`/${locale}#ready-made`);
                 }}
-                title="Thank You!"
-                message="Your order has been placed successfully."
-                orderId={lastOrderId || "Order ID"}
-                orderItems={lastOrderItems}   // new prop
+                title={t.checkout.successTitle}
+                message={t.checkout.successMessage}
+                orderId={lastOrderId ?? undefined}
+                orderIdLabel={t.checkout.orderIdLabel}
+                itemsInOrderLabel={t.checkout.itemsInOrder}
+                okLabel={t.checkout.okButton}
+                orderItems={lastOrderItems}
             />
         </MainLayout>
     );

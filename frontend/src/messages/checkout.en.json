@@ -26,6 +26,12 @@
         "codDescription": "Pay when your order arrives",
         "placeOrder": "Pay",
         "agreeToTerms": "By placing order you agree to our terms",
-        "requiredField": "Required"
+        "requiredField": "Required",
+        "processing": "Processing...",
+        "successTitle": "Thank You!",
+        "successMessage": "Your order has been placed successfully.",
+        "orderIdLabel": "Order ID",
+        "itemsInOrder": "Items in this order:",
+        "okButton": "OK"
     }
 }

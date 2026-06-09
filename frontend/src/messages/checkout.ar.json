@@ -26,6 +26,12 @@
         "codDescription": "ادفع عند وصول طلبك",
         "placeOrder": "ادفع ",
         "agreeToTerms": "بإتمام الطلب فإنك توافق على الشروط والأحكام",
-        "requiredField": "مطلوب"
+        "requiredField": "مطلوب",
+        "processing": "جاري المعالجة...",
+        "successTitle": "شكراً لك!",
+        "successMessage": "تم تقديم طلبك بنجاح.",
+        "orderIdLabel": "رقم الطلب",
+        "itemsInOrder": "المنتجات في هذا الطلب:",
+        "okButton": "حسناً"
     }
 }
