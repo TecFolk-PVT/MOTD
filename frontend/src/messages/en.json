@@ -317,6 +317,71 @@
     "placeholder": "Email Address",
     "subscribe": "Subscribe"
   },
+  "OrdersPage": {
+    "title": "Your Orders",
+    "description": "Track ready-made purchases and custom tailoring orders in one place.",
+    "loading": "Loading...",
+    "tabs": {
+      "custom": "Custom Tailoring",
+      "retail": "Ready-made"
+    },
+    "custom": {
+      "loading": "Loading custom orders...",
+      "error": "Unable to load custom orders.",
+      "detailError": "Unable to load order timeline.",
+      "emptyTitle": "No custom orders yet",
+      "emptyDescription": "Start a custom tailoring order to see it tracked here.",
+      "startOrder": "Start custom order",
+      "orderId": "Order #{id}",
+      "unknownDesign": "Custom design",
+      "viewTimeline": "View timeline",
+      "hideTimeline": "Hide timeline",
+      "loadingDetail": "Loading timeline...",
+      "timelineTitle": "Order progress",
+      "statuses": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "fabric_pickup_scheduled": "Fabric pickup scheduled",
+        "at_tailor": "At tailor",
+        "in_production": "In production",
+        "ready": "Ready",
+        "out_for_delivery": "Out for delivery",
+        "delivered": "Delivered"
+      }
+    },
+    "retail": {
+      "loading": "Loading ready-made orders...",
+      "error": "Unable to load ready-made orders.",
+      "emptyTitle": "No ready-made orders yet",
+      "emptyDescription": "Browse size-return ready-made pieces on the homepage.",
+      "browseReadyMade": "Browse ready-made",
+      "orderId": "Order #{id}",
+      "unknownItem": "Ready-made item",
+      "size": "Size",
+      "statuses": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled"
+      }
+    },
+    "timeline": {
+      "ariaLabel": "Custom order progress timeline",
+      "pending": "Pending",
+      "inProgress": "In progress",
+      "statuses": {
+        "pending": { "title": "Order placed" },
+        "confirmed": { "title": "Order confirmed" },
+        "fabric_pickup_scheduled": { "title": "Fabric pickup scheduled" },
+        "at_tailor": { "title": "At tailor shop" },
+        "in_production": { "title": "In production" },
+        "ready": { "title": "Garment ready" },
+        "out_for_delivery": { "title": "Out for delivery" },
+        "delivered": { "title": "Delivered" }
+      }
+    }
+  },
   "Footer": {
     "logoAlt": "MOTD — Mukhawar of the Day",
     "tagline": "Bespoke Eastern luxury tailored for the modern world.",
