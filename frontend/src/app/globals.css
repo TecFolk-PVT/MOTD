@@ -1,10 +1,4 @@
 @import "tailwindcss";
-/* @import "tailwindcss/base"; */
-/* @import "tailwindcss/components"; */
-/* @import "tailwindcss/utilities"; */
-/* @import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"); */
-
-/* @custom-variant dark (&:is(.dark *)); */
 
 @font-face {
   font-family: 'TT Norms Pro';
@@ -82,10 +76,12 @@
   /* Large Desktop */
 }
 
+html,
 body {
   font-family: var(--font-body);
   background-color: var(--bg-page);
   color: var(--color-black);
+  height: 100%;
 }
 
 .nav-blur {
