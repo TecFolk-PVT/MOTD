@@ -311,39 +311,66 @@ adminRouter.patch(
   })
 );
 
+// ==========================================
+// C-05: Admin tailor oversight
+// ==========================================
+
+const tailorShopOwnerPopulate = {
+  path: 'ownerId',
+  select: 'name email approvalStatus',
+  match: { approvalStatus: 'approved' },
+};
+
+async function toggleTailorShopActive(req, res) {
+  const shop = await TailorShop.findById(req.params.shopId);
+
+  if (!shop) {
+    res.status(404).send({ success: false, message: 'Tailor shop not found' });
+    return;
+  }
+
+  shop.isActive = !shop.isActive;
+  const updatedShop = await shop.save();
+  await updatedShop.populate(tailorShopOwnerPopulate);
+
+  res.send({
+    success: true,
+    message: `Tailor shop successfully ${updatedShop.isActive ? 'activated' : 'deactivated'}`,
+    shop: updatedShop,
+  });
+}
+
+// GET /api/admin/tailors
+// Approved tailor shops with populated owner (shop-centric list for C-17 UI)
 adminRouter.get(
   '/tailors',
   expressAsyncHandler(async (req, res) => {
     const shops = await TailorShop.find({})
-      .populate({
-        path: 'ownerId',
-        select: 'name email approvalStatus',
-        match: { approvalStatus: 'approved' }
-      })
+      .populate(tailorShopOwnerPopulate)
       .sort({ createdAt: -1 });
 
-    const approvedShops = shops.filter(shop => shop.ownerId !== null);
-    
-    res.send(approvedShops);
+    const items = shops.filter((shop) => shop.ownerId !== null);
+
+    res.send({
+      success: true,
+      total: items.length,
+      items,
+    });
   })
 );
 
+// PATCH /api/admin/tailors/:shopId/toggle-active
+// Toggle shop visibility for moderation (activate / deactivate)
+adminRouter.patch(
+  '/tailors/:shopId/toggle-active',
+  expressAsyncHandler(toggleTailorShopActive)
+);
+
+// PATCH /api/admin/tailors/:shopId/deactivate
+// Backward-compatible alias — also toggles isActive
 adminRouter.patch(
   '/tailors/:shopId/deactivate',
-  expressAsyncHandler(async (req, res) => {
-    const shop = await TailorShop.findById(req.params.shopId);
-
-    if (shop) {
-      shop.isActive = !shop.isActive;
-      const updatedShop = await shop.save();
-      res.send({
-        message: `Tailor shop successfully ${updatedShop.isActive ? 'activated' : 'deactivated'}`,
-        shop: updatedShop
-      });
-    } else {
-      res.status(404).send({ message: 'Tailor shop not found' });
-    }
-  })
+  expressAsyncHandler(toggleTailorShopActive)
 );
 
 export default adminRouter;
