@@ -5,8 +5,8 @@ import ReadyMadeProduct from '../models/ReadyMadeProduct.js';
 import Fabric from '../models/Fabric.js';
 import User from '../models/User.js';
 import TailorShop from '../models/TailorShop.js';
+import CustomOrder from '../models/CustomOrder.js';
 import RetailOrder, { RETAIL_ORDER_STATUSES } from '../models/RetailOrder.js';
-
 const adminRouter = express.Router();
 
 // Define admin routes here (e.g. C-02 to C-10)
@@ -484,6 +484,75 @@ adminRouter.patch(
       });
     } else {
       res.status(404).send({ message: 'Retail order not found' });
+    }
+  })
+);
+
+adminRouter.get(
+  '/orders/custom',
+  expressAsyncHandler(async (req, res) => {
+    const orders = await CustomOrder.find({})
+      .populate('userId', 'name email')
+      .populate('tailorShopId', 'name location city')
+      .sort({ createdAt: -1 });
+    
+    res.send(orders);
+  })
+);
+
+// PATCH /api/admin/orders/custom/:id/status
+// Advance the 8-step pipeline and append logs to statusHistory[] for customer timeline tracking
+adminRouter.patch(
+  '/orders/custom/:id/status',
+  expressAsyncHandler(async (req, res) => {
+    const { status, note } = req.body;
+
+    // Strict validation for the 8 custom workflow statuses
+    const validStatuses = [
+      'pending',
+      'confirmed',
+      'fabric_pickup_scheduled',
+      'at_tailor',
+      'in_production',
+      'ready',
+      'out_for_delivery',
+      'delivered',
+      'cancelled' // Added safe fallback
+    ];
+
+    if (status && !validStatuses.includes(status)) {
+      res.status(400).send({ message: 'Invalid custom logistics status value' });
+      return;
+    }
+
+    const order = await CustomOrder.findById(req.params.id);
+
+    if (order) {
+      if (status) {
+        order.status = status;
+        
+        // Structure the history block according to schema expectations
+        const historyBlock = {
+          status: status,
+          note: typeof note === 'string' ? note.trim() : '',
+          timestamp: new Date(),
+          changedBy: req.user?._id // Logs which admin made the change
+        };
+
+        // Initialize statusHistory if missing, then push the new history log
+        if (!order.statusHistory) {
+          order.statusHistory = [];
+        }
+        order.statusHistory.push(historyBlock);
+      }
+
+      const updatedOrder = await order.save();
+      res.send({
+        message: `Custom order logistics shifted to: ${updatedOrder.status}`,
+        order: updatedOrder
+      });
+    } else {
+      res.status(404).send({ message: 'Custom tailoring order not found' });
     }
   })
 );
