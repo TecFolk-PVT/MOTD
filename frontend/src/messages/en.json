@@ -339,6 +339,21 @@
     "placeholder": "Email Address",
     "subscribe": "Subscribe"
   },
+  "Admin": {
+    "loading": "Loading admin panel...",
+    "redirecting": "Redirecting...",
+    "controlPanel": "Control Panel",
+    "nav": {
+      "dashboard": "Dashboard",
+      "readyMade": "Ready-made",
+      "fabrics": "Fabrics",
+      "tailors": "Tailors",
+      "orders": "Orders",
+      "partners": "Partners",
+      "settings": "Settings",
+      "logout": "Logout"
+    }
+  },
   "OrdersPage": {
     "title": "Your Orders",
     "description": "Track ready-made purchases and custom tailoring orders in one place.",

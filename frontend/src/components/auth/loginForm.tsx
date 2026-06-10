@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useState, FormEvent } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import logoBlack from "../../../public/PNG/Black/MOTD_Wordmark_Black.png";
 import * as images from "../../../public/images/ImageIndex";
 import { motion } from "framer-motion";
 import { getTranslation } from "@/lib/getTranslation";
 import { useAuth } from "@/context/AuthContext";
+import { getPostLoginPath } from "@/lib/auth/postLoginRedirect";
 
 export default function LoginPage() {
     const params = useParams();
@@ -19,24 +20,16 @@ export default function LoginPage() {
     const router = useRouter();
     const locale = useLocale();
     const searchParams = useSearchParams();
-    const redirectUrl = searchParams.get("redirect") || `/${locale}`;
+    const redirectUrl = searchParams.get("redirect");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const { login, user, isLoading: isAuthLoading } = useAuth();
+    const { login, isLoading: isAuthLoading } = useAuth();
 
-    // ========== Redirect authenticated users (no role check) ==========
-    useEffect(() => {
-        if (!isAuthLoading && user) {
-            router.replace("/");
-        }
-    }, [user, isAuthLoading, router]);
-
-    // Show loading spinner while checking auth or during redirect
-    if (isAuthLoading || user) {
+    if (isAuthLoading) {
         return (
             <div className="h-screen flex items-center justify-center bg-[#FFFDF9]">
                 <div className="text-center">
@@ -54,17 +47,11 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            await login(email, password);
-
-            // Simple redirect: block admin/tailor paths for safety, otherwise use redirectUrl
-            const isRedirectSafe = redirectUrl &&
-                !redirectUrl.startsWith("/admin") &&
-                !redirectUrl.startsWith("/tailor");
-            const targetUrl = isRedirectSafe ? redirectUrl : `/${locale}`;
+            const loggedInUser = await login(email, password);
+            const targetUrl = getPostLoginPath(loggedInUser, redirectUrl);
 
             setSuccess(t.login.successMessage || "Login successful! Redirecting...");
-            router.push(targetUrl);
-            router.refresh();
+            router.replace(targetUrl);
         } catch (err: any) {
             setError(err.message || "An error occurred during login.");
         } finally {

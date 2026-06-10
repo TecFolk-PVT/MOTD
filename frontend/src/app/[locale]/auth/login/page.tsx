@@ -2,29 +2,21 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/context/AuthContext";
-import LoginForm from "../../../../components/auth/loginForm"; // adjust import path
+import { getPostLoginPath } from "@/lib/auth/postLoginRedirect";
+import LoginForm from "../../../../components/auth/loginForm";
 
 export default function LoginPage() {
     const { user, isLoading } = useAuth();
     const router = useRouter();
 
-    // Redirect authenticated users based on role
     useEffect(() => {
         if (!isLoading && user) {
-            const role = user.role.toLowerCase();
-            if (role === "admin") {
-                router.replace("/admin");
-            } else if (role === "tailor") {
-                router.replace("/tailor/dashboard");
-            } else {
-                router.replace("/");
-            }
+            router.replace(getPostLoginPath(user));
         }
     }, [user, isLoading, router]);
 
-    // Show loading spinner while checking auth or during redirect
     if (isLoading || user) {
         return (
             <div className="h-screen flex items-center justify-center bg-[#FFFDF9]">
@@ -36,6 +28,5 @@ export default function LoginPage() {
         );
     }
 
-    // Only render the login form when user is definitely not logged in
     return <LoginForm />;
 }
