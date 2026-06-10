@@ -26,7 +26,26 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const { login } = useAuth();
+    const { login, user, isLoading: isAuthLoading } = useAuth();
+
+    // ========== Redirect authenticated users (no role check) ==========
+    useEffect(() => {
+        if (!isAuthLoading && user) {
+            router.replace("/");
+        }
+    }, [user, isAuthLoading, router]);
+
+    // Show loading spinner while checking auth or during redirect
+    if (isAuthLoading || user) {
+        return (
+            <div className="h-screen flex items-center justify-center bg-[#FFFDF9]">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black mx-auto mb-4"></div>
+                    <p className="text-black/60 text-sm">Redirecting...</p>
+                </div>
+            </div>
+        );
+    }
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -36,12 +55,16 @@ export default function LoginPage() {
 
         try {
             await login(email, password);
-            setSuccess(t.login.successMessage || "Login successful! Redirecting...");
 
-            setTimeout(() => {
-                router.push(redirectUrl);
-                router.refresh();
-            }, 1500);
+            // Simple redirect: block admin/tailor paths for safety, otherwise use redirectUrl
+            const isRedirectSafe = redirectUrl &&
+                !redirectUrl.startsWith("/admin") &&
+                !redirectUrl.startsWith("/tailor");
+            const targetUrl = isRedirectSafe ? redirectUrl : `/${locale}`;
+
+            setSuccess(t.login.successMessage || "Login successful! Redirecting...");
+            router.push(targetUrl);
+            router.refresh();
         } catch (err: any) {
             setError(err.message || "An error occurred during login.");
         } finally {
