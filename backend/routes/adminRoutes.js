@@ -239,12 +239,7 @@ adminRouter.delete(
   })
 );
 
-// ==========================================
-// C-04: Admin Tailor Approval API
-// ==========================================
 
-// GET /api/admin/tailors/pending
-// List tailor accounts with approvalStatus: pending
 adminRouter.get(
   '/tailors/pending',
   expressAsyncHandler(async (req, res) => {
