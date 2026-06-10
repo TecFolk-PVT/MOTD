@@ -3,6 +3,7 @@ import expressAsyncHandler from 'express-async-handler';
 import ReadyMadeProduct from '../models/ReadyMadeProduct.js';
 import Fabric from '../models/Fabric.js';
 import User from '../models/User.js';
+import TailorShop from '../models/TailorShop.js';
 
 const adminRouter = express.Router();
 
@@ -306,6 +307,41 @@ adminRouter.patch(
       });
     } else {
       res.status(404).send({ message: 'Pending tailor not found or invalid role' });
+    }
+  })
+);
+
+adminRouter.get(
+  '/tailors',
+  expressAsyncHandler(async (req, res) => {
+    const shops = await TailorShop.find({})
+      .populate({
+        path: 'ownerId',
+        select: 'name email approvalStatus',
+        match: { approvalStatus: 'approved' }
+      })
+      .sort({ createdAt: -1 });
+
+    const approvedShops = shops.filter(shop => shop.ownerId !== null);
+    
+    res.send(approvedShops);
+  })
+);
+
+adminRouter.patch(
+  '/tailors/:shopId/deactivate',
+  expressAsyncHandler(async (req, res) => {
+    const shop = await TailorShop.findById(req.params.shopId);
+
+    if (shop) {
+      shop.isActive = !shop.isActive;
+      const updatedShop = await shop.save();
+      res.send({
+        message: `Tailor shop successfully ${updatedShop.isActive ? 'activated' : 'deactivated'}`,
+        shop: updatedShop
+      });
+    } else {
+      res.status(404).send({ message: 'Tailor shop not found' });
     }
   })
 );
