@@ -1,87 +1,100 @@
 "use client";
 
 import { useState } from "react";
+import { api, getApiErrorMessage } from "@/lib/api/client";
+import { resolveMediaUrl } from "@/lib/media";
 
 type ImageUploadProps = {
     value: string;
     onChange: (value: string) => void;
-    placeholder?: string;
     error?: string;
+    uploadEndpoint?: string;
+    chooseFileLabel?: string;
+    uploadingLabel?: string;
+    uploadFailedLabel?: string;
+    removeLabel?: string;
 };
 
 export default function ImageUpload({
     value,
     onChange,
-    placeholder = "Enter image URL or upload file...",
     error,
+    uploadEndpoint = "/api/admin/uploads/ready-made",
+    chooseFileLabel = "Upload image",
+    uploadingLabel = "Uploading...",
+    uploadFailedLabel = "Upload failed",
+    removeLabel = "Remove",
 }: ImageUploadProps) {
     const [previewError, setPreviewError] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [uploadError, setUploadError] = useState<string | null>(null);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+        e.target.value = "";
         if (!file) return;
 
-        // Validate file type
         if (!file.type.startsWith("image/")) {
-            alert("Please upload an image file");
+            setUploadError("Please choose an image file.");
             return;
         }
 
         setIsUploading(true);
+        setUploadError(null);
+        setPreviewError(false);
 
-        // For now, convert to data URL (client-side preview)
-        // In production, replace with actual Cloudinary upload (P-07)
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            onChange(reader.result as string);
+        try {
+            const formData = new FormData();
+            formData.append("image", file);
+            const result = await api.postFormData<{ url: string }>(uploadEndpoint, formData);
+            onChange(result.url);
+        } catch (err) {
+            setUploadError(getApiErrorMessage(err, uploadFailedLabel));
+        } finally {
             setIsUploading(false);
-        };
-        reader.onerror = () => {
-            alert("Failed to read file");
-            setIsUploading(false);
-        };
-        reader.readAsDataURL(file);
+        }
     };
+
+    const previewSrc = value ? resolveMediaUrl(value) : "";
 
     return (
         <div className="w-full space-y-2">
-            {/* URL input + file upload row */}
-            <div className="flex flex-col sm:flex-row gap-2">
-                <input
-                    type="text"
-                    value={value}
-                    onChange={(e) => {
-                        setPreviewError(false);
-                        onChange(e.target.value);
-                    }}
-                    placeholder={placeholder}
-                    className={`flex-1 h-11 md:h-12 bg-transparent border-b text-[15px] md:text-[16px] font-body-md px-0 transition-all focus:outline-none placeholder:text-black/40 text-black ${error ? "border-red-500 focus:border-red-500" : "border-black/15 focus:border-black"
-                        }`}
-                />
+            <div className="flex flex-wrap items-center gap-3">
                 <div className="relative">
                     <input
                         type="file"
                         accept="image/*"
                         onChange={handleFileUpload}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         disabled={isUploading}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
                     />
                     <button
                         type="button"
                         disabled={isUploading}
-                        className="px-3 py-2 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition"
+                        className="px-3 py-2 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition disabled:opacity-50"
                     >
-                        {isUploading ? "Uploading..." : "Upload file"}
+                        {isUploading ? uploadingLabel : chooseFileLabel}
                     </button>
                 </div>
+                {value && (
+                    <button
+                        type="button"
+                        onClick={() => onChange("")}
+                        className="text-xs text-red-500 hover:underline"
+                    >
+                        {removeLabel}
+                    </button>
+                )}
             </div>
 
-            {/* Preview */}
-            {value && !previewError && (
+            {value && (
+                <p className="text-xs text-gray-500 break-all">{value}</p>
+            )}
+
+            {previewSrc && !previewError && (
                 <div className="mt-3">
                     <img
-                        src={value}
+                        src={previewSrc}
                         alt="preview"
                         onError={() => setPreviewError(true)}
                         className="w-24 h-24 object-cover rounded-md border border-black/10"
@@ -89,10 +102,9 @@ export default function ImageUpload({
                 </div>
             )}
 
-            {/* Error messages */}
-            {(error || previewError) && (
+            {(error || uploadError || previewError) && (
                 <p className="text-xs text-red-500">
-                    {error || "Invalid image URL"}
+                    {error || uploadError || "Could not load image preview"}
                 </p>
             )}
         </div>

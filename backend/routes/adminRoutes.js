@@ -8,6 +8,10 @@ import TailorShop from '../models/TailorShop.js';
 import CustomOrder, { CUSTOM_STATUSES } from '../models/CustomOrder.js';
 import RetailOrder, { RETAIL_ORDER_STATUSES } from '../models/RetailOrder.js';
 import PlatformSettings from '../models/PlatformSettings.js';
+import {
+  uploadReadyMadeImageMiddleware,
+  processReadyMadeImage,
+} from '../middleware/uploadReadyMadeImage.js';
 
 const adminRouter = express.Router();
 
@@ -15,6 +19,22 @@ const adminRouter = express.Router();
 adminRouter.get('/health', (req, res) => {
   res.send({ message: 'Admin API is healthy' });
 });
+
+// POST /api/admin/uploads/ready-made
+// Upload + compress image; stores file under backend/uploads and returns public path
+adminRouter.post(
+  '/uploads/ready-made',
+  uploadReadyMadeImageMiddleware,
+  expressAsyncHandler(async (req, res) => {
+    if (!req.file) {
+      res.status(400).send({ message: 'No image file provided' });
+      return;
+    }
+
+    const url = await processReadyMadeImage(req.file);
+    res.status(201).send({ success: true, url });
+  })
+);
 
 // ==========================================
 // C-02: Admin Ready-Made CRUD

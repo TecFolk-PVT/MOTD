@@ -29,7 +29,8 @@ const translations = {
         readyToWear: en.ReadyToWear,
         readyMade: readyMadeEn.readyMadeInfoCard,
         checkout: checkoutEn.checkout,
-        adminDashboard: adminDashboardEn.create_ready_made
+        adminDashboard: adminDashboardEn.create_ready_made,
+        editReadyMade: adminDashboardEn.edit_ready_made,
     },
     ar: {
         login: loginAr.login,
@@ -37,7 +38,8 @@ const translations = {
         readyToWear: ar.ReadyToWear,
         readyMade: readyMadeAr.readyMadeInfoCard,
         checkout: checkoutAr.checkout,
-        adminDashboard: adminDashboardAr.create_ready_made
+        adminDashboard: adminDashboardAr.create_ready_made,
+        editReadyMade: adminDashboardAr.edit_ready_made,
     },
 };
 

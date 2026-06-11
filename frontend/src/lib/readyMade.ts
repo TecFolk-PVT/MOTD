@@ -16,6 +16,8 @@ export interface ReadyMadeListItem {
     tagColor?: string;
 }
 
+import { resolveMediaUrl } from "@/lib/media";
+
 const LEGACY_IMAGE_PATHS: Record<string, string> = {
     "/images/fab-1.png": "/images/fab1.png",
     "/images/fab-2.png": "/images/fab2.png",
@@ -24,7 +26,8 @@ const LEGACY_IMAGE_PATHS: Record<string, string> = {
 
 export function resolveReadyMadeImage(url: string | undefined): string {
     if (!url) return "/images/fab1.png";
-    return LEGACY_IMAGE_PATHS[url] ?? url;
+    const normalized = LEGACY_IMAGE_PATHS[url] ?? url;
+    return resolveMediaUrl(normalized) || "/images/fab1.png";
 }
 
 export function getReadyMadeDisplayFields(

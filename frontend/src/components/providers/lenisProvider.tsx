@@ -1,10 +1,17 @@
 // components/providers/LenisProvider.tsx
 "use client";
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 
 export default function LenisProvider({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+
     useEffect(() => {
+        if (pathname.includes("/admin")) {
+            return;
+        }
+
         const lenis = new Lenis({
             duration: 1.2,
             easing: (t) => 1 - Math.pow(1 - t, 4),
@@ -23,7 +30,7 @@ export default function LenisProvider({ children }: { children: React.ReactNode 
             cancelAnimationFrame(rafId); // ← was missing, caused memory leak too
             lenis.destroy();
         };
-    }, []);
+    }, [pathname]);
 
     return <>{children}</>;
 }
