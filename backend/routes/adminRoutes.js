@@ -7,6 +7,8 @@ import User from '../models/User.js';
 import TailorShop from '../models/TailorShop.js';
 import CustomOrder, { CUSTOM_STATUSES } from '../models/CustomOrder.js';
 import RetailOrder, { RETAIL_ORDER_STATUSES } from '../models/RetailOrder.js';
+import PlatformSettings from '../models/PlatformSettings.js';
+
 const adminRouter = express.Router();
 
 // Define admin routes here (e.g. C-02 to C-10)
@@ -598,6 +600,74 @@ adminRouter.get(
     };
 
     res.send(dashboardSummary);
+  })
+);
+
+adminRouter.get(
+  '/settings',
+  expressAsyncHandler(async (req, res) => {
+    // If the model has a custom static method like getSettings(), we use it, otherwise fallback to findOne
+    let settings = await PlatformSettings.findOne({});
+    
+    // Safety check: If for some reason seed wasn't run, initialize a default configuration block
+    if (!settings) {
+      settings = await PlatformSettings.create({
+        defaultDeliveryFee: 35,
+        defaultTailoringFee: 150,
+        platformFee: 0,
+        vatRate: 0.05,
+        currency: 'AED'
+      });
+    }
+
+    res.send(settings);
+  })
+);
+
+// PUT /api/admin/settings
+// Updates allowed configuration fields on the single platform registry document with sanity filters
+adminRouter.put(
+  '/settings',
+  expressAsyncHandler(async (req, res) => {
+    const { defaultDeliveryFee, defaultTailoringFee, platformFee, vatRate, currency } = req.body;
+
+    // 1. Structural Number Validations
+    if (defaultDeliveryFee !== undefined && (typeof defaultDeliveryFee !== 'number' || defaultDeliveryFee < 0)) {
+      res.status(400).send({ message: 'Delivery fee must be a valid number greater than or equal to 0' });
+      return;
+    }
+    if (defaultTailoringFee !== undefined && (typeof defaultTailoringFee !== 'number' || defaultTailoringFee < 0)) {
+      res.status(400).send({ message: 'Tailoring fee must be a valid number greater than or equal to 0' });
+      return;
+    }
+    if (platformFee !== undefined && (typeof platformFee !== 'number' || platformFee < 0)) {
+      res.status(400).send({ message: 'Platform fee must be a valid number greater than or equal to 0' });
+      return;
+    }
+    if (vatRate !== undefined && (typeof vatRate !== 'number' || vatRate < 0 || vatRate > 1)) {
+      res.status(400).send({ message: 'VAT rate must be a valid decimal fractional boundary between 0 and 1' });
+      return;
+    }
+
+    // 2. Fetch the current singleton record
+    let settings = await PlatformSettings.findOne({});
+    if (!settings) {
+      res.status(404).send({ message: 'Platform settings base blueprint document not found' });
+      return;
+    }
+
+    // 3. Re-assign changed attributes smoothly
+    if (defaultDeliveryFee !== undefined) settings.defaultDeliveryFee = defaultDeliveryFee;
+    if (defaultTailoringFee !== undefined) settings.defaultTailoringFee = defaultTailoringFee;
+    if (platformFee !== undefined) settings.platformFee = platformFee;
+    if (vatRate !== undefined) settings.vatRate = vatRate;
+    if (currency !== undefined) settings.currency = currency; // Fixed AED standard in MVP layout
+
+    const updatedSettings = await settings.save();
+    res.send({
+      message: 'Global platform configuration variables locked and synchronized successfully',
+      settings: updatedSettings
+    });
   })
 );
 
