@@ -25,3 +25,7 @@ Thumbs.db
 
 # Archive (reference only)
 archive/
+
+# Uploaded media (keep folder, ignore files)
+backend/uploads/**
+!backend/uploads/.gitkeep

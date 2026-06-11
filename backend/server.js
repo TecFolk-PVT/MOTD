@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { env } from './config/env.js';
+import { ensureUploadDirs, UPLOADS_ROOT } from './utils/uploads.js';
 import userRouter from './routes/userRoutes.js';
 import readyMadeRoutes from './routes/readyMadeRoutes.js';
 import fabricRoutes from './routes/fabricRoutes.js';
@@ -13,6 +14,8 @@ import { isAuth, isAdmin, isApprovedTailor } from './middleware/auth.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
+
+ensureUploadDirs();
 
 mongoose
   .connect(env.mongodbUri)
@@ -28,8 +31,9 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+app.use('/uploads', express.static(UPLOADS_ROOT));
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'motd-backend' });

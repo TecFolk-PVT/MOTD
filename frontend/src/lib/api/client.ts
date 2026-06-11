@@ -59,7 +59,11 @@ class ApiClient {
 
             // If response is not OK, throw an error with the message from the server
             if (!response.ok) {
-                const errorMessage = data?.message || data?.error || this.getDefaultErrorMessage(response.status);
+                const errorMessage =
+                    (typeof data === 'string' && data.trim()) ||
+                    data?.message ||
+                    data?.error ||
+                    this.getDefaultErrorMessage(response.status);
                 const error: ApiError = {
                     status: response.status,
                     message: errorMessage,
@@ -90,6 +94,7 @@ class ApiClient {
             case 403: return 'Forbidden. You don\'t have permission.';
             case 404: return 'Not found. The requested resource doesn\'t exist.';
             case 409: return 'Conflict. This resource already exists.';
+            case 413: return 'Request too large. Use image URLs instead of file uploads.';
             case 422: return 'Validation failed. Please check your data.';
             case 429: return 'Too many requests. Please try again later.';
             case 500: return 'Internal server error. Please try again later.';
@@ -107,6 +112,55 @@ class ApiClient {
             headers,
             body: body ? JSON.stringify(body) : undefined,
         });
+    }
+
+    async postFormData<T = any>(endpoint: string, formData: FormData): Promise<T> {
+        const url = `${this.baseUrl}${endpoint}`;
+        const headers: Record<string, string> = {};
+        const token = getToken();
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers,
+                body: formData,
+            });
+
+            let data: unknown;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                data = await response.text();
+            }
+
+            if (!response.ok) {
+                const errorMessage =
+                    (typeof data === 'string' && data.trim()) ||
+                    (data as { message?: string })?.message ||
+                    (data as { error?: string })?.error ||
+                    this.getDefaultErrorMessage(response.status);
+                throw {
+                    status: response.status,
+                    message: errorMessage,
+                    data,
+                } as ApiError;
+            }
+
+            return data as T;
+        } catch (error) {
+            if ((error as ApiError).status) {
+                throw error;
+            }
+
+            throw {
+                status: 0,
+                message: error instanceof Error ? error.message : 'Network error or server is unreachable',
+            } as ApiError;
+        }
     }
 
     async put<T = any>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
@@ -132,3 +186,12 @@ class ApiClient {
 
 export const api = new ApiClient();
 export type { ApiError };
+
+export function getApiErrorMessage(error: unknown, fallback: string): string {
+    if (error && typeof error === "object" && "message" in error) {
+        const message = (error as ApiError).message;
+        if (typeof message === "string" && message.trim()) return message;
+    }
+    if (error instanceof Error && error.message.trim()) return error.message;
+    return fallback;
+}

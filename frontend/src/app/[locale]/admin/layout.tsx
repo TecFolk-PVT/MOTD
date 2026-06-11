@@ -168,7 +168,7 @@ export default function AdminLayout({
             {/* Main Content Area */}
             <main
                 className={`
-                    min-h-screen overflow-y-auto bg-gray-100 text-black p-4 xs:p-6 sm:p-8 md:p-10
+                    min-h-screen bg-gray-100 text-black p-4 xs:p-6 sm:p-8 md:p-10 pb-16
                     transition-all duration-300
                     lg:ml-72
                 `}
