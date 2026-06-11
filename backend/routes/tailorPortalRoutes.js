@@ -1,6 +1,7 @@
 import express from 'express';
 import expressAsyncHandler from 'express-async-handler';
 import TailorShop from '../models/TailorShop.js';
+import tailorDesignRoutes from './tailorDesignRoutes.js';
 
 const tailorPortalRouter = express.Router();
 
@@ -70,7 +71,9 @@ const validateShopPayload = (data, { requireCore = false } = {}) => {
 
 const findOwnShop = (ownerId) => TailorShop.findOne({ ownerId });
 
-// Confirms isAuth + isApprovedTailor chain; B-28 adds design routes
+// Confirms isAuth + isApprovedTailor chain
+tailorPortalRouter.use('/designs', tailorDesignRoutes);
+
 tailorPortalRouter.get(
   '/status',
   expressAsyncHandler(async (req, res) => {
