@@ -22,6 +22,7 @@ interface ReadyMadeItem {
         _id: string;
         orderNumber?: string;
     };
+    countInStock: number;
     status: "available" | "sold";
     createdAt: string;
     updatedAt: string;
@@ -61,23 +62,22 @@ export default function AdminReadyMadePage() {
             const size = item.size?.toLowerCase() || '';
             const reason = item.returnReason?.toLowerCase() || '';
             const orderNumber = item.customOrderId?.orderNumber?.toLowerCase() || '';
-            const status = item.status?.toLowerCase() || '';
+            const status = item.countInStock > 0 ? 'available' : 'sold';
             return name.includes(term) || size.includes(term) || reason.includes(term) || orderNumber.includes(term) || status.includes(term);
         });
     }, [items, searchTerm]);
 
-    // Normalize status to lowercase for comparison
-    const normalizeStatus = (status: string) => status?.toLowerCase().trim();
-    const availableItems = items.filter(i => normalizeStatus(i.status) === 'available').length;
-    const soldItems = items.filter(i => normalizeStatus(i.status) === 'sold').length;
+    // Available items = countInStock > 0
+    const availableItems = items.filter(i => i.countInStock > 0).length;
+    const soldItems = items.filter(i => i.countInStock === 0).length;
 
     const StatusBadge = ({ status }: { status: string }) => {
         const normalized = status?.toLowerCase().trim();
         const isAvailable = normalized === 'available';
         return (
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${isAvailable
-                    ? 'bg-white text-black border border-black/30'
-                    : 'bg-gray-100 text-gray-500 border border-gray-200'
+                ? 'bg-white text-black border border-black/30'
+                : 'bg-gray-100 text-gray-500 border border-gray-200'
                 }`}>
                 {isAvailable ? 'Available' : 'Sold'}
             </span>
@@ -227,13 +227,10 @@ export default function AdminReadyMadePage() {
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.size || '—'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.returnReason || '—'}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                                            {item.customOrderId
-                                                ? `#${item.customOrderId.orderNumber || item.customOrderId._id.slice(-6)}`
-                                                : <span className="text-gray-300">—</span>
-                                            }
+                                            <span className="text-gray-500">#{item._id.slice(-8)}</span>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <StatusBadge status={item.status} />
+                                            <StatusBadge status={item.countInStock > 0 ? 'available' : 'sold'} />
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-right">
                                             <Link

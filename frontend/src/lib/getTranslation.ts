@@ -18,6 +18,10 @@ import readyMadeAr from "@/messages/readyMade.ar.json";
 import checkoutEn from "@/messages/checkout.en.json";
 import checkoutAr from "@/messages/checkout.ar.json";
 
+// for translation of admin dashoard
+import adminDashboardEn from "@/messages/adminDashboard.en.json";
+import adminDashboardAr from "@/messages/adminDashboard.ar.json";
+
 const translations = {
     en: {
         login: loginEn.login,
@@ -25,13 +29,15 @@ const translations = {
         readyToWear: en.ReadyToWear,
         readyMade: readyMadeEn.readyMadeInfoCard,
         checkout: checkoutEn.checkout,
+        adminDashboard: adminDashboardEn.create_ready_made
     },
     ar: {
         login: loginAr.login,
         signup: signupAr.signup,
         readyToWear: ar.ReadyToWear,
         readyMade: readyMadeAr.readyMadeInfoCard,
-        checkout: checkoutAr.checkout
+        checkout: checkoutAr.checkout,
+        adminDashboard: adminDashboardAr.create_ready_made
     },
 };
 
