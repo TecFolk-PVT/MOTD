@@ -46,8 +46,15 @@ export default function ImageUpload({
         try {
             const formData = new FormData();
             formData.append("image", file);
-            const result = await api.postFormData<{ url: string }>(uploadEndpoint, formData);
-            onChange(result.url);
+            const result = await api.postFormData<{ success?: boolean; url?: string }>(
+                uploadEndpoint,
+                formData,
+            );
+            const uploadedUrl = result.url?.trim();
+            if (!uploadedUrl) {
+                throw new Error("Upload succeeded but no image URL was returned.");
+            }
+            onChange(uploadedUrl);
         } catch (err) {
             setUploadError(getApiErrorMessage(err, uploadFailedLabel));
         } finally {

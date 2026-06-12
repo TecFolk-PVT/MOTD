@@ -1,6 +1,7 @@
 import type { Locale } from "@/i18n/routing";
 import { formatCurrency } from "@/lib/format";
 import { resolveFabricImage } from "@/lib/fabrics";
+import { resolveMediaUrl } from "@/lib/media";
 
 export interface TailorShopListItem {
     _id: string;
@@ -37,7 +38,8 @@ export type DesignCategory =
     | "jalabiya"
     | "abaya"
     | "bisht"
-    | "mukhawar";
+    | "mukhawar"
+    | "kaftan";
 
 export interface TailorDesignListItem {
     _id: string;
@@ -93,7 +95,10 @@ export function formatTailorRating(rating = 0): string {
 }
 
 export function resolveDesignImage(url: string | undefined): string {
-    return resolveFabricImage(url);
+    const raw = url?.trim();
+    if (!raw) return resolveFabricImage(undefined);
+    const resolved = resolveMediaUrl(raw);
+    return resolved || resolveFabricImage(undefined);
 }
 
 export function getDesignDisplayFields(
@@ -122,6 +127,7 @@ export function formatDesignCategory(category: string, locale: Locale): string {
         abaya: { en: "Abaya", ar: "عباية" },
         bisht: { en: "Bisht", ar: "بشت" },
         mukhawar: { en: "Mukhawar", ar: "مخاوَر" },
+        kaftan: { en: "Kaftan", ar: "قفطان" },
     };
 
     const entry = labels[category as DesignCategory];

@@ -2,7 +2,11 @@ import multer from 'multer';
 import sharp from 'sharp';
 import path from 'path';
 import { randomBytes } from 'crypto';
-import { READY_MADE_UPLOAD_DIR, toPublicUploadPath } from '../utils/uploads.js';
+import {
+  READY_MADE_UPLOAD_DIR,
+  TAILOR_DESIGN_UPLOAD_DIR,
+  toPublicUploadPath,
+} from '../utils/uploads.js';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -50,4 +54,22 @@ export async function processReadyMadeImage(file) {
     .toFile(outputPath);
 
   return toPublicUploadPath('ready-made', filename);
+}
+
+export async function processTailorDesignImage(file) {
+  const filename = `tailor-design-${Date.now()}-${randomBytes(4).toString('hex')}.webp`;
+  const outputPath = path.join(TAILOR_DESIGN_UPLOAD_DIR, filename);
+
+  await sharp(file.buffer)
+    .rotate()
+    .resize({
+      width: 1200,
+      height: 1200,
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 82 })
+    .toFile(outputPath);
+
+  return toPublicUploadPath('tailor-design', filename);
 }

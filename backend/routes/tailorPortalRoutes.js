@@ -2,6 +2,10 @@ import express from 'express';
 import expressAsyncHandler from 'express-async-handler';
 import TailorShop from '../models/TailorShop.js';
 import tailorDesignRoutes from './tailorDesignRoutes.js';
+import {
+  uploadReadyMadeImageMiddleware,
+  processTailorDesignImage,
+} from '../middleware/uploadReadyMadeImage.js';
 
 const tailorPortalRouter = express.Router();
 
@@ -70,6 +74,21 @@ const validateShopPayload = (data, { requireCore = false } = {}) => {
 };
 
 const findOwnShop = (ownerId) => TailorShop.findOne({ ownerId });
+
+// POST /api/tailor/uploads/design-image
+tailorPortalRouter.post(
+  '/uploads/design-image',
+  uploadReadyMadeImageMiddleware,
+  expressAsyncHandler(async (req, res) => {
+    if (!req.file) {
+      res.status(400).json({ message: 'No image file provided' });
+      return;
+    }
+
+    const url = await processTailorDesignImage(req.file);
+    res.status(201).json({ success: true, url });
+  })
+);
 
 // Confirms isAuth + isApprovedTailor chain
 tailorPortalRouter.use('/designs', tailorDesignRoutes);
