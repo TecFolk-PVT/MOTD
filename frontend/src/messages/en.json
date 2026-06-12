@@ -447,6 +447,56 @@
         "jalabiya": "Jalabiya",
         "kaftan": "Kaftan",
         "thob": "Thob"
+    "shop": {
+      "loading": "Loading shop profile...",
+      "eyebrow": "Shop Profile",
+      "createTitle": "Create your shop",
+      "editTitle": "Edit shop profile",
+      "createDescription": "Set up your public tailor shop. Name and slug are required; you can add descriptions, images, and contact details.",
+      "editDescription": "Update how customers see your shop on MOTD.",
+      "viewPublicProfile": "View public shop page",
+      "createCta": "Create shop",
+      "saveCta": "Save changes",
+      "saving": "Saving...",
+      "backToDashboard": "Back to dashboard",
+      "successCreated": "Your shop profile was created successfully.",
+      "successUpdated": "Your shop profile was updated successfully.",
+      "imageSaved": "Image saved to your shop profile.",
+      "imageRemoved": "Image removed successfully.",
+      "sections": {
+        "identity": "Shop identity",
+        "about": "About your shop",
+        "media": "Images",
+        "contact": "Location & contact"
+      },
+      "fields": {
+        "name": "Shop name (English)",
+        "nameAr": "Shop name (Arabic)",
+        "slug": "URL slug",
+        "description": "Description (English)",
+        "descriptionAr": "Description (Arabic)",
+        "logo": "Shop logo",
+        "coverImage": "Cover image",
+        "city": "City",
+        "location": "Address / area",
+        "phone": "Phone"
+      },
+      "placeholders": {
+        "name": "e.g. Ayesha Al Riaz Atelier",
+        "nameAr": "مثال: أتيليه عائشة الرِياض",
+        "slug": "e.g. ayesha-al-riaz",
+        "description": "Tell customers about your craft and specialties...",
+        "descriptionAr": "عرّف العملاء بحرفتك وتخصصاتك...",
+        "logo": "/images/tailor-1.png",
+        "coverImage": "/images/tailor-1.png",
+        "city": "Dubai",
+        "location": "Al Fahidi Historical District",
+        "phone": "+971 4 353 2100"
+      },
+      "hints": {
+        "slug": "Lowercase letters, numbers, and hyphens only. Used in your public URL.",
+        "logoUpload": "Square shop mark. Used when no cover image is set.",
+        "coverUpload": "Wide hero photo — shown on the homepage, tailor listing, and your public profile."
       },
       "upload": {
         "chooseFile": "Choose image",
@@ -476,6 +526,28 @@
     "placeholders": {
       "shopTitle": "Shop Profile",
       "shopDescription": "Full shop profile editing arrives in the next sprint task (B-31)."
+        "nameRequired": "English shop name is required.",
+        "nameArRequired": "Arabic shop name is required.",
+        "slugRequired": "URL slug is required.",
+        "slugInvalid": "Slug must use lowercase letters, numbers, and hyphens only."
+      },
+      "errors": {
+        "loadFailed": "Could not load your shop profile.",
+        "createFailed": "Could not create your shop profile.",
+        "updateFailed": "Could not update your shop profile.",
+        "conflict": "This shop slug is already in use. Choose another slug."
+      },
+      "meta": {
+        "rating": "Rating",
+        "reviews": "Reviews",
+        "status": "Listing status",
+        "active": "Active",
+        "inactive": "Inactive"
+      }
+    },
+    "placeholders": {
+      "designsTitle": "Designs",
+      "designsDescription": "Design management UI arrives in the next sprint task (B-32)."
     }
   },
   "community": {

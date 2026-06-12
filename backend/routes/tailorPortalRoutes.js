@@ -6,6 +6,10 @@ import {
   uploadReadyMadeImageMiddleware,
   processTailorDesignImage,
 } from '../middleware/uploadReadyMadeImage.js';
+  uploadSingleImageMiddleware,
+  processTailorShopImage,
+} from '../middleware/uploadReadyMadeImage.js';
+import { deleteTailorShopUpload } from '../utils/uploads.js';
 
 const tailorPortalRouter = express.Router();
 
@@ -92,6 +96,23 @@ tailorPortalRouter.post(
 
 // Confirms isAuth + isApprovedTailor chain
 tailorPortalRouter.use('/designs', tailorDesignRoutes);
+
+// POST /api/tailor/uploads/shop-image?variant=logo|cover
+tailorPortalRouter.post(
+  '/uploads/shop-image',
+  uploadSingleImageMiddleware,
+  expressAsyncHandler(async (req, res) => {
+    if (!req.file) {
+      res.status(400).json({ message: 'No image file provided' });
+      return;
+    }
+
+    const variant = req.query.variant === 'logo' ? 'logo' : 'cover';
+    const url = await processTailorShopImage(req.file, { variant });
+
+    res.status(201).json({ success: true, url });
+  })
+);
 
 tailorPortalRouter.get(
   '/status',
@@ -216,8 +237,22 @@ tailorPortalRouter.put(
       }
     }
 
+    const previousLogo = shop.logo;
+    const previousCover = shop.coverImage;
+
     Object.assign(shop, data);
     const updatedShop = await shop.save();
+
+    if (data.logo !== undefined && previousLogo && previousLogo !== updatedShop.logo) {
+      deleteTailorShopUpload(previousLogo);
+    }
+    if (
+      data.coverImage !== undefined &&
+      previousCover &&
+      previousCover !== updatedShop.coverImage
+    ) {
+      deleteTailorShopUpload(previousCover);
+    }
 
     res.json({
       success: true,
