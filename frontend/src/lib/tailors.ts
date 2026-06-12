@@ -1,6 +1,7 @@
 import type { Locale } from "@/i18n/routing";
 import { formatCurrency } from "@/lib/format";
 import { resolveFabricImage } from "@/lib/fabrics";
+import { resolveMediaUrl } from "@/lib/media";
 
 export interface TailorShopListItem {
     _id: string;
@@ -56,11 +57,34 @@ export interface TailorDesignListItem {
 
 const DEFAULT_TAILOR_IMAGE = "/images/tailor-1.png";
 
+function isUploadedImage(path?: string): boolean {
+    return !!path?.trim().startsWith("/uploads/");
+}
+
+/**
+ * Pick the best shop image for cards/heroes.
+ * Custom uploads beat seeded /images/* defaults so a new logo is not hidden by an old cover path.
+ */
 export function resolveTailorImage(
     logo?: string,
     coverImage?: string,
 ): string {
-    return logo?.trim() || coverImage?.trim() || DEFAULT_TAILOR_IMAGE;
+    const cover = coverImage?.trim() || "";
+    const logoPath = logo?.trim() || "";
+
+    let raw = DEFAULT_TAILOR_IMAGE;
+
+    if (isUploadedImage(cover) && isUploadedImage(logoPath)) {
+        raw = cover;
+    } else if (isUploadedImage(cover)) {
+        raw = cover;
+    } else if (isUploadedImage(logoPath)) {
+        raw = logoPath;
+    } else if (cover || logoPath) {
+        raw = cover || logoPath;
+    }
+
+    return resolveMediaUrl(raw) || DEFAULT_TAILOR_IMAGE;
 }
 
 export function getTailorDisplayFields(
