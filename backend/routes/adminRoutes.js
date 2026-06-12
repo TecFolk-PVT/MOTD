@@ -8,6 +8,7 @@ import TailorShop from '../models/TailorShop.js';
 import CustomOrder, { CUSTOM_STATUSES } from '../models/CustomOrder.js';
 import RetailOrder, { RETAIL_ORDER_STATUSES } from '../models/RetailOrder.js';
 import PlatformSettings from '../models/PlatformSettings.js';
+import bcrypt from 'bcryptjs';
 import {
   uploadReadyMadeImageMiddleware,
   processReadyMadeImage,
@@ -688,6 +689,106 @@ adminRouter.put(
       message: 'Global platform configuration variables locked and synchronized successfully',
       settings: updatedSettings
     });
+  })
+);
+
+adminRouter.get(
+  '/users',
+  expressAsyncHandler(async (req, res) => {
+    const partners = await User.find({ role: 'fabric_store' })
+      .select('-password')
+      .sort({ createdAt: -1 });
+    
+    res.send(partners);
+  })
+);
+
+// POST /api/admin/users
+// Create a new fabric store partner (Forces role: fabric_store and approvalStatus: approved)
+adminRouter.post(
+  '/users',
+  expressAsyncHandler(async (req, res) => {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      res.status(400).send({ message: 'Name, email, and password are required' });
+      return;
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      res.status(400).send({ message: 'A partner or user with this email already exists' });
+      return;
+    }
+
+    // Force strict parameters according to architectural specifications
+    const BCRYPT_ROUNDS = 10;
+    const newPartner = new User({
+      name: name.trim(),
+      email: normalizedEmail,
+      password: bcrypt.hashSync(password, BCRYPT_ROUNDS),
+      role: 'fabric_store', // Forced security role boundary
+      approvalStatus: 'approved' // Automatically bypasses the pending queue
+    });
+
+    const createdPartner = await newPartner.save();
+    
+    // Return scrubbed data response
+    res.status(201).send({
+      _id: createdPartner._id,
+      name: createdPartner.name,
+      email: createdPartner.email,
+      role: createdPartner.role,
+      approvalStatus: createdPartner.approvalStatus
+    });
+  })
+);
+
+// PUT /api/admin/users/:id
+// Update partner account fields (Strictly scoped to fabric_store role only)
+adminRouter.put(
+  '/users/:id',
+  expressAsyncHandler(async (req, res) => {
+    const partner = await User.findById(req.params.id);
+
+    // Dynamic role containment validation guard
+    if (partner && partner.role === 'fabric_store') {
+      if (req.body.name) partner.name = req.body.name.trim();
+      if (req.body.email) partner.email = req.body.email.toLowerCase().trim();
+      
+      if (req.body.password) {
+        const BCRYPT_ROUNDS = 10;
+        partner.password = bcrypt.hashSync(req.body.password, BCRYPT_ROUNDS);
+      }
+
+      const updatedPartner = await partner.save();
+      res.send({
+        _id: updatedPartner._id,
+        name: updatedPartner.name,
+        email: updatedPartner.email,
+        role: updatedPartner.role,
+        approvalStatus: updatedPartner.approvalStatus
+      });
+    } else {
+      res.status(404).send({ message: 'Fabric store partner not found or action unauthorized for this user scope' });
+    }
+  })
+);
+
+// DELETE /api/admin/users/:id
+// Remove partner registry from the system safely
+adminRouter.delete(
+  '/users/:id',
+  expressAsyncHandler(async (req, res) => {
+    const partner = await User.findById(req.params.id);
+
+    if (partner && partner.role === 'fabric_store') {
+      await partner.deleteOne();
+      res.send({ message: 'Fabric store partner successfully purged from catalog registry' });
+    } else {
+      res.status(404).send({ message: 'Fabric store partner not found or action unauthorized for this user scope' });
+    }
   })
 );
 
