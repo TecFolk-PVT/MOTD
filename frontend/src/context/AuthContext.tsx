@@ -89,57 +89,40 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     // SIGN IN
     const login = async (email: string, password: string): Promise<User> => {
-        setIsLoading(true);
-        try {
-            const response = await api.post<ApiUserResponse>('/api/users/signin', {
-                email,
-                password,
-            });
-            saveToken(response.token!);
-            const mappedUser = mapApiUser(response);
-            setUser(mappedUser);
-            return mappedUser;  // 👈 return user for immediate use
-        } finally {
-            setIsLoading(false);
-        }
+        const response = await api.post<ApiUserResponse>('/api/users/signin', {
+            email,
+            password,
+        });
+        saveToken(response.token!);
+        const mappedUser = mapApiUser(response);
+        setUser(mappedUser);
+        return mappedUser;
     };
 
 
     // SIGN UP
     const register = async (name: string, email: string, password: string) => {
-        setIsLoading(true);
-        try {
-            const response = await api.post<ApiUserResponse>('/api/users/signup', {
-                name,
-                email,
-                password,
-            });
+        const response = await api.post<ApiUserResponse>('/api/users/signup', {
+            name,
+            email,
+            password,
+        });
 
-            saveToken(response.token!);
-            setUser(mapApiUser(response));
-        } catch (error) {
-            throw error;
-        } finally {
-            setIsLoading(false);
-        }
+        saveToken(response.token!);
+        setUser(mapApiUser(response));
     };
 
     const registerTailor = async (name: string, email: string, password: string) => {
-        setIsLoading(true);
-        try {
-            const response = await api.post<ApiUserResponse>('/api/users/signup/tailor', {
-                name,
-                email,
-                password,
-            });
+        const response = await api.post<ApiUserResponse>('/api/users/signup/tailor', {
+            name,
+            email,
+            password,
+        });
 
-            saveToken(response.token!);
-            const mappedUser = mapApiUser(response);
-            setUser(mappedUser);
-            return mappedUser;
-        } finally {
-            setIsLoading(false);
-        }
+        saveToken(response.token!);
+        const mappedUser = mapApiUser(response);
+        setUser(mappedUser);
+        return mappedUser;
     };
 
     const logout = () => {

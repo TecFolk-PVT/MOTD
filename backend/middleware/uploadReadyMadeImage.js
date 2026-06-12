@@ -40,6 +40,8 @@ export function uploadSingleImageMiddleware(req, res, next) {
   });
 }
 
+export const uploadReadyMadeImageMiddleware = uploadSingleImageMiddleware;
+
 export async function processReadyMadeImage(file) {
   const filename = `ready-made-${Date.now()}-${randomBytes(4).toString('hex')}.webp`;
   const outputPath = path.join(READY_MADE_UPLOAD_DIR, filename);
@@ -61,7 +63,20 @@ export async function processReadyMadeImage(file) {
 export async function processTailorDesignImage(file) {
   const filename = `tailor-design-${Date.now()}-${randomBytes(4).toString('hex')}.webp`;
   const outputPath = path.join(TAILOR_DESIGN_UPLOAD_DIR, filename);
-export const uploadReadyMadeImageMiddleware = uploadSingleImageMiddleware;
+
+  await sharp(file.buffer)
+    .rotate()
+    .resize({
+      width: 1200,
+      height: 1200,
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 82 })
+    .toFile(outputPath);
+
+  return toPublicUploadPath('tailor-design', filename);
+}
 
 export async function processTailorShopImage(file, { variant = 'cover' } = {}) {
   const isLogo = variant === 'logo';
@@ -71,8 +86,6 @@ export async function processTailorShopImage(file, { variant = 'cover' } = {}) {
   await sharp(file.buffer)
     .rotate()
     .resize({
-      width: 1200,
-      height: 1200,
       width: isLogo ? 1200 : 1920,
       height: isLogo ? 1200 : 1080,
       fit: 'inside',
@@ -81,6 +94,5 @@ export async function processTailorShopImage(file, { variant = 'cover' } = {}) {
     .webp({ quality: 82 })
     .toFile(outputPath);
 
-  return toPublicUploadPath('tailor-design', filename);
   return toPublicUploadPath('tailor-shop', filename);
 }

@@ -4,9 +4,8 @@ import TailorShop from '../models/TailorShop.js';
 import tailorDesignRoutes from './tailorDesignRoutes.js';
 import {
   uploadReadyMadeImageMiddleware,
-  processTailorDesignImage,
-} from '../middleware/uploadReadyMadeImage.js';
   uploadSingleImageMiddleware,
+  processTailorDesignImage,
   processTailorShopImage,
 } from '../middleware/uploadReadyMadeImage.js';
 import { deleteTailorShopUpload } from '../utils/uploads.js';

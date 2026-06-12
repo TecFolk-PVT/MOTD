@@ -470,6 +470,83 @@
       "designsCardEyebrow": "الخطوة ٢",
       "designsCardTitle": "إدارة تصاميمك"
     },
+    "shop": {
+      "loading": "جاري تحميل ملف المتجر...",
+      "eyebrow": "ملف المتجر",
+      "createTitle": "إنشاء متجرك",
+      "editTitle": "تعديل ملف المتجر",
+      "createDescription": "أعد متجرك العام. الاسم والرابط مطلوبان؛ يمكنك إضافة الوصف والصور وبيانات التواصل.",
+      "editDescription": "حدّث كيف يرى العملاء متجرك على MOTD.",
+      "viewPublicProfile": "عرض صفحة المتجر العامة",
+      "createCta": "إنشاء المتجر",
+      "saveCta": "حفظ التغييرات",
+      "saving": "جاري الحفظ...",
+      "backToDashboard": "العودة للوحة التحكم",
+      "successCreated": "تم إنشاء ملف المتجر بنجاح.",
+      "successUpdated": "تم تحديث ملف المتجر بنجاح.",
+      "imageSaved": "تم حفظ الصورة في ملف المتجر.",
+      "imageRemoved": "تمت إزالة الصورة بنجاح.",
+      "sections": {
+        "identity": "هوية المتجر",
+        "about": "عن متجرك",
+        "media": "الصور",
+        "contact": "الموقع والتواصل"
+      },
+      "fields": {
+        "name": "اسم المتجر (إنجليزي)",
+        "nameAr": "اسم المتجر (عربي)",
+        "slug": "رابط URL",
+        "description": "الوصف (إنجليزي)",
+        "descriptionAr": "الوصف (عربي)",
+        "logo": "شعار المتجر",
+        "coverImage": "صورة الغلاف",
+        "city": "المدينة",
+        "location": "العنوان / المنطقة",
+        "phone": "الهاتف"
+      },
+      "placeholders": {
+        "name": "مثال: Ayesha Al Riaz Atelier",
+        "nameAr": "مثال: أتيليه عائشة الرِياض",
+        "slug": "مثال: ayesha-al-riaz",
+        "description": "عرّف العملاء بحرفتك وتخصصاتك...",
+        "descriptionAr": "عرّف العملاء بحرفتك وتخصصاتك...",
+        "logo": "/images/tailor-1.png",
+        "coverImage": "/images/tailor-1.png",
+        "city": "دبي",
+        "location": "حي الفهيدي التاريخي",
+        "phone": "+971 4 353 2100"
+      },
+      "hints": {
+        "slug": "أحرف إنجليزية صغيرة وأرقام وشرطات فقط. يُستخدم في رابط متجرك العام.",
+        "logoUpload": "شعار مربّع للمتجر. يُستخدم عند عدم وجود صورة غلاف.",
+        "coverUpload": "صورة عريضة للعرض — تظهر في الصفحة الرئيسية وقائمة الخياطين وملفك العام."
+      },
+      "upload": {
+        "chooseFile": "اختر صورة",
+        "uploading": "جاري الرفع...",
+        "failed": "فشل الرفع",
+        "remove": "إزالة"
+      },
+      "validation": {
+        "nameRequired": "اسم المتجر بالإنجليزية مطلوب.",
+        "nameArRequired": "اسم المتجر بالعربية مطلوب.",
+        "slugRequired": "رابط URL مطلوب.",
+        "slugInvalid": "يجب أن يحتوي الرابط على أحرف إنجليزية صغيرة وأرقام وشرطات فقط."
+      },
+      "errors": {
+        "loadFailed": "تعذّر تحميل ملف المتجر.",
+        "createFailed": "تعذّر إنشاء ملف المتجر.",
+        "updateFailed": "تعذّر تحديث ملف المتجر.",
+        "conflict": "رابط المتجر مستخدم بالفعل. اختر رابطاً آخر."
+      },
+      "meta": {
+        "rating": "التقييم",
+        "reviews": "المراجعات",
+        "status": "حالة الظهور",
+        "active": "نشط",
+        "inactive": "غير نشط"
+      }
+    },
     "designs": {
       "loading": "جاري تحميل التصاميم...",
       "eyebrow": "التصاميم",
@@ -534,56 +611,6 @@
         "jalabiya": "جلابية",
         "kaftan": "قفطان",
         "thob": "ثوب"
-    "shop": {
-      "loading": "جاري تحميل ملف المتجر...",
-      "eyebrow": "ملف المتجر",
-      "createTitle": "إنشاء متجرك",
-      "editTitle": "تعديل ملف المتجر",
-      "createDescription": "أعد متجرك العام. الاسم والرابط مطلوبان؛ يمكنك إضافة الوصف والصور وبيانات التواصل.",
-      "editDescription": "حدّث كيف يرى العملاء متجرك على MOTD.",
-      "viewPublicProfile": "عرض صفحة المتجر العامة",
-      "createCta": "إنشاء المتجر",
-      "saveCta": "حفظ التغييرات",
-      "saving": "جاري الحفظ...",
-      "backToDashboard": "العودة للوحة التحكم",
-      "successCreated": "تم إنشاء ملف المتجر بنجاح.",
-      "successUpdated": "تم تحديث ملف المتجر بنجاح.",
-      "imageSaved": "تم حفظ الصورة في ملف المتجر.",
-      "imageRemoved": "تمت إزالة الصورة بنجاح.",
-      "sections": {
-        "identity": "هوية المتجر",
-        "about": "عن متجرك",
-        "media": "الصور",
-        "contact": "الموقع والتواصل"
-      },
-      "fields": {
-        "name": "اسم المتجر (إنجليزي)",
-        "nameAr": "اسم المتجر (عربي)",
-        "slug": "رابط URL",
-        "description": "الوصف (إنجليزي)",
-        "descriptionAr": "الوصف (عربي)",
-        "logo": "شعار المتجر",
-        "coverImage": "صورة الغلاف",
-        "city": "المدينة",
-        "location": "العنوان / المنطقة",
-        "phone": "الهاتف"
-      },
-      "placeholders": {
-        "name": "مثال: Ayesha Al Riaz Atelier",
-        "nameAr": "مثال: أتيليه عائشة الرِياض",
-        "slug": "مثال: ayesha-al-riaz",
-        "description": "عرّف العملاء بحرفتك وتخصصاتك...",
-        "descriptionAr": "عرّف العملاء بحرفتك وتخصصاتك...",
-        "logo": "/images/tailor-1.png",
-        "coverImage": "/images/tailor-1.png",
-        "city": "دبي",
-        "location": "حي الفهيدي التاريخي",
-        "phone": "+971 4 353 2100"
-      },
-      "hints": {
-        "slug": "أحرف إنجليزية صغيرة وأرقام وشرطات فقط. يُستخدم في رابط متجرك العام.",
-        "logoUpload": "شعار مربّع للمتجر. يُستخدم عند عدم وجود صورة غلاف.",
-        "coverUpload": "صورة عريضة للعرض — تظهر في الصفحة الرئيسية وقائمة الخياطين وملفك العام."
       },
       "upload": {
         "chooseFile": "اختر صورة",
@@ -609,32 +636,6 @@
         "deleteFailed": "تعذّر حذف التصميم.",
         "conflict": "رابط التصميم مستخدم بالفعل في متجرك."
       }
-    },
-    "placeholders": {
-      "shopTitle": "ملف المتجر",
-      "shopDescription": "تحرير ملف المتجر الكامل سيُضاف في المهمة التالية (B-31)."
-        "nameRequired": "اسم المتجر بالإنجليزية مطلوب.",
-        "nameArRequired": "اسم المتجر بالعربية مطلوب.",
-        "slugRequired": "رابط URL مطلوب.",
-        "slugInvalid": "يجب أن يحتوي الرابط على أحرف إنجليزية صغيرة وأرقام وشرطات فقط."
-      },
-      "errors": {
-        "loadFailed": "تعذّر تحميل ملف المتجر.",
-        "createFailed": "تعذّر إنشاء ملف المتجر.",
-        "updateFailed": "تعذّر تحديث ملف المتجر.",
-        "conflict": "رابط المتجر مستخدم بالفعل. اختر رابطاً آخر."
-      },
-      "meta": {
-        "rating": "التقييم",
-        "reviews": "المراجعات",
-        "status": "حالة الظهور",
-        "active": "نشط",
-        "inactive": "غير نشط"
-      }
-    },
-    "placeholders": {
-      "designsTitle": "التصاميم",
-      "designsDescription": "واجهة إدارة التصاميم ستُضاف في المهمة التالية (B-32)."
     }
   },
   "PartnerSection": {
