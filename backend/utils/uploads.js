@@ -8,11 +8,13 @@ export const UPLOADS_ROOT = path.join(__dirname, '..', 'uploads');
 export const READY_MADE_UPLOAD_DIR = path.join(UPLOADS_ROOT, 'ready-made');
 export const TAILOR_DESIGN_UPLOAD_DIR = path.join(UPLOADS_ROOT, 'tailor-design');
 export const TAILOR_SHOP_UPLOAD_DIR = path.join(UPLOADS_ROOT, 'tailor-shop');
+export const FABRIC_UPLOAD_DIR = path.join(UPLOADS_ROOT, "fabrics");
 
 export function ensureUploadDirs() {
   fs.mkdirSync(READY_MADE_UPLOAD_DIR, { recursive: true });
   fs.mkdirSync(TAILOR_DESIGN_UPLOAD_DIR, { recursive: true });
   fs.mkdirSync(TAILOR_SHOP_UPLOAD_DIR, { recursive: true });
+  fs.mkdirSync(FABRIC_UPLOAD_DIR, { recursive: true });
 }
 
 export function toPublicUploadPath(folder, filename) {
