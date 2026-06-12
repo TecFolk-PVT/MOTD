@@ -107,10 +107,11 @@ export function TailorsSection() {
                                 key={tailor._id}
                                 className="group bg-(--bg-page) border border-(--color-border) overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1"
                             >
-                                <div className="aspect-square relative overflow-hidden bg-(--color-border)/10">
+                                <div className="aspect-4/3 max-h-64 sm:max-h-72 relative overflow-hidden bg-(--color-border)/10">
                                     <img
                                         src={imageUrl}
                                         alt={name}
+                                        loading="lazy"
                                         className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

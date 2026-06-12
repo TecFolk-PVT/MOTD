@@ -50,11 +50,12 @@ export default function TailorDetailView({
                     <span className="text-black">{badge || name}</span>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
-                    <div className="aspect-4/3 lg:aspect-square bg-[#F0EBE3] overflow-hidden rounded-sm">
+                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,420px)_1fr] gap-8 lg:gap-12 mb-16">
+                    <div className="aspect-4/3 max-w-md lg:max-w-none mx-auto lg:mx-0 w-full bg-[#F0EBE3] overflow-hidden rounded-sm">
                         <img
                             src={coverImage}
                             alt={name}
+                            loading="lazy"
                             className="w-full h-full object-cover"
                         />
                     </div>

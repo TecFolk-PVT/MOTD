@@ -2,7 +2,11 @@ import multer from 'multer';
 import sharp from 'sharp';
 import path from 'path';
 import { randomBytes } from 'crypto';
-import { READY_MADE_UPLOAD_DIR, toPublicUploadPath } from '../utils/uploads.js';
+import {
+  READY_MADE_UPLOAD_DIR,
+  TAILOR_SHOP_UPLOAD_DIR,
+  toPublicUploadPath,
+} from '../utils/uploads.js';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -18,7 +22,8 @@ const upload = multer({
   },
 });
 
-export function uploadReadyMadeImageMiddleware(req, res, next) {
+/** Shared multer middleware for single image uploads (ready-made, tailor shop, etc.). */
+export function uploadSingleImageMiddleware(req, res, next) {
   upload.single('image')(req, res, (err) => {
     if (!err) {
       next();
@@ -50,4 +55,25 @@ export async function processReadyMadeImage(file) {
     .toFile(outputPath);
 
   return toPublicUploadPath('ready-made', filename);
+}
+
+export const uploadReadyMadeImageMiddleware = uploadSingleImageMiddleware;
+
+export async function processTailorShopImage(file, { variant = 'cover' } = {}) {
+  const isLogo = variant === 'logo';
+  const filename = `tailor-shop-${variant}-${Date.now()}-${randomBytes(4).toString('hex')}.webp`;
+  const outputPath = path.join(TAILOR_SHOP_UPLOAD_DIR, filename);
+
+  await sharp(file.buffer)
+    .rotate()
+    .resize({
+      width: isLogo ? 1200 : 1920,
+      height: isLogo ? 1200 : 1080,
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+    .webp({ quality: 82 })
+    .toFile(outputPath);
+
+  return toPublicUploadPath('tailor-shop', filename);
 }
