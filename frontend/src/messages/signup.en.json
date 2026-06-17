@@ -1,0 +1,24 @@
+{
+    "signup": {
+        "pageTitle": "MOTD - SignUp",
+        "imageText": " QUIET LUXURY • EMIRATI HERITAGE",
+        "subTitle": "JOIN THE HOUSE OF MOTD",
+        "title": "SIGN UP",
+        "description": "Create your atelier profile. Access bespoke collections and connect with master artisans.",
+        "nameLabel": "Full Name",
+        "emailLabel": "EMAIL ADDRESS",
+        "passwordLabel": "PASSWORD",
+        "confirmPasswordLabel": "CONFIRM PASSWORD",
+        "passwordInstruction": "Use 8+ characters with letters & numbers",
+        "buttonLabel": "CREATE ACCOUNT",
+        "buttonProgressLabel": "CREATING ACCOUNT",
+        "or": "OR",
+        "alreadyLabel": "Already have an account?",
+        "signInLabel": "SIGN IN",
+        "privacyLabel": "PRIVACY",
+        "termsLabel": "TERMS",
+        "copyrightLabel": "© 2024 MOTD BESPOKE • UAE",
+        "passwordMismatch": "Passwords do not match.",
+        "successMessage": "Account created successfully! Redirecting..."
+    }
+}

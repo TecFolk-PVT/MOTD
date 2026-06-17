@@ -1,0 +1,21 @@
+{
+    "login" : {
+        "pageTitle" : "MOTD - Login",
+        "imageText" : " QUIET LUXURY • EMIRATI HERITAGE",
+        "subTitle" : "WELCOME BACK",
+        "title" : "SIGN IN",
+        "description" : "Access your personal atelier. Explore custom commissions and exclusive collections.",
+        "emailLabel" : "EMAIL ADDRESS",
+        "passwordLabel" : "PASSWORD",
+        "forgetPassword" : "FORGET PASSWORD",
+        "buttonLabel" : "SIGN IN",
+        "buttonProgressLabel" : "VERIFYING",
+        "or" : "OR",
+        "alreadyLabel" : "NEW TO MOTD?",
+        "signupLabel" : "SIGN UP NOW",
+        "privacyLabel" : "PRIVACY",
+        "termsLabel" : "TERMS",
+        "copyrightLabel" : "© 2026 MOTD BESPOKE • UAE",
+        "successMessage": "Login successful!"
+    }
+}

@@ -1,240 +1,26 @@
 {
   "Metadata": {
-    "title": "MOTD",
-    "description": "UAE/GCC marketplace for ready-made clothes and custom tailoring"
+    "title": "MOTD — Mukhawar of the Day",
+    "description": "Mukhawar of the Day — UAE/GCC marketplace for ready-made clothes and custom tailoring"
   },
   "HomePage": {
-    "title": "MOTD",
-    "description": "UAE/GCC marketplace for ready-made clothes and custom tailoring.",
+    "title": "MOTD — Mukhawar of the Day",
+    "description": "Mukhawar of the Day — UAE/GCC marketplace for ready-made clothes and custom tailoring.",
     "samplePrice": "Sample price (AED)"
-  },
-  "BannerCarousel": {
-    "ariaLabel": "Featured banners",
-    "dotsAriaLabel": "Banner slides",
-    "dotLabel": "Go to banner {index}",
-    "prevSlide": "Previous banner",
-    "nextSlide": "Next banner"
-  },
-  "FabricCarousel": {
-    "ariaLabel": "Ready to wear — fabric materials",
-    "eyebrow": "Curated Materials",
-    "title": "Ready to Wear",
-    "exploreLink": "Browse All 2,500+ Fabrics →",
-    "viewDetails": "View Details",
-    "emptyFilter": "No fabrics match this material. Try another filter.",
-    "filtersAriaLabel": "Filter by material",
-    "dotsAriaLabel": "Fabric carousel slides",
-    "dotLabel": "Go to slide {index}",
-    "prevSlide": "Previous slide",
-    "nextSlide": "Next slide",
-    "filters": {
-      "all": "All Fabrics",
-      "wool": "Wool",
-      "silk": "Silk",
-      "linen": "Linen",
-      "cashmere": "Cashmere"
-    }
-  },
-  "ProductCarousel": {
-    "ariaLabel": "Premium fabrics — ready-made collection",
-    "eyebrow": "Ready to Explore",
-    "title": "Premium Fabrics",
-    "exploreLink": "Explore Fabrics →",
-    "shopNow": "Shop Now",
-    "emptyFilter": "No items match this style. Try another filter.",
-    "filtersAriaLabel": "Filter by style",
-    "dotsAriaLabel": "Carousel slides",
-    "dotLabel": "Go to slide {index}",
-    "prevSlide": "Previous slide",
-    "nextSlide": "Next slide",
-    "filters": {
-      "all": "All Styles",
-      "kandura": "Kandura",
-      "abaya": "Abaya",
-      "bisht": "Mukhawar"
-    }
-  },
-  "MeasurementGuide": {
-    "ariaLabel": "Measure with confidence",
-    "eyebrow": "Perfect Fit Guarantee",
-    "titleLine1": "Measure with",
-    "titleLine2": "Confidence",
-    "description": "Getting your measurements right is the first step to a perfectly tailored garment. Follow our simple guide to ensure a flawless fit.",
-    "downloadCta": "Download Measurement Guide",
-    "imageAlt": "How to measure guide",
-    "tips": {
-      "tape": {
-        "title": "Use a Soft Measuring Tape",
-        "description": "Ensure the tape is snug but not too tight, and keep it parallel to the floor for accurate measurements."
-      },
-      "clothing": {
-        "title": "Wear Minimal Clothing",
-        "description": "For the most accurate results, measure over lightweight, form-fitting clothing or undergarments."
-      },
-      "posture": {
-        "title": "Stand Naturally",
-        "description": "Keep your body relaxed with feet together and arms at your sides for consistent measurements."
-      },
-      "keyAreas": {
-        "title": "Double Check Key Areas",
-        "description": "Focus on chest, waist, hips, inseam, and sleeve length — these define your garment's silhouette."
-      }
-    }
-  },
-  "OrderTimeline": {
-    "ariaLabel": "Craft progress — order tracking",
-    "title": "Craft Progress",
-    "orderMeta": "Order #82941-MK · Bespoke Commission",
-    "estimatedCompletion": "Estimated Completion · May 22",
-    "stepsAriaLabel": "Order progress steps",
-    "steps": {
-      "confirmed": {
-        "title": "Order Confirmed",
-        "subtitle": "March 12"
-      },
-      "fabric": {
-        "title": "Fabric Selection",
-        "subtitle": "March 14"
-      },
-      "atelier": {
-        "title": "Atelier Crafting",
-        "subtitle": "In Progress"
-      },
-      "delivery": {
-        "title": "Delivery",
-        "subtitle": "Pending"
-      }
-    }
-  },
-  "Testimonials": {
-    "ariaLabel": "The client experience",
-    "title": "The Client Experience",
-    "cards": {
-      "kauser-al-qayyum": {
-        "quote": "The level of precision from a smartphone scan is truly refined. The garment feels tailored to movement itself — understated, exact, and personal.",
-        "name": "Kauser Al QAYYUM",
-        "role": "Finance Executive · Sharjah, UAE"
-      },
-      "noor-al-sayed": {
-        "quote": "A quiet connection to authentic fabrics and craft traditions. Every piece feels considered, not produced.",
-        "name": "Noor Al-Sayed",
-        "role": "Art Curator · Dubai"
-      },
-      "maria-al-javed": {
-        "quote": "What stands out is clarity — knowing the origin of every material and the hands behind it makes each garment meaningful.",
-        "name": "Maria Al Javed",
-        "role": "Architect · Abu Dhabi, UAE"
-      },
-      "maryum-al-yaqoub": {
-        "quote": "A seamless experience from consultation to delivery. The outcome feels precise, measured, and quietly exceptional.",
-        "name": "Maryum Al Yaqoub",
-        "role": "Entrepreneur · Dubai, UAE"
-      }
-    }
-  },
-  "PartnerSection": {
-    "ariaLabel": "Vendor portal and newsletter"
-  },
-  "PartnerCTA": {
-    "eyebrow": "For Partners",
-    "title": "Join the Global Atelier",
-    "description": "A curated network for master tailors and textile houses — where craftsmanship meets modern presentation and global visibility.",
-    "applyCta": "Apply to Join",
-    "imageAlt": "A tailor is stitching mukhawar"
-  },
-  "HomeNewsletter": {
-    "eyebrow": "The Newsletter",
-    "title": "Elegance in Your Inbox",
-    "description": "Receive seasonal fabric releases, atelier stories, and curated craftsmanship highlights — delivered sparingly, only when it matters.",
-    "formLabel": "Newsletter signup",
-    "emailLabel": "Email address",
-    "emailPlaceholder": "Email Address",
-    "subscribe": "Subscribe"
-  },
-  "TailorGrid": {
-    "ariaLabel": "Meet the tailors",
-    "eyebrow": "Master Artisans of the UAE",
-    "title": "Meet the Tailors",
-    "description": "Discover the Emirates' most celebrated master tailors, preserving centuries-old heritage through exceptional craftsmanship",
-    "viewAll": "View All Master Tailors of the UAE",
-    "bookConsultation": "Book Consultation →",
-    "reviewCount": "({count} reviews)",
-    "cards": {
-      "ayesha-al-riaz": {
-        "imageAlt": "Ayesha Al Riaz",
-        "badge": "5+ Years",
-        "name": "Ayesha Al Riaz",
-        "location": "Dubai, Al Fahidi Historical District",
-        "description": "Master of traditional Emirati kandura and bespoke suits. Third-generation tailor preserving Dubai's rich textile heritage since 1988."
-      },
-      "asma-al-naeem": {
-        "imageAlt": "Asma Al Naeem",
-        "badge": "Royal Court",
-        "name": "Asma Al Naeem",
-        "location": "Abu Dhabi, Corniche Road",
-        "description": "Official tailor to Abu Dhabi's royal court. Specializing in ceremonial bisht and luxury evening wear with over 40 years of excellence."
-      },
-      "fatima-al-qasimi": {
-        "imageAlt": "Fatima Al Qasimi",
-        "badge": "Women's Wear",
-        "name": "Fatima Al Qasimi",
-        "location": "Sharjah, Heart of Sharjah",
-        "description": "Pioneering female tailor redefining traditional abaya and jalabiya. Award-winning designer blending heritage with contemporary elegance."
-      }
-    }
-  },
-  "CategoryGrid": {
-    "ariaLabel": "Elite collections",
-    "eyebrow": "Browse by Category",
-    "titleLine1": "Elite",
-    "titleLine2": "Collections",
-    "viewAll": "View All Collections",
-    "items": {
-      "abaya": "Abaya",
-      "jalabiya": "Jalabiya",
-      "kandura": "Kandura",
-      "mukhawar": "Mukhawar",
-      "kaftan": "Kaftan",
-      "thob": "THOB"
-    },
-    "imageAlt": {
-      "abaya": "Abaya",
-      "jalabiya": "Jalabiya",
-      "kandura": "Kandura",
-      "mukhawar": "Mukhawar",
-      "kaftan": "Kaftan",
-      "thob": "THOB"
-    }
-  },
-  "Hero": {
-    "ariaLabel": "Featured hero",
-    "imageAlt": "Embroidered fabric from UAE tailor",
-    "eyebrow": "Mukhawara of the Day",
-    "headlineLine1": "Rooted in Tradition.",
-    "headlineLine2": "Worn Today.",
-    "body": "We curate exceptional embroidered fabrics from trusted tailors across the Emirates — transforming a months-long journey into a seamless, considered experience.",
-    "ctaShopNow": "Shop Now",
-    "ctaMeetTailors": "Meet the Tailors"
-  },
-  "LocaleSwitcher": {
-    "label": "Language",
-    "en": "English",
-    "ar": "العربية"
   },
   "Navbar": {
     "ariaLabel": "Main navigation",
-    "logoAlt": "MOTD",
+    "logoAlt": "MOTD — Mukhawar of the Day",
     "links": {
-      "fabric": "Fabric",
-      "fabricStore": "Fabric Store",
-      "customClothing": "Custom Clothing",
-      "howItWorks": "How It Works",
-      "collections": "Collections",
+      "fabrics": "Fabrics",
       "tailors": "Tailors",
-      "stories": "Stories"
+      "stories": "Stories",
+      "howItWorks": "How It Works",
+      "about": "About"
     },
     "actions": {
       "search": "Search",
+      "login": "Login",
       "account": "Account",
       "wishlist": "Wishlist",
       "cart": "Cart",
@@ -242,28 +28,668 @@
       "closeMenu": "Close menu"
     }
   },
-  "TrustBar": {
-    "ariaLabel": "Trust and payment assurances",
-    "items": {
-      "securePayments": "Secure Payments",
-      "verifiedTailors": "Verified Tailors",
-      "premiumFabrics": "Premium Fabrics",
-      "fastDelivery": "Fast Delivery"
+  "HeroSection": {
+    "ariaLabel": "Featured hero",
+    "imageAlt": "Embroidered fabric from UAE tailor",
+    "eyebrow": "Mukhawar of the Day",
+    "headlineLine1": "Rooted in Tradition.",
+    "headlineLine2": "Worn Today.",
+    "body": "We curate exceptional embroidered fabrics from trusted tailors across the Emirates — transforming a months-long journey into a seamless, considered experience.",
+    "ctaShopNow": "Shop Now",
+    "ctaMeetTailors": "Meet the Tailors"
+  },
+  "TrendingDesigns": {
+    "ariaLabel": "Trending Mukhawar Designs",
+    "eyebrow": "Most Popular",
+    "title": "Trending Designs",
+    "exploreLink": "Browse All 500+ Designs →"
+  },
+  "FabricDetail": {
+    "loading": "Loading fabric...",
+    "error": "Failed to load fabric",
+    "notFound": "Fabric not found",
+    "notFoundTitle": "Fabric Not Found",
+    "browseAll": "Browse All Fabrics",
+    "goBack": "Go Back",
+    "fabrics": "Fabrics",
+    "material": "Material",
+    "color": "Color",
+    "city": "City",
+    "perMeter": "Price per meter",
+    "selectForCustomOrder": "Select for Custom Order",
+    "storeTitle": "Listed by fabric store partner",
+    "pickupLabel": "Store pickup address",
+    "partnerNote": "Fabric sold and picked up from this MOTD partner store."
+  },
+  "PremiumFabrics": {
+    "ariaLabel": "Premium Fabrics",
+    "eyebrow": "Ready to Explore",
+    "title": "Premium Fabrics",
+    "exploreLink": "Explore Fabrics",
+    "shopNow": "Shop Now",
+    "loading": "Loading fabrics...",
+    "empty": "No fabrics available",
+    "emptyFilter": "No fabrics match this material. Try another filter.",
+    "error": "Failed to load fabrics",
+    "filters": {
+      "all": "All Fabrics",
+      "wool": "Wool",
+      "silk": "Silk",
+      "linen": "Linen",
+      "cashmere": "Cashmere",
+      "cotton": "Cotton"
+    }
+  },
+  "ReadyToWear": {
+    "ariaLabel": "Ready to wear — fabric materials",
+    "eyebrow": "Curated Materials",
+    "title": "Ready To Wear",
+    "exploreLink": "Browse All →",
+    "shopNow": "Shop Now",
+    "sizeLabel": "Size",
+    "loading": "Loading...",
+    "empty": "No items right now"
+  },
+  "TailorsSection": {
+    "ariaLabel": "Meet the tailors",
+    "eyebrow": "Master Artisans of the UAE",
+    "title": "Meet the Tailors",
+    "description": "Discover the Emirates' most celebrated master tailors, preserving centuries-old heritage through exceptional craftsmanship",
+    "viewAll": "View All Master Tailors of the UAE",
+    "bookConsultation": "Check Tailor Designs",
+    "reviews": "reviews",
+    "loading": "Loading tailors...",
+    "empty": "No tailor shops available",
+    "error": "Failed to load tailors"
+  },
+  "TailorsListing": {
+    "eyebrow": "Master Artisans of the UAE",
+    "title": "Master Tailors of the UAE",
+    "description": "Browse approved tailor shops across the Emirates. Each atelier offers bespoke designs you can order through our custom tailoring flow.",
+    "showing": "Showing {count} tailor shops",
+    "viewShop": "View Shop",
+    "reviews": "reviews",
+    "loading": "Loading tailor shops...",
+    "emptyTitle": "No Tailor Shops",
+    "empty": "There are no approved tailor shops available right now. Please check back soon.",
+    "errorTitle": "Unable to Load Tailors"
+  },
+  "CustomOrderCheckout": {
+    "title": "Checkout",
+    "description": "Enter your UAE delivery address and confirm your custom order. Payment is cash on delivery only.",
+    "loading": "Loading...",
+    "incompleteDraft": "Your order is incomplete. Please finish the configurator steps first.",
+    "loadingPricing": "Calculating total...",
+    "pricingError": "Unable to load order total.",
+    "summaryTitle": "Order Summary",
+    "design": "Design",
+    "tailor": "Tailor",
+    "total": "Total",
+    "deliveryTitle": "Delivery Address",
+    "fullName": "Full Name",
+    "phone": "Phone",
+    "emirate": "Emirate",
+    "selectEmirate": "Select emirate",
+    "city": "City",
+    "line1": "Street / Building",
+    "line2": "Apartment / Villa (optional)",
+    "required": "Required",
+    "paymentTitle": "Payment",
+    "codLabel": "Cash on Delivery (COD)",
+    "codDescription": "Pay when your custom order is delivered.",
+    "ownFabricPickupNote": "For own-fabric orders, this address is also used for fabric pickup coordination.",
+    "placeOrder": "Place Order",
+    "processing": "Placing order...",
+    "submitError": "Unable to place order. Please try again.",
+    "backToReview": "Back to review",
+    "agreeToTerms": "By placing this order you agree to our terms.",
+    "successTitle": "Thank You!",
+    "successMessage": "Your custom tailoring order has been placed successfully.",
+    "orderIdLabel": "Order ID",
+    "itemsInOrder": "Items in this order:",
+    "okButton": "OK",
+    "unknownDesign": "Custom design"
+  },
+  "CustomOrderReview": {
+    "stepLabel": "Step {step} of {total}",
+    "title": "Review Your Order",
+    "description": "Confirm your selections and review the itemized price breakdown before checkout.",
+    "loading": "Loading...",
+    "loadingPricing": "Calculating price...",
+    "incompleteDraft": "Your order is incomplete. Please finish the earlier configurator steps.",
+    "pricingError": "Unable to calculate price. Please try again.",
+    "summaryTitle": "Order Summary",
+    "pricingTitle": "Price Breakdown",
+    "fabric": "Fabric",
+    "ownFabric": "Own fabric (no platform cost)",
+    "tailor": "Tailor",
+    "design": "Design",
+    "fabricMeters": "Fabric meters",
+    "measurements": "Measurements",
+    "measurementsNotProvided": "Not provided",
+    "notes": "Notes",
+    "lines": {
+      "designBase": "Design base price",
+      "fabricCost": "Fabric cost",
+      "fabricDetail": "{meters} m × {pricePerMeter}",
+      "tailoringFee": "Tailoring fee",
+      "deliveryFee": "Delivery fee",
+      "subtotal": "Subtotal",
+      "vat": "VAT ({rate}%)",
+      "total": "Total"
+    },
+    "backToMeasurements": "Back to measurements",
+    "editOrder": "Edit fabric selection",
+    "continue": "Continue to Checkout",
+    "meters": "m"
+  },
+  "CustomOrderMeasurements": {
+    "stepLabel": "Step {step} of {total}",
+    "title": "Your Measurements",
+    "description": "Enter garment measurements using the same fields as our thobe measurement guide. All fields are optional — you can refine these with your tailor later.",
+    "loading": "Loading...",
+    "optionalNote": "All fields are optional. Measurements are in inches, matching the standard tailoring guide.",
+    "unit": "in",
+    "fields": {
+      "totalLength": "Total Length",
+      "totalLengthHint": "Full garment length from shoulder to hem (الطول)",
+      "shoulderWidth": "Shoulder Width",
+      "shoulderWidthHint": "Across the shoulders (عرض الكتف)",
+      "armLength": "Arm Length",
+      "armLengthHint": "Shoulder to cuff along the outer arm (طول الذراع)",
+      "chestWidth": "Chest Width",
+      "chestWidthHint": "Across the chest at the fullest point (محيط الصدر)",
+      "waist": "Waist",
+      "waistHint": "Around the waist line (الخصر)",
+      "hips": "Garment width at hip level",
+      "hipsHint": "(الأرداف)",
+      "neckWidth": "Neck Opening Width",
+      "neckWidthHint": "Width of the neck opening (عرض الحلق)",
+      "neckDepth": "Neck Opening Depth",
+      "neckDepthHint": "Depth of the neck opening (طول الحلق)",
+      "armholeHeight": "Armhole Height",
+      "armholeHeightHint": "Shoulder to underarm (ارتفاع الإبط)",
+      "arabicSleeveSection": "Arabic Sleeve Size",
+      "arabicSleeveSectionHint": "Cuff detail measurements (مقاس الكم العربي)",
+      "sleeveOpeningWidth": "Sleeve Opening Width",
+      "sleeveOpeningWidthHint": "Width of the cuff opening",
+      "cuffLength": "Cuff Length",
+      "cuffLengthHint": "Length of the cuff detail",
+      "notes": "Additional Notes",
+      "notesPlaceholder": "Any fit preferences or special instructions for your tailor"
+    },
+    "backToMeters": "Back to fabric meters",
+    "continue": "Continue to Review"
+  },
+  "CustomOrderMeters": {
+    "stepLabel": "Step {step} of {total}",
+    "title": "Fabric Meters",
+    "description": "Enter how many meters of fabric you need. We've suggested an amount based on your chosen design — adjust if needed.",
+    "loading": "Loading...",
+    "designLabel": "Selected design",
+    "suggestedLabel": "Suggested amount",
+    "inputLabel": "Fabric meters",
+    "inputPlaceholder": "e.g. 3.5",
+    "inputHint": "Enter a value greater than zero.",
+    "ownFabricNote": "You're using your own fabric. This amount helps your tailor plan the work; no platform fabric cost applies.",
+    "platformFabricNote": "Fabric cost at checkout is calculated per meter using your selected platform fabric.",
+    "backToTailor": "Back to tailor & design",
+    "backToFabric": "Back to fabric selection",
+    "continue": "Continue to Measurements",
+    "meters": "m"
+  },
+  "CustomOrderTailor": {
+    "stepLabel": "Step {step} of {total}",
+    "title": "Choose Tailor & Design",
+    "description": "Select an approved tailor shop and pick the design style for your custom garment.",
+    "loading": "Loading...",
+    "loadingTailors": "Loading tailor shops...",
+    "loadingDesigns": "Loading designs...",
+    "tailorsTitle": "Select a Tailor",
+    "designsTitle": "Select a Design",
+    "emptyTailors": "No tailor shops available.",
+    "emptyDesigns": "This tailor has no designs available yet.",
+    "backToFabric": "Back to fabric selection",
+    "browseTailors": "Browse all tailors",
+    "continueToFabric": "Continue to Fabric Selection",
+    "continueToMeters": "Continue to Fabric Meters",
+    "continue": "Continue to Fabric Meters",
+    "fromPrice": "From",
+    "estimatedDays": "Est.",
+    "days": "days",
+    "estimatedMeters": "Est. fabric",
+    "meters": "m"
+  },
+  "CustomOrderFabric": {
+    "stepLabel": "Step {step} of {total}",
+    "title": "Choose Your Fabric",
+    "description": "Select a fabric from our partner stores, or choose to use your own fabric for this custom order.",
+    "platformOptionEyebrow": "Option A",
+    "platformOptionTitle": "Platform Fabric",
+    "platformOptionDescription": "Browse MOTD partner fabrics. Price is calculated per meter at checkout.",
+    "ownFabricOptionEyebrow": "Option B",
+    "ownFabricOptionTitle": "Use My Own Fabric",
+    "ownFabricOptionDescription": "You supply the fabric. No platform fabric cost is added to your order.",
+    "ownFabricConfirmedTitle": "You will use your own fabric",
+    "ownFabricConfirmedDescription": "Continue to choose your tailor and design. Fabric cost will not be included in your order total.",
+    "loading": "Loading...",
+    "loadingFabrics": "Loading fabrics...",
+    "empty": "No fabrics match this filter.",
+    "browseFabrics": "Browse fabric store",
+    "backToTailor": "Back to tailor & design",
+    "continueToTailor": "Continue to Tailor & Design",
+    "continueToMeters": "Continue to Fabric Meters",
+    "continue": "Continue to Tailor & Design",
+    "filters": {
+      "all": "All Fabrics",
+      "wool": "Wool",
+      "silk": "Silk",
+      "linen": "Linen",
+      "cashmere": "Cashmere",
+      "cotton": "Cotton"
+    }
+  },
+  "TailorDetail": {
+    "loading": "Loading tailor shop...",
+    "notFound": "Tailor shop not found",
+    "notFoundTitle": "Tailor Shop Not Found",
+    "browseAll": "Browse All Tailors",
+    "goBack": "Go Back",
+    "tailors": "Tailors",
+    "reviews": "reviews",
+    "phone": "Phone",
+    "designsTitle": "Design Gallery",
+    "designsEmpty": "No designs available from this tailor yet.",
+    "fromPrice": "From",
+    "estimatedDays": "Est.",
+    "days": "days",
+    "startOrder": "Start Custom Order"
+  },
+  "MeasurementGuide": {
+    "eyebrow": "PERFECT FIT GUARANTEE",
+    "title": "Measure with Confidence",
+    "description": "Follow our simple guide to get accurate measurements for a perfectly tailored garment.",
+    "tip1": {
+      "title": "Use a Soft Measuring Tape",
+      "desc": "Keep tape snug but not tight, parallel to the floor."
+    },
+    "tip2": {
+      "title": "Stand Naturally",
+      "desc": "Feet together, arms at sides, body relaxed."
+    },
+    "tip3": {
+      "title": "Double Check Key Areas",
+      "desc": "Match the guide: length, shoulder, chest, waist, hip width, and sleeve details."
+    },
+    "btn": "Download Guide"
+  },
+  "Testimonials": {
+    "title": "The Client Experience"
+  },
+  "TailorRegister": {
+    "eyebrow": "Partner with MOTD",
+    "title": "Tailor Registration",
+    "description": "Create your tailor account to list your shop and designs on MOTD. Your application will be reviewed by our team before going live.",
+    "nameLabel": "Full Name",
+    "namePlaceholder": "Your full name",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@example.com",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Confirm Password",
+    "passwordHint": "Minimum 8 characters recommended",
+    "passwordMismatch": "Passwords do not match",
+    "submit": "Submit Application",
+    "submitting": "Submitting...",
+    "approvalNote": "After registration, MOTD admin must approve your account before you can publish your shop and designs.",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "customerRegister": "Register as a customer",
+    "successTitle": "Application Submitted",
+    "successMessage": "Thank you for applying. Your tailor account is awaiting MOTD admin approval. We'll notify you once your shop can go live.",
+    "successStatus": "Status: Pending approval",
+    "goHome": "Return to homepage",
+    "imageCaption": "Master tailoring, presented to the world"
+  },
+  "TailorPortal": {
+    "loading": "Loading tailor portal...",
+    "portalLabel": "Tailor Portal",
+    "logout": "Sign out",
+    "nav": {
+      "dashboard": "Dashboard",
+      "shop": "Shop Profile",
+      "designs": "Designs"
+    },
+    "pending": {
+      "eyebrow": "Tailor Portal",
+      "title": "Awaiting Approval",
+      "description": "Your tailor account is under review by the MOTD team. You'll get access to shop and design management once approved.",
+      "status": "Status: Pending approval",
+      "goHome": "Return to homepage"
+    },
+    "rejected": {
+      "eyebrow": "Tailor Portal",
+      "title": "Application Not Approved",
+      "description": "Unfortunately your tailor application was not approved at this time.",
+      "contact": "If you believe this was a mistake or would like more information, please contact the MOTD team.",
+      "contactCta": "Contact support",
+      "goHome": "Return to homepage"
+    },
+    "dashboard": {
+      "eyebrow": "Tailor Dashboard",
+      "title": "Welcome, {name}",
+      "description": "Manage your shop profile and design catalog from here.",
+      "shopCardEyebrow": "Step 1",
+      "shopCardTitle": "Set up your shop",
+      "designsCardEyebrow": "Step 2",
+      "designsCardTitle": "Manage your designs"
+    },
+    "shop": {
+      "loading": "Loading shop profile...",
+      "eyebrow": "Shop Profile",
+      "createTitle": "Create your shop",
+      "editTitle": "Edit shop profile",
+      "createDescription": "Set up your public tailor shop. Name and slug are required; you can add descriptions, images, and contact details.",
+      "editDescription": "Update how customers see your shop on MOTD.",
+      "viewPublicProfile": "View public shop page",
+      "createCta": "Create shop",
+      "saveCta": "Save changes",
+      "saving": "Saving...",
+      "backToDashboard": "Back to dashboard",
+      "successCreated": "Your shop profile was created successfully.",
+      "successUpdated": "Your shop profile was updated successfully.",
+      "imageSaved": "Image saved to your shop profile.",
+      "imageRemoved": "Image removed successfully.",
+      "sections": {
+        "identity": "Shop identity",
+        "about": "About your shop",
+        "media": "Images",
+        "contact": "Location & contact"
+      },
+      "fields": {
+        "name": "Shop name (English)",
+        "nameAr": "Shop name (Arabic)",
+        "slug": "URL slug",
+        "description": "Description (English)",
+        "descriptionAr": "Description (Arabic)",
+        "logo": "Shop logo",
+        "coverImage": "Cover image",
+        "city": "City",
+        "location": "Address / area",
+        "phone": "Phone"
+      },
+      "placeholders": {
+        "name": "e.g. Ayesha Al Riaz Atelier",
+        "nameAr": "مثال: أتيليه عائشة الرِياض",
+        "slug": "e.g. ayesha-al-riaz",
+        "description": "Tell customers about your craft and specialties...",
+        "descriptionAr": "عرّف العملاء بحرفتك وتخصصاتك...",
+        "logo": "/images/tailor-1.png",
+        "coverImage": "/images/tailor-1.png",
+        "city": "Dubai",
+        "location": "Al Fahidi Historical District",
+        "phone": "+971 4 353 2100"
+      },
+      "hints": {
+        "slug": "Lowercase letters, numbers, and hyphens only. Used in your public URL.",
+        "logoUpload": "Square shop mark. Used when no cover image is set.",
+        "coverUpload": "Wide hero photo — shown on the homepage, tailor listing, and your public profile."
+      },
+      "upload": {
+        "chooseFile": "Choose image",
+        "uploading": "Uploading...",
+        "failed": "Upload failed",
+        "remove": "Remove"
+      },
+      "validation": {
+        "nameRequired": "English shop name is required.",
+        "nameArRequired": "Arabic shop name is required.",
+        "slugRequired": "URL slug is required.",
+        "slugInvalid": "Slug must use lowercase letters, numbers, and hyphens only."
+      },
+      "errors": {
+        "loadFailed": "Could not load your shop profile.",
+        "createFailed": "Could not create your shop profile.",
+        "updateFailed": "Could not update your shop profile.",
+        "conflict": "This shop slug is already in use. Choose another slug."
+      },
+      "meta": {
+        "rating": "Rating",
+        "reviews": "Reviews",
+        "status": "Listing status",
+        "active": "Active",
+        "inactive": "Inactive"
+      }
+    },
+    "designs": {
+      "loading": "Loading designs...",
+      "eyebrow": "Designs",
+      "title": "Your designs",
+      "description": "Create and manage the designs customers can order from your shop.",
+      "addDesign": "Add design",
+      "addFirst": "Add your first design",
+      "empty": "You have not published any designs yet.",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "confirmDelete": "Delete \"{name}\"? This cannot be undone.",
+      "deleted": "Design deleted successfully.",
+      "statusActive": "Active",
+      "statusInactive": "Hidden",
+      "basePrice": "From AED {price}",
+      "estimatedDays": "{days} days",
+      "createTitle": "New design",
+      "editTitle": "Edit design",
+      "createDescription": "Add a new design listing for your tailor shop.",
+      "editDescription": "Update pricing, images, and visibility for this design.",
+      "createCta": "Create design",
+      "saveCta": "Save changes",
+      "saving": "Saving...",
+      "cancel": "Cancel",
+      "backToList": "Back to designs",
+      "successCreated": "Design created successfully.",
+      "successUpdated": "Design updated successfully.",
+      "shopRequiredTitle": "Create your shop first",
+      "shopRequiredDescription": "You need a shop profile before you can add designs.",
+      "shopRequiredCta": "Set up shop profile",
+      "addImage": "Add another image",
+      "removeImage": "Remove this image",
+      "sections": {
+        "identity": "Design identity",
+        "about": "Description",
+        "pricing": "Pricing & lead time",
+        "images": "Images"
+      },
+      "fields": {
+        "name": "Design name (English)",
+        "nameAr": "Design name (Arabic)",
+        "slug": "URL slug",
+        "category": "Category",
+        "description": "Description (English)",
+        "descriptionAr": "Description (Arabic)",
+        "basePrice": "Base price (AED)",
+        "tailoringFee": "Tailoring fee (AED)",
+        "estimatedMeters": "Estimated fabric (meters)",
+        "estimatedDays": "Estimated days",
+        "isActive": "Visible to customers",
+        "image": "Image {number}"
+      },
+      "hints": {
+        "slug": "Lowercase letters, numbers, and hyphens only."
+      },
+      "categories": {
+        "kandura": "Kandura",
+        "abaya": "Abaya",
+        "bisht": "Bisht",
+        "mukhawar": "Mukhawar",
+        "jalabiya": "Jalabiya",
+        "kaftan": "Kaftan",
+        "thob": "Thob"
+      },
+      "upload": {
+        "chooseFile": "Choose image",
+        "uploading": "Uploading...",
+        "failed": "Upload failed",
+        "remove": "Remove"
+      },
+      "validation": {
+        "nameRequired": "English design name is required.",
+        "nameArRequired": "Arabic design name is required.",
+        "slugRequired": "URL slug is required.",
+        "slugInvalid": "Slug must use lowercase letters, numbers, and hyphens only.",
+        "imagesRequired": "At least one image is required.",
+        "basePriceInvalid": "Base price must be zero or greater.",
+        "tailoringFeeInvalid": "Tailoring fee must be zero or greater.",
+        "estimatedMetersInvalid": "Estimated meters must be greater than zero.",
+        "estimatedDaysInvalid": "Estimated days must be at least 1."
+      },
+      "errors": {
+        "loadFailed": "Could not load designs.",
+        "createFailed": "Could not create design.",
+        "updateFailed": "Could not update design.",
+        "deleteFailed": "Could not delete design.",
+        "conflict": "This design slug already exists for your shop."
+      }
+    }
+  },
+  "community": {
+    "eyebrow": "For Partners",
+    "title": "Join Our Community",
+    "description": "A curated network for master tailors and textile houses — where craftsmanship meets modern presentation and global visibility.",
+    "btn": "Apply to Join"
+  },
+  "newsletter": {
+    "eyebrow": "The Newsletter",
+    "title": "Elegance in Your Inbox",
+    "description": "Receive seasonal fabric releases, atelier stories, and curated craftsmanship highlights — delivered sparingly, only when it matters.",
+    "placeholder": "Email Address",
+    "subscribe": "Subscribe"
+  },
+  "Admin": {
+    "loading": "Loading admin panel...",
+    "redirecting": "Redirecting...",
+    "controlPanel": "Control Panel",
+    "nav": {
+      "dashboard": "Dashboard",
+      "readyMade": "Ready-made",
+      "fabrics": "Fabrics",
+      "tailors": "Tailors",
+      "orders": "Orders",
+      "partners": "Partners",
+      "settings": "Settings",
+      "logout": "Logout"
+    },
+    "OrdersCustom": {
+      "title": "Custom Orders",
+      "subtitle": "Manage the custom tailoring workflow",
+      "loading": "Loading orders...",
+      "refresh": "Refresh",
+      "empty": "No custom orders found",
+      "loadError": "Failed to load custom orders",
+      "loadToastError": "Failed to load data",
+      "updateSuccess": "Order updated",
+      "updateFailed": "Failed to update status",
+      "notePlaceholder": "Note (optional)",
+      "advanceTo": "Advance to {status}",
+      "revertTo": "Revert to {status}",
+      "pipelineComplete": "Delivered — workflow complete",
+      "tabs": {
+        "retail": "Retail orders",
+        "custom": "Custom orders"
+      },
+      "stats": {
+        "total": "Total",
+        "pending": "Pending",
+        "inProduction": "In production",
+        "delivered": "Delivered"
+      },
+      "columns": {
+        "customer": "Customer",
+        "design": "Design",
+        "tailor": "Tailor",
+        "status": "Status",
+        "date": "Date",
+        "total": "Total"
+      },
+      "fabricLabel": "Fabric: {name}",
+      "unknownCustomer": "Unknown customer",
+      "unknownDesign": "Custom design",
+      "unknownTailor": "Unknown tailor",
+      "unknownFabric": "—"
+    }
+  },
+  "OrdersPage": {
+    "title": "Your Orders",
+    "description": "Track ready-made purchases and custom tailoring orders in one place.",
+    "loading": "Loading...",
+    "tabs": {
+      "custom": "Custom Tailoring",
+      "retail": "Ready-made"
+    },
+    "custom": {
+      "loading": "Loading custom orders...",
+      "error": "Unable to load custom orders.",
+      "detailError": "Unable to load order timeline.",
+      "emptyTitle": "No custom orders yet",
+      "emptyDescription": "Start a custom tailoring order to see it tracked here.",
+      "startOrder": "Start custom order",
+      "orderId": "Order #{id}",
+      "unknownDesign": "Custom design",
+      "viewTimeline": "View timeline",
+      "hideTimeline": "Hide timeline",
+      "loadingDetail": "Loading timeline...",
+      "timelineTitle": "Order progress",
+      "statuses": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "fabric_pickup_scheduled": "Fabric pickup scheduled",
+        "at_tailor": "At tailor",
+        "in_production": "In production",
+        "ready": "Ready",
+        "out_for_delivery": "Out for delivery",
+        "delivered": "Delivered"
+      }
+    },
+    "retail": {
+      "loading": "Loading ready-made orders...",
+      "error": "Unable to load ready-made orders.",
+      "emptyTitle": "No ready-made orders yet",
+      "emptyDescription": "Browse size-return ready-made pieces on the homepage.",
+      "browseReadyMade": "Browse ready-made",
+      "orderId": "Order #{id}",
+      "unknownItem": "Ready-made item",
+      "size": "Size",
+      "statuses": {
+        "pending": "Pending",
+        "confirmed": "Confirmed",
+        "shipped": "Shipped",
+        "delivered": "Delivered",
+        "cancelled": "Cancelled"
+      }
+    },
+    "timeline": {
+      "ariaLabel": "Custom order progress timeline",
+      "pending": "Pending",
+      "inProgress": "In progress",
+      "statuses": {
+        "pending": { "title": "Order placed" },
+        "confirmed": { "title": "Order confirmed" },
+        "fabric_pickup_scheduled": { "title": "Fabric pickup scheduled" },
+        "at_tailor": { "title": "At tailor shop" },
+        "in_production": { "title": "In production" },
+        "ready": { "title": "Garment ready" },
+        "out_for_delivery": { "title": "Out for delivery" },
+        "delivered": { "title": "Delivered" }
+      }
     }
   },
   "Footer": {
-    "ariaLabel": "Site footer",
-    "logoAlt": "MOTD",
+    "logoAlt": "MOTD — Mukhawar of the Day",
     "tagline": "Bespoke Eastern luxury tailored for the modern world.",
     "description": "A refined destination connecting discerning clients with exceptional fabrics, master tailoring houses, and elevated craftsmanship inspired by contemporary Gulf elegance.",
-    "copyright": "© 2026 MOTD. All Rights Reserved.",
-    "paymentMethods": "Accepted payment methods",
-    "columns": {
-      "quickLinks": "Quick Links",
-      "customerServices": "Customer Services",
-      "business": "Business"
-    },
-    "quickLinks": {
+    "quickLinks": "Quick Links",
+    "services": "Customer Services",
+    "business": "Business",
+    "quickLinksList": {
       "home": "Home",
       "exploreFabrics": "Explore Fabrics",
       "tailors": "Tailors",
@@ -271,7 +697,7 @@
       "aboutUs": "About Us",
       "contact": "Contact"
     },
-    "customerServices": {
+    "customerLinks": {
       "trackOrder": "Track Order",
       "shippingPolicy": "Shipping Policy",
       "returnsRefunds": "Returns & Refunds",
@@ -279,32 +705,18 @@
       "faqs": "FAQs",
       "supportCenter": "Support Center"
     },
-    "business": {
+    "businessLinks": {
       "becomeTailor": "Become a Tailor",
       "fabricVendor": "Fabric Vendor Registration",
       "shippingPartner": "Shipping Partner",
       "vendorDashboard": "Vendor Dashboard",
       "partnerships": "Partnership Opportunities"
     },
-    "social": {
-      "instagram": "Instagram",
-      "website": "Website",
-      "pinterest": "Pinterest",
-      "youtube": "YouTube",
-      "linkedin": "LinkedIn"
-    },
-    "newsletter": {
-      "heading": "The Newsletter",
-      "description": "Seasonal fabric releases, atelier stories, and curated craftsmanship — delivered sparingly.",
-      "formLabel": "Newsletter signup",
-      "emailLabel": "Email address",
-      "emailPlaceholder": "Email Address",
-      "subscribe": "Subscribe"
-    },
     "policies": {
       "privacy": "Privacy Policy",
       "terms": "Terms & Conditions",
       "cookies": "Cookies Policy"
-    }
+    },
+    "copyright": "© 2026 MOTD. All Rights Reserved."
   }
 }

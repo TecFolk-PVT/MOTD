@@ -1,12 +1,8 @@
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap");
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @font-face {
   font-family: "TT Norms Pro";
-  src: url("/fonts/TTNormsPro-Regular.woff2") format("woff2");
+  src: url("/fonts/TTNormsPro-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -14,7 +10,7 @@
 
 @font-face {
   font-family: "TT Norms Pro Mono";
-  src: url("/fonts/TT-Norms-Pro-Mono/TTNormsProMono-Rg.ttf") format("opentype");
+  src: url("/fonts/TTNormsProMono-Regular.otf") format("opentype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -22,7 +18,7 @@
 
 @font-face {
   font-family: "Ivy Ora";
-  src: url("/fonts/IvyOraDisplay-Regular.woff2") format("woff2");
+  src: url("/fonts/IvyOraText-Regular.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -48,7 +44,9 @@
   /* Typography */
   --font-display: "Ivy Ora", serif;
   --font-ui: "TT Norms Pro Mono", monospace;
+  /* nav, subheadings, labels */
   --font-body: "TT Norms Pro", sans-serif;
+  /* paragraphs */
 
   /* Borders */
   --border-thin: 0.5px solid var(--color-border);
@@ -66,12 +64,24 @@
   --space-40: 40px;
   --space-64: 64px;
   --space-80: 80px;
+
+  /* Section Spacing */
+  --space-section-sm: 48px;
+  /* Mobile */
+  --space-section-md: 64px;
+  /* Tablet */
+  --space-section-lg: 80px;
+  /* Desktop */
+  --space-section-xl: 96px;
+  /* Large Desktop */
 }
 
+html,
 body {
   font-family: var(--font-body);
   background-color: var(--bg-page);
   color: var(--color-black);
+  height: 100%;
 }
 
 .nav-blur {
@@ -79,30 +89,81 @@ body {
   background: color-mix(in srgb, var(--bg-page) 85%, transparent);
 }
 
-.material-symbols-outlined {
-  font-family: "Material Symbols Outlined", sans-serif;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-smoothing: antialiased;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+/* Premium Golden Scrollbar - No White anywhere */
+@layer base {
+  /* Webkit browsers */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: linear-gradient(135deg, #f5f5f0 0%, #ede9e0 100%);
+    /* Off-White gradients */
+    border-radius: 10px;
+    box-shadow: inset 0 0 3px rgba(212, 175, 55, 0.2);
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+    /* Stone Black gradients */
+    box-shadow: inset 0 0 3px rgba(212, 175, 55, 0.3);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #000000 0%, #1a1a1a 100%);
+    /* Black to Stone Black */
+    border-radius: 9999px;
+    border: 1px solid #d4af37;
+    box-shadow: 0 0 4px rgba(212, 175, 55, 0.4);
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
+    /* Stone Black gradient */
+    border: 1px solid #d4af37;
+    box-shadow: 0 0 4px rgba(212, 175, 55, 0.5);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #d4af37 0%, #b8960f 100%);
+    /* Gold gradient */
+    border: 1px solid #ffd700;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.8);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #d4af37 0%, #c5a028 100%);
+    /* Gold gradient */
+    border: 1px solid #ffd700;
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.9);
+  }
+
+  /* Corner styling */
+  ::-webkit-scrollbar-corner {
+    background: #f5f5f0;
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
+  }
+
+  .dark ::-webkit-scrollbar-corner {
+    background: #1a1a1a;
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #000000 #f5f5f0;
+    /* Black thumb, Off-White track */
+  }
+
+  .dark * {
+    scrollbar-color: #1a1a1a #1a1a1a;
+    /* Stone Black thumb + track */
+  }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
-
-  .carousel-touch {
-    touch-action: pan-y;
-    -webkit-user-select: none;
-    user-select: none;
-  }
+/* Slow down the slide movement (smooth infinite loop) */
+.embla__container {
+  transition: transform 200ms ease-out;
 }

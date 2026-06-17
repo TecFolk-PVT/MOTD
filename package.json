@@ -2,7 +2,7 @@
   "name": "motd-project",
   "version": "1.0.0",
   "private": true,
-  "description": "MOTD — UAE/GCC hybrid marketplace for ready-made clothes and custom tailoring",
+  "description": "MOTD (Mukhawar of the Day) — UAE/GCC hybrid marketplace for ready-made clothes and custom tailoring",
   "scripts": {
     "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
     "dev:backend": "npm run dev --prefix backend",
@@ -13,5 +13,8 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
+  },
+  "dependencies": {
+    "react-hot-toast": "^2.6.0"
   }
 }

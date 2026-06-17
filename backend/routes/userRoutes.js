@@ -14,6 +14,7 @@ const sendUserResponse = (res, user) => {
     email: user.email,
     role: user.role,
     isAdmin: user.isAdmin,
+    approvalStatus: user.approvalStatus,
     token: generateToken(user),
   });
 };
@@ -56,7 +57,41 @@ userRouter.post(
       return;
     }
 
+    if (user.isActive === false) {
+      res.status(403).send({ message: 'Account is deactivated' });
+      return;
+    }
+
     sendUserResponse(res, user);
+  })
+);
+
+userRouter.post(
+  '/signup/tailor',
+  expressAsyncHandler(async (req, res) => {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      res.status(400).send({ message: 'Name, email, and password are required' });
+      return;
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      res.status(400).send({ message: 'User already exists' });
+      return;
+    }
+
+    const user = new User({
+      name: name.trim(),
+      email: normalizedEmail,
+      password: bcrypt.hashSync(password, BCRYPT_ROUNDS),
+      role: 'tailor',
+      approvalStatus: 'pending',
+    });
+
+    const createdUser = await user.save();
+    sendUserResponse(res, createdUser);
   })
 );
 

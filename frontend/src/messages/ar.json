@@ -1,12 +1,58 @@
 {
   "Metadata": {
-    "title": "MOTD",
-    "description": "سوق إماراتي/خليجي للملابس الجاهزة والخياطة المخصصة"
+    "title": "MOTD — مخوّر اليوم",
+    "description": "مخوّر اليوم — سوق إماراتي/خليجي للملابس الجاهزة والخياطة المخصصة"
   },
   "HomePage": {
-    "title": "MOTD",
-    "description": "سوق إماراتي/خليجي للملابس الجاهزة والخياطة المخصصة.",
+    "title": "MOTD — مخوّر اليوم",
+    "description": "مخوّر اليوم — سوق إماراتي/خليجي للملابس الجاهزة والخياطة المخصصة.",
     "samplePrice": "سعر تجريبي (درهم)"
+  },
+  "Navbar": {
+    "ariaLabel": "التنقل الرئيسي",
+    "logoAlt": "MOTD — مخوّر اليوم",
+    "links": {
+      "fabrics": "الأقمشة",
+      "howItWorks": "كيف يعمل",
+      "tailors": "الخياطون",
+      "stories": "القصص",
+      "about": "حول"
+    },
+    "actions": {
+      "search": "بحث",
+      "login": "تسجيل الدخول",
+      "account": "الحساب",
+      "wishlist": "المفضلة",
+      "cart": "السلة",
+      "openMenu": "فتح القائمة",
+      "closeMenu": "إغلاق القائمة"
+    }
+  },
+  "HeroSection": {
+    "ariaLabel": "القسم الرئيسي",
+    "imageAlt": "قماش مطرّز من خياط إماراتي",
+    "eyebrow": "مخوّر اليوم",
+    "headlineLine1": "جذور في التقاليد",
+    "headlineLine2": "تُرتدى اليوم",
+    "body": "نختار بعناية أقمشة مطرّزة استثنائية من خياطين موثوقين في أنحاء الإمارات — لنحوّل رحلة تستغرق شهوراً إلى تجربة سلسة ومدروسة.",
+    "ctaShopNow": "تسوق الآن",
+    "ctaMeetTailors": "تعرّف على الخياطين"
+  },
+  "TrendingDesigns": {
+    "ariaLabel": "تصاميم المخاوير الرائجة",
+    "eyebrow": "الأكثر شعبية",
+    "title": "تصاميم رائجة",
+    "exploreLink": "تصفح جميع التصاميم الـ 500+ →"
+  },
+  "ReadyToWear": {
+    "ariaLabel": "جاهز للارتداء — مواد الأقمشة",
+    "eyebrow": "المواد المنسقة",
+    "title": "جاهز للارتداء",
+    "exploreLink": "تصفح الكل ←",
+    "shopNow": "تسوق الآن",
+    "sizeLabel": "المقاس",
+    "loading": "جاري التحميل...",
+    "empty": "لا توجد قطع حالياً"
   },
   "BannerCarousel": {
     "ariaLabel": "لافتات مميزة",
@@ -14,6 +60,42 @@
     "dotLabel": "الانتقال إلى اللافتة {index}",
     "prevSlide": "اللافتة السابقة",
     "nextSlide": "اللافتة التالية"
+  },
+  "FabricDetail": {
+    "loading": "جاري تحميل القماش...",
+    "error": "تعذر تحميل القماش",
+    "notFound": "القماش غير موجود",
+    "notFoundTitle": "القماش غير موجود",
+    "browseAll": "تصفح جميع الأقمشة",
+    "goBack": "رجوع",
+    "fabrics": "الأقمشة",
+    "material": "المادة",
+    "color": "اللون",
+    "city": "المدينة",
+    "perMeter": "السعر لكل متر",
+    "selectForCustomOrder": "اختر للطلب المخصص",
+    "storeTitle": "معروض من متجر أقمشة شريك",
+    "pickupLabel": "عنوان الاستلام من المتجر",
+    "partnerNote": "يتم بيع القماش واستلامه من متجر شريك MOTD."
+  },
+  "PremiumFabrics": {
+    "ariaLabel": "أقمشة فاخرة",
+    "eyebrow": "جاهز للاستكشاف",
+    "title": "أقمشة فاخرة",
+    "exploreLink": "استكشف الأقمشة",
+    "shopNow": "تسوق الآن",
+    "loading": "جاري تحميل الأقمشة...",
+    "empty": "لا توجد أقمشة متاحة",
+    "emptyFilter": "لا توجد أقمشة لهذه المادة. جرّب فلتراً آخر.",
+    "error": "تعذر تحميل الأقمشة",
+    "filters": {
+      "all": "جميع الأقمشة",
+      "wool": "صوف",
+      "silk": "حرير",
+      "linen": "كتان",
+      "cashmere": "كشمير",
+      "cotton": "قطن"
+    }
   },
   "FabricCarousel": {
     "ariaLabel": "جاهز للارتداء — مواد الأقمشة",
@@ -53,6 +135,221 @@
       "abaya": "عباءة",
       "bisht": "مخوّر"
     }
+  },
+  "TailorsSection": {
+    "ariaLabel": "تعرف على الخياطين",
+    "eyebrow": "حرفيو الإمارات الماهرون",
+    "title": "تعرف على الخياطين",
+    "description": "اكتشف أشهر خياطي الإمارات الذين يحافظون على التراث العريق من خلال حرفية استثنائية",
+    "viewAll": "عرض جميع خياطي الإمارات",
+    "bookConsultation": "اطّلع على تصاميم الخياط",
+    "reviews": "مراجعة",
+    "loading": "جاري تحميل الخياطين...",
+    "empty": "لا توجد متاجر خياطة متاحة",
+    "error": "تعذر تحميل الخياطين"
+  },
+  "TailorsListing": {
+    "eyebrow": "حرفيو الإمارات الماهرون",
+    "title": "خياطو الإمارات الماهرون",
+    "description": "تصفح متاجر الخياطة المعتمدة في الإمارات. يقدم كل أتيليه تصاميم مفصّلة يمكنك طلبها عبر مسار الخياطة المخصصة.",
+    "showing": "عرض {count} متجر خياطة",
+    "viewShop": "عرض المتجر",
+    "reviews": "مراجعة",
+    "loading": "جاري تحميل متاجر الخياطة...",
+    "emptyTitle": "لا توجد متاجر خياطة",
+    "empty": "لا توجد متاجر خياطة معتمدة متاحة حالياً. يرجى المراجعة لاحقاً.",
+    "errorTitle": "تعذر تحميل الخياطين"
+  },
+  "CustomOrderCheckout": {
+    "title": "الدفع",
+    "description": "أدخل عنوان التوصيل في الإمارات وأكد طلبك المخصص. الدفع نقداً عند الاستلام فقط.",
+    "loading": "جاري التحميل...",
+    "incompleteDraft": "طلبك غير مكتمل. يرجى إكمال خطوات التخصيص أولاً.",
+    "loadingPricing": "جاري حساب الإجمالي...",
+    "pricingError": "تعذر تحميل إجمالي الطلب.",
+    "summaryTitle": "ملخص الطلب",
+    "design": "التصميم",
+    "tailor": "الخياط",
+    "total": "الإجمالي",
+    "deliveryTitle": "عنوان التوصيل",
+    "fullName": "الاسم الكامل",
+    "phone": "الهاتف",
+    "emirate": "الإمارة",
+    "selectEmirate": "اختر الإمارة",
+    "city": "المدينة",
+    "line1": "الشارع / المبنى",
+    "line2": "الشقة / الفيلا (اختياري)",
+    "required": "مطلوب",
+    "paymentTitle": "الدفع",
+    "codLabel": "الدفع عند الاستلام",
+    "codDescription": "ادفع عند استلام طلبك المخصص.",
+    "ownFabricPickupNote": "لطلبات القماش الخاص، يُستخدم هذا العنوان أيضاً لتنسيق استلام القماش.",
+    "placeOrder": "تأكيد الطلب",
+    "processing": "جاري تأكيد الطلب...",
+    "submitError": "تعذر تأكيد الطلب. يرجى المحاولة مرة أخرى.",
+    "backToReview": "العودة إلى المراجعة",
+    "agreeToTerms": "بتأكيد الطلب فإنك توافق على الشروط.",
+    "successTitle": "شكراً لك!",
+    "successMessage": "تم تقديم طلب الخياطة المخصص بنجاح.",
+    "orderIdLabel": "رقم الطلب",
+    "itemsInOrder": "المنتجات في هذا الطلب:",
+    "okButton": "حسناً",
+    "unknownDesign": "تصميم مخصص"
+  },
+  "CustomOrderReview": {
+    "stepLabel": "الخطوة {step} من {total}",
+    "title": "مراجعة طلبك",
+    "description": "تأكد من اختياراتك وراجع تفصيل الأسعار قبل الدفع.",
+    "loading": "جاري التحميل...",
+    "loadingPricing": "جاري حساب السعر...",
+    "incompleteDraft": "طلبك غير مكتمل. يرجى إكمال خطوات التخصيص السابقة.",
+    "pricingError": "تعذر حساب السعر. يرجى المحاولة مرة أخرى.",
+    "summaryTitle": "ملخص الطلب",
+    "pricingTitle": "تفصيل السعر",
+    "fabric": "القماش",
+    "ownFabric": "قماش خاص (بدون تكلفة من المنصة)",
+    "tailor": "الخياط",
+    "design": "التصميم",
+    "fabricMeters": "أمتار القماش",
+    "measurements": "القياسات",
+    "measurementsNotProvided": "غير مُدخل",
+    "notes": "ملاحظات",
+    "lines": {
+      "designBase": "السعر الأساسي للتصميم",
+      "fabricCost": "تكلفة القماش",
+      "fabricDetail": "{meters} م × {pricePerMeter}",
+      "tailoringFee": "رسوم الخياطة",
+      "deliveryFee": "رسوم التوصيل",
+      "subtotal": "المجموع الفرعي",
+      "vat": "ضريبة القيمة المضافة ({rate}%)",
+      "total": "الإجمالي"
+    },
+    "backToMeasurements": "العودة إلى القياسات",
+    "editOrder": "تعديل اختيار القماش",
+    "continue": "متابعة إلى الدفع",
+    "meters": "م"
+  },
+  "CustomOrderMeasurements": {
+    "stepLabel": "الخطوة {step} من {total}",
+    "title": "قياساتك",
+    "description": "أدخل قياسات الثوب وفق دليل القياس المعتمد. جميع الحقول اختيارية — يمكنك تعديلها لاحقاً مع الخياط.",
+    "loading": "جاري التحميل...",
+    "optionalNote": "جميع الحقول اختيارية. القياسات بالبوصة، وفق دليل الخياطة المعتاد.",
+    "unit": "بوصة",
+    "fields": {
+      "totalLength": "الطول",
+      "totalLengthHint": "الطول الكامل للثوب من الكتف إلى الأسفل",
+      "shoulderWidth": "عرض الكتف",
+      "shoulderWidthHint": "عرض الكتفين",
+      "armLength": "طول الذراع",
+      "armLengthHint": "من الكتف إلى طرف الكم على طول الذراع",
+      "chestWidth": "محيط الصدر",
+      "chestWidthHint": "عرض الصدر عند أوسع نقطة",
+      "waist": "الخصر",
+      "waistHint": "محيط الخصر",
+      "hips": "الأرداف",
+      "hipsHint": "عرض الثوب عند خط الأرداف",
+      "neckWidth": "عرض الحلق",
+      "neckWidthHint": "عرض فتحة الرقبة",
+      "neckDepth": "طول الحلق",
+      "neckDepthHint": "عمق فتحة الرقبة",
+      "armholeHeight": "ارتفاع الإبط",
+      "armholeHeightHint": "من الكتف إلى الإبط",
+      "arabicSleeveSection": "مقاس الكم العربي",
+      "arabicSleeveSectionHint": "قياسات تفاصيل الكم",
+      "sleeveOpeningWidth": "عرض فتحة الكم",
+      "sleeveOpeningWidthHint": "عرض فتحة طرف الكم",
+      "cuffLength": "طول الكم",
+      "cuffLengthHint": "طول تفصيل الكم",
+      "notes": "ملاحظات إضافية",
+      "notesPlaceholder": "أي تفضيلات للملاءمة أو تعليمات خاصة للخياط"
+    },
+    "backToMeters": "العودة إلى أمتار القماش",
+    "continue": "متابعة إلى المراجعة"
+  },
+  "CustomOrderMeters": {
+    "stepLabel": "الخطوة {step} من {total}",
+    "title": "أمتار القماش",
+    "description": "أدخل عدد أمتار القماش المطلوبة. اقترحنا كمية بناءً على التصميم المختار — عدّلها إذا لزم الأمر.",
+    "loading": "جاري التحميل...",
+    "designLabel": "التصميم المختار",
+    "suggestedLabel": "الكمية المقترحة",
+    "inputLabel": "أمتار القماش",
+    "inputPlaceholder": "مثال: 3.5",
+    "inputHint": "أدخل قيمة أكبر من صفر.",
+    "ownFabricNote": "أنت تستخدم قماشك الخاص. هذه الكمية تساعد الخياط في التخطيط؛ لا تُضاف تكلفة قماش من المنصة.",
+    "platformFabricNote": "تُحسب تكلفة القماش عند الدفع لكل متر وفق القماش المختار من المنصة.",
+    "backToTailor": "العودة إلى الخياط والتصميم",
+    "backToFabric": "العودة لاختيار القماش",
+    "continue": "متابعة إلى القياسات",
+    "meters": "م"
+  },
+  "CustomOrderTailor": {
+    "stepLabel": "الخطوة {step} من {total}",
+    "title": "اختر الخياط والتصميم",
+    "description": "اختر متجر خياطة معتمداً وحدد تصميم قطعتك المخصصة.",
+    "loading": "جاري التحميل...",
+    "loadingTailors": "جاري تحميل متاجر الخياطة...",
+    "loadingDesigns": "جاري تحميل التصاميم...",
+    "tailorsTitle": "اختر خياطاً",
+    "designsTitle": "اختر تصميماً",
+    "emptyTailors": "لا توجد متاجر خياطة متاحة.",
+    "emptyDesigns": "لا توجد تصاميم متاحة من هذا الخياط حالياً.",
+    "backToFabric": "العودة لاختيار القماش",
+    "browseTailors": "تصفح جميع الخياطين",
+    "continueToFabric": "متابعة إلى اختيار القماش",
+    "continueToMeters": "متابعة إلى أمتار القماش",
+    "continue": "متابعة إلى أمتار القماش",
+    "fromPrice": "من",
+    "estimatedDays": "تقريباً",
+    "days": "يوم",
+    "estimatedMeters": "القماش المقدّر",
+    "meters": "م"
+  },
+  "CustomOrderFabric": {
+    "stepLabel": "الخطوة {step} من {total}",
+    "title": "اختر القماش",
+    "description": "اختر قماشاً من متاجر شركائنا، أو استخدم قماشك الخاص لهذا الطلب المخصص.",
+    "platformOptionEyebrow": "الخيار أ",
+    "platformOptionTitle": "قماش المنصة",
+    "platformOptionDescription": "تصفح أقمشة شركاء MOTD. يُحسب السعر لكل متر عند الدفع.",
+    "ownFabricOptionEyebrow": "الخيار ب",
+    "ownFabricOptionTitle": "استخدم قماشي الخاص",
+    "ownFabricOptionDescription": "أنت توفر القماش. لن تُضاف تكلفة قماش المنصة إلى طلبك.",
+    "ownFabricConfirmedTitle": "ستستخدم قماشك الخاص",
+    "ownFabricConfirmedDescription": "تابع لاختيار الخياط والتصميم. لن تُدرج تكلفة القماش في إجمالي الطلب.",
+    "loading": "جاري التحميل...",
+    "loadingFabrics": "جاري تحميل الأقمشة...",
+    "empty": "لا توجد أقمشة تطابق هذا الفلتر.",
+    "browseFabrics": "تصفح متجر الأقمشة",
+    "backToTailor": "العودة إلى الخياط والتصميم",
+    "continueToTailor": "متابعة إلى الخياط والتصميم",
+    "continueToMeters": "متابعة إلى أمتار القماش",
+    "continue": "متابعة إلى الخياط والتصميم",
+    "filters": {
+      "all": "جميع الأقمشة",
+      "wool": "صوف",
+      "silk": "حرير",
+      "linen": "كتان",
+      "cashmere": "كشمير",
+      "cotton": "قطن"
+    }
+  },
+  "TailorDetail": {
+    "loading": "جاري تحميل متجر الخياطة...",
+    "notFound": "متجر الخياطة غير موجود",
+    "notFoundTitle": "متجر الخياطة غير موجود",
+    "browseAll": "تصفح جميع الخياطين",
+    "goBack": "رجوع",
+    "tailors": "الخياطون",
+    "reviews": "مراجعة",
+    "phone": "الهاتف",
+    "designsTitle": "معرض التصاميم",
+    "designsEmpty": "لا توجد تصاميم متاحة من هذا الخياط حالياً.",
+    "fromPrice": "من",
+    "estimatedDays": "تقريباً",
+    "days": "يوم",
+    "startOrder": "ابدأ الطلب المخصص"
   },
   "MeasurementGuide": {
     "ariaLabel": "قِس بثقة",
@@ -132,6 +429,231 @@
       }
     }
   },
+  "TailorRegister": {
+    "eyebrow": "شارك مع MOTD",
+    "title": "تسجيل الخياط",
+    "description": "أنشئ حساب خياط لعرض متجرك وتصاميمك على MOTD. ستراجع فريقنا طلبك قبل النشر.",
+    "nameLabel": "الاسم الكامل",
+    "namePlaceholder": "اسمك الكامل",
+    "emailLabel": "البريد الإلكتروني",
+    "emailPlaceholder": "name@example.com",
+    "passwordLabel": "كلمة المرور",
+    "confirmPasswordLabel": "تأكيد كلمة المرور",
+    "passwordHint": "يُنصح بثمانية أحرف على الأقل",
+    "passwordMismatch": "كلمتا المرور غير متطابقتين",
+    "submit": "إرسال الطلب",
+    "submitting": "جاري الإرسال...",
+    "approvalNote": "بعد التسجيل، يجب أن يوافق مسؤول MOTD على حسابك قبل نشر متجرك وتصاميمك.",
+    "alreadyHaveAccount": "لديك حساب بالفعل؟",
+    "signIn": "تسجيل الدخول",
+    "customerRegister": "التسجيل كعميل",
+    "successTitle": "تم إرسال الطلب",
+    "successMessage": "شكراً لتقديمك. حساب الخياط بانتظار موافقة إدارة MOTD. سنُعلمك عندما يصبح متجرك جاهزاً للنشر.",
+    "successStatus": "الحالة: بانتظار الموافقة",
+    "goHome": "العودة للصفحة الرئيسية",
+    "imageCaption": "حرفية الخياطة، بعرض عالمي"
+  },
+  "TailorPortal": {
+    "loading": "جاري تحميل بوابة الخياط...",
+    "portalLabel": "بوابة الخياط",
+    "logout": "تسجيل الخروج",
+    "nav": {
+      "dashboard": "لوحة التحكم",
+      "shop": "ملف المتجر",
+      "designs": "التصاميم"
+    },
+    "pending": {
+      "eyebrow": "بوابة الخياط",
+      "title": "بانتظار الموافقة",
+      "description": "حساب الخياط قيد مراجعة فريق MOTD. ستتمكن من إدارة المتجر والتصاميم بعد الموافقة.",
+      "status": "الحالة: بانتظار الموافقة",
+      "goHome": "العودة للصفحة الرئيسية"
+    },
+    "rejected": {
+      "eyebrow": "بوابة الخياط",
+      "title": "لم تُقبل الطلب",
+      "description": "للأسف لم تُقبل طلب الانضمام كخياط في الوقت الحالي.",
+      "contact": "إذا كنت تعتقد أن هذا خطأ أو تريد مزيداً من المعلومات، تواصل مع فريق MOTD.",
+      "contactCta": "تواصل مع الدعم",
+      "goHome": "العودة للصفحة الرئيسية"
+    },
+    "dashboard": {
+      "eyebrow": "لوحة الخياط",
+      "title": "مرحباً، {name}",
+      "description": "أدر ملف متجرك وكتالوج التصاميم من هنا.",
+      "shopCardEyebrow": "الخطوة ١",
+      "shopCardTitle": "إعداد متجرك",
+      "designsCardEyebrow": "الخطوة ٢",
+      "designsCardTitle": "إدارة تصاميمك"
+    },
+    "shop": {
+      "loading": "جاري تحميل ملف المتجر...",
+      "eyebrow": "ملف المتجر",
+      "createTitle": "إنشاء متجرك",
+      "editTitle": "تعديل ملف المتجر",
+      "createDescription": "أعد متجرك العام. الاسم والرابط مطلوبان؛ يمكنك إضافة الوصف والصور وبيانات التواصل.",
+      "editDescription": "حدّث كيف يرى العملاء متجرك على MOTD.",
+      "viewPublicProfile": "عرض صفحة المتجر العامة",
+      "createCta": "إنشاء المتجر",
+      "saveCta": "حفظ التغييرات",
+      "saving": "جاري الحفظ...",
+      "backToDashboard": "العودة للوحة التحكم",
+      "successCreated": "تم إنشاء ملف المتجر بنجاح.",
+      "successUpdated": "تم تحديث ملف المتجر بنجاح.",
+      "imageSaved": "تم حفظ الصورة في ملف المتجر.",
+      "imageRemoved": "تمت إزالة الصورة بنجاح.",
+      "sections": {
+        "identity": "هوية المتجر",
+        "about": "عن متجرك",
+        "media": "الصور",
+        "contact": "الموقع والتواصل"
+      },
+      "fields": {
+        "name": "اسم المتجر (إنجليزي)",
+        "nameAr": "اسم المتجر (عربي)",
+        "slug": "رابط URL",
+        "description": "الوصف (إنجليزي)",
+        "descriptionAr": "الوصف (عربي)",
+        "logo": "شعار المتجر",
+        "coverImage": "صورة الغلاف",
+        "city": "المدينة",
+        "location": "العنوان / المنطقة",
+        "phone": "الهاتف"
+      },
+      "placeholders": {
+        "name": "مثال: Ayesha Al Riaz Atelier",
+        "nameAr": "مثال: أتيليه عائشة الرِياض",
+        "slug": "مثال: ayesha-al-riaz",
+        "description": "عرّف العملاء بحرفتك وتخصصاتك...",
+        "descriptionAr": "عرّف العملاء بحرفتك وتخصصاتك...",
+        "logo": "/images/tailor-1.png",
+        "coverImage": "/images/tailor-1.png",
+        "city": "دبي",
+        "location": "حي الفهيدي التاريخي",
+        "phone": "+971 4 353 2100"
+      },
+      "hints": {
+        "slug": "أحرف إنجليزية صغيرة وأرقام وشرطات فقط. يُستخدم في رابط متجرك العام.",
+        "logoUpload": "شعار مربّع للمتجر. يُستخدم عند عدم وجود صورة غلاف.",
+        "coverUpload": "صورة عريضة للعرض — تظهر في الصفحة الرئيسية وقائمة الخياطين وملفك العام."
+      },
+      "upload": {
+        "chooseFile": "اختر صورة",
+        "uploading": "جاري الرفع...",
+        "failed": "فشل الرفع",
+        "remove": "إزالة"
+      },
+      "validation": {
+        "nameRequired": "اسم المتجر بالإنجليزية مطلوب.",
+        "nameArRequired": "اسم المتجر بالعربية مطلوب.",
+        "slugRequired": "رابط URL مطلوب.",
+        "slugInvalid": "يجب أن يحتوي الرابط على أحرف إنجليزية صغيرة وأرقام وشرطات فقط."
+      },
+      "errors": {
+        "loadFailed": "تعذّر تحميل ملف المتجر.",
+        "createFailed": "تعذّر إنشاء ملف المتجر.",
+        "updateFailed": "تعذّر تحديث ملف المتجر.",
+        "conflict": "رابط المتجر مستخدم بالفعل. اختر رابطاً آخر."
+      },
+      "meta": {
+        "rating": "التقييم",
+        "reviews": "المراجعات",
+        "status": "حالة الظهور",
+        "active": "نشط",
+        "inactive": "غير نشط"
+      }
+    },
+    "designs": {
+      "loading": "جاري تحميل التصاميم...",
+      "eyebrow": "التصاميم",
+      "title": "تصاميمك",
+      "description": "أنشئ وأدر التصاميم التي يمكن للعملاء طلبها من متجرك.",
+      "addDesign": "إضافة تصميم",
+      "addFirst": "أضف أول تصميم",
+      "empty": "لم تنشر أي تصاميم بعد.",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "deleting": "جاري الحذف...",
+      "confirmDelete": "حذف \"{name}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+      "deleted": "تم حذف التصميم بنجاح.",
+      "statusActive": "نشط",
+      "statusInactive": "مخفي",
+      "basePrice": "من {price} درهم",
+      "estimatedDays": "{days} أيام",
+      "createTitle": "تصميم جديد",
+      "editTitle": "تعديل التصميم",
+      "createDescription": "أضف تصميماً جديداً لمتجر الخياطة.",
+      "editDescription": "حدّث السعر والصور وظهور التصميم.",
+      "createCta": "إنشاء التصميم",
+      "saveCta": "حفظ التغييرات",
+      "saving": "جاري الحفظ...",
+      "cancel": "إلغاء",
+      "backToList": "العودة للتصاميم",
+      "successCreated": "تم إنشاء التصميم بنجاح.",
+      "successUpdated": "تم تحديث التصميم بنجاح.",
+      "shopRequiredTitle": "أنشئ متجرك أولاً",
+      "shopRequiredDescription": "تحتاج ملف متجر قبل إضافة التصاميم.",
+      "shopRequiredCta": "إعداد ملف المتجر",
+      "addImage": "إضافة صورة أخرى",
+      "removeImage": "إزالة هذه الصورة",
+      "sections": {
+        "identity": "هوية التصميم",
+        "about": "الوصف",
+        "pricing": "التسعير ومدة التنفيذ",
+        "images": "الصور"
+      },
+      "fields": {
+        "name": "اسم التصميم (إنجليزي)",
+        "nameAr": "اسم التصميم (عربي)",
+        "slug": "رابط URL",
+        "category": "الفئة",
+        "description": "الوصف (إنجليزي)",
+        "descriptionAr": "الوصف (عربي)",
+        "basePrice": "السعر الأساسي (درهم)",
+        "tailoringFee": "رسوم الخياطة (درهم)",
+        "estimatedMeters": "الأقمشة المقدرة (متر)",
+        "estimatedDays": "الأيام المقدرة",
+        "isActive": "ظاهر للعملاء",
+        "image": "صورة {number}"
+      },
+      "hints": {
+        "slug": "أحرف إنجليزية صغيرة وأرقام وشرطات فقط."
+      },
+      "categories": {
+        "kandura": "كندورة",
+        "abaya": "عباية",
+        "bisht": "بشت",
+        "mukhawar": "مخاوَر",
+        "jalabiya": "جلابية",
+        "kaftan": "قفطان",
+        "thob": "ثوب"
+      },
+      "upload": {
+        "chooseFile": "اختر صورة",
+        "uploading": "جاري الرفع...",
+        "failed": "فشل الرفع",
+        "remove": "إزالة"
+      },
+      "validation": {
+        "nameRequired": "اسم التصميم بالإنجليزية مطلوب.",
+        "nameArRequired": "اسم التصميم بالعربية مطلوب.",
+        "slugRequired": "رابط URL مطلوب.",
+        "slugInvalid": "يجب أن يحتوي الرابط على أحرف إنجليزية صغيرة وأرقام وشرطات فقط.",
+        "imagesRequired": "صورة واحدة على الأقل مطلوبة.",
+        "basePriceInvalid": "يجب أن يكون السعر الأساسي صفراً أو أكثر.",
+        "tailoringFeeInvalid": "يجب أن تكون رسوم الخياطة صفراً أو أكثر.",
+        "estimatedMetersInvalid": "يجب أن تكون الأمترة المقدرة أكبر من صفر.",
+        "estimatedDaysInvalid": "يجب أن تكون الأيام المقدرة ١ على الأقل."
+      },
+      "errors": {
+        "loadFailed": "تعذّر تحميل التصاميم.",
+        "createFailed": "تعذّر إنشاء التصميم.",
+        "updateFailed": "تعذّر تحديث التصميم.",
+        "deleteFailed": "تعذّر حذف التصميم.",
+        "conflict": "رابط التصميم مستخدم بالفعل في متجرك."
+      }
+    }
+  },
   "PartnerSection": {
     "ariaLabel": "بوابة الشركاء والنشرة الإخبارية"
   },
@@ -157,7 +679,7 @@
     "title": "تعرّف على الخياطين",
     "description": "اكتشف أشهر خياطي الإمارات الماهرين، الذين يحفظون إرثاً عريقاً عبر حرفية استثنائية",
     "viewAll": "عرض جميع خياطي الإمارات الماهرين",
-    "bookConsultation": "احجز استشارة ←",
+    "bookConsultation": "اطّلع على تصاميم الخياط ←",
     "reviewCount": "({count} تقييم)",
     "cards": {
       "ayesha-al-riaz": {
@@ -206,41 +728,18 @@
       "thob": "ثوب"
     }
   },
-  "Hero": {
-    "ariaLabel": "القسم الرئيسي",
-    "imageAlt": "قماش مطرّز من خياط إماراتي",
-    "eyebrow": "مخوّرة اليوم",
-    "headlineLine1": "جذور في التقاليد.",
-    "headlineLine2": "تُرتدى اليوم.",
-    "body": "نختار بعناية أقمشة مطرّزة استثنائية من خياطين موثوقين في أنحاء الإمارات — لنحوّل رحلة تستغرق شهوراً إلى تجربة سلسة ومدروسة.",
-    "ctaShopNow": "تسوق الآن",
-    "ctaMeetTailors": "تعرّف على الخياطين"
-  },
   "LocaleSwitcher": {
     "label": "اللغة",
     "en": "English",
     "ar": "العربية"
   },
-  "Navbar": {
-    "ariaLabel": "التنقل الرئيسي",
-    "logoAlt": "MOTD",
-    "links": {
-      "fabric": "الأقمشة",
-      "fabricStore": "متجر الأقمشة",
-      "customClothing": "ملابس مخصصة",
-      "howItWorks": "كيف يعمل",
-      "collections": "المجموعات",
-      "tailors": "الخياطون",
-      "stories": "القصص"
-    },
-    "actions": {
-      "search": "بحث",
-      "account": "الحساب",
-      "wishlist": "المفضلة",
-      "cart": "السلة",
-      "openMenu": "فتح القائمة",
-      "closeMenu": "إغلاق القائمة"
-    }
+  "actions": {
+    "search": "بحث",
+    "account": "الحساب",
+    "wishlist": "المفضلة",
+    "cart": "السلة",
+    "openMenu": "فتح القائمة",
+    "closeMenu": "إغلاق القائمة"
   },
   "TrustBar": {
     "ariaLabel": "ضمانات الثقة والدفع",
@@ -251,9 +750,127 @@
       "fastDelivery": "توصيل سريع"
     }
   },
+  "Admin": {
+    "loading": "جاري تحميل لوحة الإدارة...",
+    "redirecting": "جاري إعادة التوجيه...",
+    "controlPanel": "لوحة التحكم",
+    "nav": {
+      "dashboard": "لوحة المعلومات",
+      "readyMade": "جاهز للارتداء",
+      "fabrics": "الأقمشة",
+      "tailors": "الخياطون",
+      "orders": "الطلبات",
+      "partners": "الشركاء",
+      "settings": "الإعدادات",
+      "logout": "تسجيل الخروج"
+    },
+    "OrdersCustom": {
+      "title": "طلبات الخياطة المخصصة",
+      "subtitle": "إدارة سير عمل الخياطة المخصصة",
+      "loading": "جاري تحميل الطلبات...",
+      "refresh": "تحديث",
+      "empty": "لا توجد طلبات مخصصة",
+      "loadError": "فشل تحميل الطلبات المخصصة",
+      "loadToastError": "فشل تحميل البيانات",
+      "updateSuccess": "تم تحديث الطلب",
+      "updateFailed": "فشل تحديث الحالة",
+      "notePlaceholder": "ملاحظة (اختياري)",
+      "advanceTo": "الانتقال إلى {status}",
+      "revertTo": "الرجوع إلى {status}",
+      "pipelineComplete": "تم التسليم — اكتمل سير العمل",
+      "tabs": {
+        "retail": "طلبات التجزئة",
+        "custom": "طلبات مخصصة"
+      },
+      "stats": {
+        "total": "الإجمالي",
+        "pending": "قيد الانتظار",
+        "inProduction": "قيد الإنتاج",
+        "delivered": "تم التسليم"
+      },
+      "columns": {
+        "customer": "العميل",
+        "design": "التصميم",
+        "tailor": "الخياط",
+        "status": "الحالة",
+        "date": "التاريخ",
+        "total": "الإجمالي"
+      },
+      "fabricLabel": "القماش: {name}",
+      "unknownCustomer": "عميل غير معروف",
+      "unknownDesign": "تصميم مخصص",
+      "unknownTailor": "خياط غير معروف",
+      "unknownFabric": "—"
+    }
+  },
+  "OrdersPage": {
+    "title": "طلباتك",
+    "description": "تتبع مشتريات الألبسة الجاهزة وطلبات الخياطة المخصصة في مكان واحد.",
+    "loading": "جاري التحميل...",
+    "tabs": {
+      "custom": "الخياطة المخصصة",
+      "retail": "جاهز"
+    },
+    "custom": {
+      "loading": "جاري تحميل الطلبات المخصصة...",
+      "error": "تعذر تحميل الطلبات المخصصة.",
+      "detailError": "تعذر تحميل خط زمني الطلب.",
+      "emptyTitle": "لا توجد طلبات مخصصة بعد",
+      "emptyDescription": "ابدأ طلب خياطة مخصص لعرضه هنا.",
+      "startOrder": "ابدأ طلباً مخصصاً",
+      "orderId": "طلب #{id}",
+      "unknownDesign": "تصميم مخصص",
+      "viewTimeline": "عرض الخط الزمني",
+      "hideTimeline": "إخفاء الخط الزمني",
+      "loadingDetail": "جاري تحميل الخط الزمني...",
+      "timelineTitle": "تقدّم الطلب",
+      "statuses": {
+        "pending": "قيد الانتظار",
+        "confirmed": "مؤكد",
+        "fabric_pickup_scheduled": "جدولة استلام القماش",
+        "at_tailor": "عند الخياط",
+        "in_production": "قيد الإنتاج",
+        "ready": "جاهز",
+        "out_for_delivery": "في التوصيل",
+        "delivered": "تم التسليم"
+      }
+    },
+    "retail": {
+      "loading": "جاري تحميل الطلبات الجاهزة...",
+      "error": "تعذر تحميل الطلبات الجاهزة.",
+      "emptyTitle": "لا توجد طلبات جاهزة بعد",
+      "emptyDescription": "تصفح قطع الجاهز المعادة للمقاس في الصفحة الرئيسية.",
+      "browseReadyMade": "تصفح الجاهز",
+      "orderId": "طلب #{id}",
+      "unknownItem": "قطعة جاهزة",
+      "size": "المقاس",
+      "statuses": {
+        "pending": "قيد الانتظار",
+        "confirmed": "مؤكد",
+        "shipped": "تم الشحن",
+        "delivered": "تم التسليم",
+        "cancelled": "ملغى"
+      }
+    },
+    "timeline": {
+      "ariaLabel": "خط زمني لتقدّم الطلب المخصص",
+      "pending": "معلّق",
+      "inProgress": "قيد التنفيذ",
+      "statuses": {
+        "pending": { "title": "تم تقديم الطلب" },
+        "confirmed": { "title": "تأكيد الطلب" },
+        "fabric_pickup_scheduled": { "title": "جدولة استلام القماش" },
+        "at_tailor": { "title": "عند متجر الخياطة" },
+        "in_production": { "title": "قيد الإنتاج" },
+        "ready": { "title": "القطعة جاهزة" },
+        "out_for_delivery": { "title": "في التوصيل" },
+        "delivered": { "title": "تم التسليم" }
+      }
+    }
+  },
   "Footer": {
     "ariaLabel": "تذييل الموقع",
-    "logoAlt": "MOTD",
+    "logoAlt": "MOTD — مخوّر اليوم",
     "tagline": "فخامة شرقية مفصّلة للعالم المعاصر.",
     "description": "وجهة راقية تربط العملاء المميزين بأقمشة استثنائية وبيوت خياطة متقنة وحرفية رفيعة مستوحاة من أناقة الخليج المعاصرة.",
     "copyright": "© 2026 MOTD. جميع الحقوق محفوظة.",
