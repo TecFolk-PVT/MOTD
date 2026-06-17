@@ -763,6 +763,44 @@
       "partners": "الشركاء",
       "settings": "الإعدادات",
       "logout": "تسجيل الخروج"
+    },
+    "OrdersCustom": {
+      "title": "طلبات الخياطة المخصصة",
+      "subtitle": "إدارة سير عمل الخياطة المخصصة",
+      "loading": "جاري تحميل الطلبات...",
+      "refresh": "تحديث",
+      "empty": "لا توجد طلبات مخصصة",
+      "loadError": "فشل تحميل الطلبات المخصصة",
+      "loadToastError": "فشل تحميل البيانات",
+      "updateSuccess": "تم تحديث الطلب",
+      "updateFailed": "فشل تحديث الحالة",
+      "notePlaceholder": "ملاحظة (اختياري)",
+      "advanceTo": "الانتقال إلى {status}",
+      "revertTo": "الرجوع إلى {status}",
+      "pipelineComplete": "تم التسليم — اكتمل سير العمل",
+      "tabs": {
+        "retail": "طلبات التجزئة",
+        "custom": "طلبات مخصصة"
+      },
+      "stats": {
+        "total": "الإجمالي",
+        "pending": "قيد الانتظار",
+        "inProduction": "قيد الإنتاج",
+        "delivered": "تم التسليم"
+      },
+      "columns": {
+        "customer": "العميل",
+        "design": "التصميم",
+        "tailor": "الخياط",
+        "status": "الحالة",
+        "date": "التاريخ",
+        "total": "الإجمالي"
+      },
+      "fabricLabel": "القماش: {name}",
+      "unknownCustomer": "عميل غير معروف",
+      "unknownDesign": "تصميم مخصص",
+      "unknownTailor": "خياط غير معروف",
+      "unknownFabric": "—"
     }
   },
   "OrdersPage": {

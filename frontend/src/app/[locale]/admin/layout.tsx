@@ -68,7 +68,7 @@ export default function AdminLayout({
         { label: "Ready-made", href: "/admin/ready-made", icon: Shirt },
         { label: "Fabrics", href: "/admin/fabrics", icon: Scissors },
         { label: "Tailors", href: "/admin/tailors", icon: Users },
-        { label: "Orders", href: "/admin/orders/custom", icon: ShoppingBag },
+        { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
         { label: "Partners", href: "/admin/partners", icon: Store },
         { label: "Settings", href: "/admin/settings", icon: Settings },
     ];

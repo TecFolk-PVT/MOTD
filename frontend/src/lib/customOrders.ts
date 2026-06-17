@@ -76,6 +76,24 @@ export function getCustomOrderStatusIndex(status: CustomOrderStatus): number {
     return CUSTOM_ORDER_STATUSES.indexOf(status);
 }
 
+export function isCustomOrderStatus(status: string): status is CustomOrderStatus {
+    return CUSTOM_ORDER_STATUSES.includes(status as CustomOrderStatus);
+}
+
+export function getNextCustomOrderStatus(status: string): CustomOrderStatus | null {
+    if (!isCustomOrderStatus(status)) return null;
+    const index = getCustomOrderStatusIndex(status);
+    if (index < 0 || index >= CUSTOM_ORDER_STATUSES.length - 1) return null;
+    return CUSTOM_ORDER_STATUSES[index + 1];
+}
+
+export function getPreviousCustomOrderStatus(status: string): CustomOrderStatus | null {
+    if (!isCustomOrderStatus(status)) return null;
+    const index = getCustomOrderStatusIndex(status);
+    if (index <= 0) return null;
+    return CUSTOM_ORDER_STATUSES[index - 1];
+}
+
 export function getHistoryEntryForStatus(
     history: CustomOrderStatusHistoryEntry[],
     status: CustomOrderStatus,

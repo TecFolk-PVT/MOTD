@@ -577,6 +577,44 @@
       "partners": "Partners",
       "settings": "Settings",
       "logout": "Logout"
+    },
+    "OrdersCustom": {
+      "title": "Custom Orders",
+      "subtitle": "Manage the custom tailoring workflow",
+      "loading": "Loading orders...",
+      "refresh": "Refresh",
+      "empty": "No custom orders found",
+      "loadError": "Failed to load custom orders",
+      "loadToastError": "Failed to load data",
+      "updateSuccess": "Order updated",
+      "updateFailed": "Failed to update status",
+      "notePlaceholder": "Note (optional)",
+      "advanceTo": "Advance to {status}",
+      "revertTo": "Revert to {status}",
+      "pipelineComplete": "Delivered — workflow complete",
+      "tabs": {
+        "retail": "Retail orders",
+        "custom": "Custom orders"
+      },
+      "stats": {
+        "total": "Total",
+        "pending": "Pending",
+        "inProduction": "In production",
+        "delivered": "Delivered"
+      },
+      "columns": {
+        "customer": "Customer",
+        "design": "Design",
+        "tailor": "Tailor",
+        "status": "Status",
+        "date": "Date",
+        "total": "Total"
+      },
+      "fabricLabel": "Fabric: {name}",
+      "unknownCustomer": "Unknown customer",
+      "unknownDesign": "Custom design",
+      "unknownTailor": "Unknown tailor",
+      "unknownFabric": "—"
     }
   },
   "OrdersPage": {

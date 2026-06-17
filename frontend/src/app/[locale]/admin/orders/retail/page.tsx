@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api/client";
 import { PackageSearch, AlertTriangle, ChevronDown } from "lucide-react";
 import { useTranslations } from "next-intl";
+import AdminOrdersTabs from "@/components/admin/AdminOrdersTabs";
 
 type RetailOrder = {
   _id: string;
@@ -146,6 +147,8 @@ export default function AdminRetailOrdersPage() {
 
   return (
     <div className="space-y-6 p-6">
+      <AdminOrdersTabs />
+
       <div>
         <h1 className="text-3xl font-light text-black tracking-tight">Retail Orders</h1>
         <p className="text-gray-500 mt-1 text-sm">Monitor and update delivery fulfillment status pipelines for ready-made items.</p>
