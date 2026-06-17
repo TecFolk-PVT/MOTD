@@ -1,6 +1,7 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 import ReadyMadeProduct from "../models/ReadyMadeProduct.js";
 import Fabric from "../models/Fabric.js";
 import User from "../models/User.js";
@@ -18,6 +19,26 @@ import {
 } from "../middleware/uploadFabricImages.js";
 
 const adminRouter = express.Router();
+const BCRYPT_ROUNDS = 10;
+
+function partnerPublicFields(user) {
+  return {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    isActive: user.isActive,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
+  };
+}
+
+async function findFabricStorePartner(id) {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return null;
+  }
+  return User.findOne({ _id: id, role: "fabric_store" });
+}
 
 // Define admin routes here (e.g. C-02 to C-10)
 adminRouter.get("/health", (req, res) => {
@@ -184,78 +205,138 @@ adminRouter.post(
   }),
 );
 
+// ==========================================
+// C-20: Admin fabric store partners
+// GET    /api/admin/partners/fabric-stores
+// POST   /api/admin/create-partners
+// PUT    /api/admin/edit-partners/:id
+// DELETE /api/admin/delete-partner/:id
+// PATCH  /api/admin/partners/fabric-stores/:id/toggle-active
+// ==========================================
+
 // GET /api/admin/partners/fabric-stores
-// Approved fabric store partners for admin fabric form picker
+// Active partners for fabric form picker; pass ?includeInactive=1 for admin list
 adminRouter.get(
   "/partners/fabric-stores",
-  expressAsyncHandler(async (_req, res) => {
-    const stores = await User.find({ role: "fabric_store" }).sort({ name: 1 });
+  expressAsyncHandler(async (req, res) => {
+    const filter = { role: "fabric_store" };
+    if (req.query.includeInactive !== "1") {
+      filter.isActive = true;
+    }
+
+    const stores = await User.find(filter)
+      .select("-password")
+      .sort({ name: 1 });
 
     res.send(stores);
   }),
 );
 
-// POST /api/admin/users
+// POST /api/admin/create-partners
 adminRouter.post(
   "/create-partners",
   expressAsyncHandler(async (req, res) => {
-    const { name, email, password, role, approvalStatus } = req.body;
-    // validate required fields
-    const existingUser = await User.findOne({ email });
+    const { name, email, password } = req.body;
+
+    if (!name?.trim() || !email?.trim() || !password) {
+      res.status(400).send({ message: "Name, email, and password are required" });
+      return;
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       res.status(400).send({ message: "User already exists" });
       return;
     }
+
     const user = new User({
-      name,
-      email,
-      password, // should be hashed; use pre-save hook or hash here
-      role: role || "fabric_store",
-      approvalStatus: approvalStatus || "approved",
+      name: name.trim(),
+      email: normalizedEmail,
+      password: bcrypt.hashSync(password, BCRYPT_ROUNDS),
+      role: "fabric_store",
     });
     await user.save();
+
     res.status(201).send({
-      message: "User created",
-      user: {
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      message: "Partner created",
+      user: partnerPublicFields(user),
     });
   }),
 );
 
-// PUT /api/admin/users/:id
+// PUT /api/admin/edit-partners/:id
 adminRouter.put(
   "/edit-partners/:id",
   expressAsyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
-    const user = await User.findById(req.params.id);
+    const user = await findFabricStorePartner(req.params.id);
     if (!user) {
-      res.status(404).send({ message: "User not found" });
+      res.status(404).send({ message: "Fabric store partner not found" });
       return;
     }
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (password) user.password = password; // handle hashing
+
+    if (name?.trim()) {
+      user.name = name.trim();
+    }
+    if (email?.trim()) {
+      user.email = email.toLowerCase().trim();
+    }
+    if (password) {
+      user.password = bcrypt.hashSync(password, BCRYPT_ROUNDS);
+    }
+
     await user.save();
-    res.send({ message: "User updated", user });
+    res.send({
+      message: "Partner updated",
+      user: partnerPublicFields(user),
+    });
   }),
 );
 
-// DELETE /api/admin/users/:id
+// DELETE /api/admin/delete-partner/:id
 adminRouter.delete(
   "/delete-partner/:id",
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
+    const user = await findFabricStorePartner(req.params.id);
     if (!user) {
-      res.status(404).send({ message: "User not found" });
+      res.status(404).send({ message: "Fabric store partner not found" });
       return;
     }
+
     await user.deleteOne();
-    res.send({ message: "User deleted" });
-  })
+    res.send({ message: "Partner deleted" });
+  }),
+);
+
+async function toggleFabricStorePartnerActive(req, res) {
+  const user = await findFabricStorePartner(req.params.id);
+  if (!user) {
+    res.status(404).send({ message: "Fabric store partner not found" });
+    return;
+  }
+
+  user.isActive = !user.isActive;
+  const updated = await user.save();
+
+  res.send({
+    success: true,
+    message: `Partner successfully ${updated.isActive ? "activated" : "deactivated"}`,
+    user: partnerPublicFields(updated),
+  });
+}
+
+// PATCH /api/admin/partners/fabric-stores/:id/toggle-active
+adminRouter.patch(
+  "/partners/fabric-stores/:id/toggle-active",
+  expressAsyncHandler(toggleFabricStorePartnerActive),
+);
+
+// PATCH /api/admin/partners/fabric-stores/:id/deactivate
+// Backward-compatible alias — toggles isActive
+adminRouter.patch(
+  "/partners/fabric-stores/:id/deactivate",
+  expressAsyncHandler(toggleFabricStorePartnerActive),
 );
 
 async function assertFabricStorePartner(listedByStore) {
@@ -266,6 +347,7 @@ async function assertFabricStorePartner(listedByStore) {
   const store = await User.findOne({
     _id: listedByStore,
     role: "fabric_store",
+    isActive: true,
   }).select("_id");
 
   if (!store) {

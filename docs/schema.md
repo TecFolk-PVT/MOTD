@@ -67,9 +67,22 @@ Tailors self-register with `role: 'tailor'`. Admin approves or rejects accounts 
 | `role` | String (enum) | yes | `customer` | See **ROLES** below |
 | `approvalStatus` | String (enum) | yes | role-based | See **APPROVAL_STATUSES** and approval rules above |
 | `rejectionNote` | String | no | `''` | Optional admin note when `approvalStatus === 'rejected'`; cleared on approve |
+| `isActive` | Boolean | yes | `true` | Account enabled; `false` blocks sign-in (used for fabric store partners) |
 | `isAdmin` | Boolean | yes | `false` | Derived: `true` when `role === 'admin'` (pre-save) |
 
 **Indexes:** `{ role: 1, approvalStatus: 1 }`, unique on `email`.
+
+### Admin fabric store partners (C-20)
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/admin/partners/fabric-stores` | Active partners (fabric form picker). `?includeInactive=1` includes deactivated accounts for admin list |
+| `POST` | `/api/admin/create-partners` | Create `fabric_store` user (password hashed server-side) |
+| `PUT` | `/api/admin/edit-partners/:id` | Update name, email, optional password reset |
+| `DELETE` | `/api/admin/delete-partner/:id` | Hard delete partner |
+| `PATCH` | `/api/admin/partners/fabric-stores/:id/toggle-active` | Toggle `isActive` (deactivate / reactivate) |
+
+`fabric_store` accounts are auto-approved via User pre-save; use `isActive` for moderation instead of `approvalStatus`.
 
 ---
 

@@ -24,6 +24,7 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     rejectionNote: { type: String, default: '', trim: true },
+    isActive: { type: Boolean, default: true, required: true },
     isAdmin: { type: Boolean, default: false, required: true },
   },
   {

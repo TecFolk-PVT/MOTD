@@ -97,18 +97,21 @@ async function seedUsersAndSettings() {
       email: 'hanayan@motd.test',
       password,
       role: 'fabric_store',
+      isActive: true,
     },
     {
       name: 'Mauzan Textiles',
       email: 'mauzan@motd.test',
       password,
       role: 'fabric_store',
+      isActive: true,
     },
     {
       name: 'Sharjah Heritage Fabrics',
       email: 'sharjah@motd.test',
       password,
       role: 'fabric_store',
+      isActive: true,
     },
   ]);
 

@@ -22,7 +22,6 @@ interface FabricStorePartner {
   name: string;
   email: string;
   createdAt?: string;
-  approvalStatus?: "pending" | "approved" | "rejected";
   isActive?: boolean;
 }
 
@@ -68,15 +67,15 @@ function PartnerFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const payload: { name: string; email: string; password?: string } = {
-      name,
-      email,
-    };
-    if (!isEditing && password) {
+    const payload: PartnerFormData = { name, email };
+    if (password) {
       payload.password = password;
     }
     onSubmit(payload);
   };
+
+  const inputClassName =
+    "w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-black transition";
 
   return (
     <div
@@ -88,45 +87,46 @@ function PartnerFormModal({
           {isEditing ? "Edit Partner" : "Add Partner"}
         </h2>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-              Name
-            </label>
+          <FormField label="Name" name="name" required>
             <input
+              id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-black transition"
+              className={inputClassName}
             />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-              Email
-            </label>
+          </FormField>
+          <FormField label="Email" name="email" required>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-black transition"
+              className={inputClassName}
             />
-          </div>
-          {!isEditing && (
-            <div>
-              <label className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:border-black transition"
-              />
-            </div>
-          )}
+          </FormField>
+          <FormField
+            label={isEditing ? "New password" : "Password"}
+            name="password"
+            required={!isEditing}
+            hint={
+              isEditing
+                ? "Leave blank to keep the current password"
+                : undefined
+            }
+          >
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required={!isEditing}
+              minLength={isEditing ? undefined : 6}
+              className={inputClassName}
+            />
+          </FormField>
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
@@ -233,7 +233,7 @@ export default function AdminPartnersPage() {
     setError(null);
     try {
       const res = await api.get<FabricStorePartner[]>(
-        "/api/admin/partners/fabric-stores",
+        "/api/admin/partners/fabric-stores?includeInactive=1",
       );
       setRows(res || []);
     } catch (err) {
@@ -252,11 +252,7 @@ export default function AdminPartnersPage() {
   const handleCreate = async (data: PartnerFormData) => {
     setFormLoading(true);
     try {
-      await api.post("/api/admin/create-partners", {
-        ...data,
-        role: "fabric_store",
-        approvalStatus: "approved",
-      });
+      await api.post("/api/admin/create-partners", data);
       toast.success("Partner created");
       setFormModalOpen(false);
       fetchData();
@@ -274,13 +270,14 @@ export default function AdminPartnersPage() {
 
   const handleUpdate = async (data: PartnerFormData) => {
     if (!editingPartner) return;
-    const { name, email } = data;
+    const { name, email, password } = data;
     setFormLoading(true);
     try {
-      await api.put(`/api/admin/edit-partners/${editingPartner._id}`, {
-        name,
-        email,
-      });
+      const payload: PartnerFormData = { name, email };
+      if (password) {
+        payload.password = password;
+      }
+      await api.put(`/api/admin/edit-partners/${editingPartner._id}`, payload);
       toast.success("Partner updated");
       setFormModalOpen(false);
       setEditingPartner(undefined);
@@ -290,6 +287,12 @@ export default function AdminPartnersPage() {
     } finally {
       setFormLoading(false);
     }
+  };
+
+  const handleDeactivate = (partner: FabricStorePartner) => {
+    setSelectedPartner(partner);
+    setConfirmAction("deactivate");
+    setConfirmModalOpen(true);
   };
 
   const handleDelete = (partner: FabricStorePartner) => {
@@ -303,10 +306,10 @@ export default function AdminPartnersPage() {
     setConfirmLoading(true);
     try {
       if (confirmAction === "deactivate") {
+        await api.patch(
+          `/api/admin/partners/fabric-stores/${selectedPartner._id}/toggle-active`,
+        );
         const currentActive = selectedPartner.isActive ?? true;
-        await api.patch(`/api/admin/users/${selectedPartner._id}`, {
-          isActive: !currentActive,
-        });
         toast.success(`Partner ${currentActive ? "deactivated" : "activated"}`);
       } else if (confirmAction === "delete") {
         await api.delete(`/api/admin/delete-partner/${selectedPartner._id}`);
@@ -336,20 +339,26 @@ export default function AdminPartnersPage() {
 
   const formatDate = (date?: string) => {
     if (!date) return "—";
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    return new Date(date).toLocaleDateString(
+      localeParam === "ar" ? "ar-AE" : "en-US",
+      {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      },
+    );
   };
+
+  const activeCount = rows.filter((r) => r.isActive !== false).length;
+  const inactiveCount = rows.length - activeCount;
 
   // ---------- Loading / Error ----------
   if (loading) {
     return (
       <div className="space-y-6 animate-pulse">
         <div className="h-8 w-48 bg-gray-200 rounded" />
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-6">
-          {[...Array(4)].map((_, i) => (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+          {[...Array(3)].map((_, i) => (
             <div
               key={i}
               className="bg-white rounded-2xl p-4 border border-gray-100"
@@ -471,28 +480,18 @@ export default function AdminPartnersPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
           <p className="text-xs text-gray-400 uppercase">Total Partners</p>
           <p className="text-2xl font-light text-black mt-1">{rows.length}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <p className="text-xs text-gray-400 uppercase">Pending</p>
-          <p className="text-2xl font-light text-black mt-1">
-            {rows.filter((r) => r.approvalStatus === "pending").length}
-          </p>
+          <p className="text-xs text-gray-400 uppercase">Active</p>
+          <p className="text-2xl font-light text-black mt-1">{activeCount}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <p className="text-xs text-gray-400 uppercase">Approved</p>
-          <p className="text-2xl font-light text-black mt-1">
-            {rows.filter((r) => r.approvalStatus === "approved").length}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <p className="text-xs text-gray-400 uppercase">Rejected</p>
-          <p className="text-2xl font-light text-black mt-1">
-            {rows.filter((r) => r.approvalStatus === "rejected").length}
-          </p>
+          <p className="text-xs text-gray-400 uppercase">Inactive</p>
+          <p className="text-2xl font-light text-black mt-1">{inactiveCount}</p>
         </div>
       </div>
 
@@ -541,15 +540,10 @@ export default function AdminPartnersPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredRows.map((row) => {
-                  const status = row.approvalStatus || "pending";
-                  const statusColor =
-                    status === "approved"
-                      ? "bg-green-100 text-green-800"
-                      : status === "rejected"
-                        ? "bg-red-100 text-red-800"
-                        : "bg-yellow-100 text-yellow-800";
-                  const isActive =
-                    row.isActive !== undefined ? row.isActive : true;
+                  const isActive = row.isActive !== false;
+                  const statusColor = isActive
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-100 text-gray-600";
 
                   return (
                     <tr key={row._id} className="hover:bg-gray-50">
@@ -563,13 +557,8 @@ export default function AdminPartnersPage() {
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}`}
                         >
-                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                          {isActive ? "Active" : "Inactive"}
                         </span>
-                        {!isActive && (
-                          <span className="ml-2 text-xs text-gray-400">
-                            (inactive)
-                          </span>
-                        )}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
                         {formatDate(row.createdAt)}
@@ -582,6 +571,17 @@ export default function AdminPartnersPage() {
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeactivate(row)}
+                            className={`px-2 py-1 rounded text-xs font-medium transition hover:cursor-pointer ${
+                              isActive
+                                ? "text-red-700 bg-red-50 hover:bg-red-100"
+                                : "text-green-700 bg-green-50 hover:bg-green-100"
+                            }`}
+                            title={isActive ? "Deactivate" : "Activate"}
+                          >
+                            {isActive ? "Deactivate" : "Activate"}
                           </button>
                           <button
                             onClick={() => handleDelete(row)}

@@ -57,6 +57,11 @@ userRouter.post(
       return;
     }
 
+    if (user.isActive === false) {
+      res.status(403).send({ message: 'Account is deactivated' });
+      return;
+    }
+
     sendUserResponse(res, user);
   })
 );
