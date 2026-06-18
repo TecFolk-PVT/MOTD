@@ -141,9 +141,6 @@ export default function DesignDetailView({
                             <p className="[font-family:var(--font-ui)] text-2xl text-black">
                                 {formatDesignBasePrice(design.basePrice, locale)}
                             </p>
-                            <p className="[font-family:var(--font-ui)] text-xs uppercase tracking-[0.2em] text-(--color-grey-muted) mt-1">
-                                {labels.startingPrice}
-                            </p>
                         </div>
 
                         {description && (

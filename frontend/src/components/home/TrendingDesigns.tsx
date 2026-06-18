@@ -360,12 +360,12 @@ export function TrendingSection() {
                                                         {name}
                                                     </h3>
                                                     <span className="[font-family:var(--font-ui)] text-[12px] xs:text-[13px] sm:text-[14px] md:text-[13px] lg:text-[14px] xl:text-[15px] 2xl:text-[16px] tracking-[0.24em] text-black font-normal whitespace-nowrap">
-                                                        {fromLabel} {priceText}
+                                                        {priceText}
                                                     </span>
                                                 </div>
 
                                                 <p className="[font-family:var(--font-ui)] text-[8px] xs:text-[7px] sm:text-[8px] md:text-[7px] lg:text-[8px] xl:text-[9px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-2 xs:mb-2.5 sm:mb-3 font-normal">
-                                                    {tailorName}
+                                                    {isArabic ? "الخياط: " : "Tailor: "}{tailorName}
                                                 </p>
 
                                                 <p className="[font-family:var(--font-body)] text-[11px] xs:text-[10px] sm:text-[11px] md:text-[10px] lg:text-[11px] xl:text-[12px] 2xl:text-[13px] leading-relaxed xs:leading-[1.5] sm:leading-[1.6] text-(--color-grey-muted) line-clamp-2 font-normal grow">
