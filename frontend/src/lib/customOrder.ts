@@ -405,7 +405,7 @@ export function isTailorStepComplete(draft: CustomOrderDraft): boolean {
 }
 
 export function isMetersStepComplete(draft: CustomOrderDraft): boolean {
-    return draft.fabricMeters !== null && draft.fabricMeters >= 3 && draft.fabricMeters <= 7;
+    return draft.fabricMeters !== null && draft.fabricMeters >= 2 && draft.fabricMeters <= 7;
 }
 
 export function isMeasurementsStepComplete(_draft: CustomOrderDraft): boolean {

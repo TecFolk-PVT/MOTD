@@ -41,17 +41,17 @@ export default function FabricMetersStep() {
 
         if (draft.fabricMeters !== null && draft.fabricMeters > 0) {
             setMetersInput(String(draft.fabricMeters));
-            if (draft.fabricMeters >= 3 && draft.fabricMeters <= 7) {
+            if (draft.fabricMeters >= 2 && draft.fabricMeters <= 7) {
                 setFabricMeters(draft.fabricMeters);
             } else {
                 setFabricMeters(null);
             }
         } else if (draft.design?.estimatedMeters && draft.design.estimatedMeters > 0) {
-            if (draft.design.estimatedMeters >= 3 && draft.design.estimatedMeters <= 7) {
+            if (draft.design.estimatedMeters >= 2 && draft.design.estimatedMeters <= 7) {
                 setFabricMeters(draft.design.estimatedMeters);
                 setMetersInput(String(draft.design.estimatedMeters));
             } else {
-                const boundValue = Math.min(7, Math.max(3, draft.design.estimatedMeters));
+                const boundValue = Math.min(7, Math.max(2, draft.design.estimatedMeters));
                 setFabricMeters(boundValue);
                 setMetersInput(String(boundValue));
             }
@@ -82,7 +82,7 @@ export default function FabricMetersStep() {
     const parsedValue = Number(metersInput);
     const isInputValid =
         metersInput.trim() === "" ||
-        (Number.isFinite(parsedValue) && parsedValue >= 3 && parsedValue <= 7);
+        (Number.isFinite(parsedValue) && parsedValue >= 2 && parsedValue <= 7);
 
     const handleInputChange = (value: string) => {
         setMetersInput(value);
@@ -92,7 +92,7 @@ export default function FabricMetersStep() {
         }
 
         const parsed = Number(value);
-        if (Number.isFinite(parsed) && parsed >= 3 && parsed <= 7) {
+        if (Number.isFinite(parsed) && parsed >= 2 && parsed <= 7) {
             setFabricMeters(parsed);
         } else {
             setFabricMeters(null);
@@ -150,7 +150,7 @@ export default function FabricMetersStep() {
                     <input
                         id="fabric-meters"
                         type="number"
-                        min="3"
+                        min="2"
                         max="7"
                         step="0.1"
                         inputMode="decimal"
