@@ -54,6 +54,10 @@ export interface TailorDesignListItem {
     tailoringFee: number;
     estimatedMeters: number;
     estimatedDays: number;
+    tailorSlug?: string;
+    tailorName?: string;
+    tailorNameAr?: string;
+    tailorShopId?: string;
 }
 
 const DEFAULT_TAILOR_IMAGE = "/images/tailor-1.png";

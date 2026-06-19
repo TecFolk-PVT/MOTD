@@ -307,7 +307,7 @@ export function TrendingSection() {
                     </button>
 
                     {/* Embla Carousel Viewport */}
-                    <div className="overflow-hidden" ref={emblaRef}>
+                    <div className="overflow-hidden py-8 -my-8" ref={emblaRef}>
                         <div className="flex gap-2 xs:gap-3 sm:gap-4 md:gap-5 lg:gap-6">
                             {filteredDesigns.map((design) => {
                                 const { name, description, category } = getDesignDisplayFields(
@@ -332,19 +332,20 @@ export function TrendingSection() {
                                             lg:flex-[0_0_calc(33.333%-24px)]
                                             xl:flex-[0_0_calc(28.571%-28px)]
                                             2xl:flex-[0_0_calc(25%-32px)]
-                                            group overflow-hidden rounded-lg
+                                            group py-4
                                         `}
                                     >
                                         <Link
                                             href={`/designs/${design.slug}`}
-                                            className="block bg-(--bg-page) border border-(--color-border) overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 h-full flex flex-col hover:cursor-pointer text-left"
+                                            className="block bg-(--bg-page) border border-(--color-border) rounded-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 h-full flex flex-col hover:cursor-pointer text-left"
                                         >
-                                            <div className="aspect-9/9 relative overflow-hidden bg-[#F5F4F0]">
+                                            <div className="aspect-9/9 relative overflow-hidden bg-[#F5F4F0] rounded-t-lg">
                                                 <img
                                                     src={imageUrl}
                                                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                                                     alt={name}
                                                 />
+                                                <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                                 <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
                                                     <span
                                                         className="bg-[#8B6F47] text-white px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-normal"

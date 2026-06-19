@@ -194,7 +194,7 @@ export function ReadyToWearSection() {
                         </svg>
                     </button>
 
-                    <div className="overflow-hidden" ref={emblaRef}>
+                    <div className="overflow-hidden py-8 -my-8" ref={emblaRef}>
                         <div className="flex will-change-transform gap-2 xs:gap-3 sm:gap-4 md:gap-5 lg:gap-6">
                             {products.map((item) => {
                                 const { title, description } = getReadyMadeDisplayFields(
@@ -206,19 +206,20 @@ export function ReadyToWearSection() {
                                 return (
                                     <div
                                         key={item._id}
-                                        className="flex-[0_0_calc(100%-8px)] xs:flex-[0_0_calc(66.666%-12px)] sm:flex-[0_0_calc(50%-16px)] md:flex-[0_0_calc(40%-20px)] lg:flex-[0_0_calc(33.333%-24px)] xl:flex-[0_0_calc(28.571%-28px)] 2xl:flex-[0_0_calc(25%-32px)] group overflow-hidden rounded-lg"
+                                        className="flex-[0_0_calc(100%-8px)] xs:flex-[0_0_calc(66.666%-12px)] sm:flex-[0_0_calc(50%-16px)] md:flex-[0_0_calc(40%-20px)] lg:flex-[0_0_calc(33.333%-24px)] xl:flex-[0_0_calc(28.571%-28px)] 2xl:flex-[0_0_calc(25%-32px)] group py-4"
                                     >
                                         <Link
                                             href={`/ready-made/${item.slug}`}
-                                            className="block bg-(--bg-page) border border-(--color-border) overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-1 h-full flex flex-col hover:cursor-pointer"
+                                            className="block bg-(--bg-page) border border-(--color-border) rounded-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 h-full flex flex-col hover:cursor-pointer"
                                         >
                                             {/* Image with aspect ratio and hover zoom */}
-                                            <div className="aspect-9/9 relative overflow-hidden">
+                                            <div className="aspect-9/9 relative overflow-hidden rounded-t-lg">
                                                 <img
                                                     src={image}
                                                     alt={title}
                                                     className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                                                 />
+                                                <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                             </div>
 
                                             {/* Content area */}
