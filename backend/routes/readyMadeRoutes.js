@@ -25,15 +25,17 @@ readyMadeRoutes.get("/", async (req, res) => {
         const items = products.map((p) => ({
             _id: p._id,
             slug: p.slug,
-            price: p.price,
-            size: p.size,
-            style: p.style,
             images: p.images,
-            countInStock: p.countInStock,
+            colors: p.colors,
             name: p.name,
             nameAr: p.nameAr,
             description: p.description,
             descriptionAr: p.descriptionAr,
+            finalSellingPriceAED: p.finalSellingPriceAED,
+            tag: p.tag,
+            tagAr: p.tagAr,
+            tagColor: p.tagColor,
+            tagColorAr: p.tagColorAr,
         }));
 
         res.json({
