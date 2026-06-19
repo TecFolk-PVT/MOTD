@@ -250,8 +250,8 @@
     "suggestedLabel": "Suggested amount",
     "inputLabel": "Fabric meters",
     "inputPlaceholder": "e.g. 3.5",
-    "inputHint": "Enter a value between 3 and 7 meters.",
-    "validationError": "Fabric meters must be between 3 and 7.",
+    "inputHint": "Enter a value between 2 and 7 meters.",
+    "validationError": "Fabric meters must be between 2 and 7.",
     "ownFabricNote": "You're using your own fabric. This amount helps your tailor plan the work; no platform fabric cost applies.",
     "platformFabricNote": "Fabric cost at checkout is calculated per meter using your selected platform fabric.",
     "backToTailor": "Back to tailor & design",
@@ -261,13 +261,14 @@
   },
   "CustomOrderTailor": {
     "stepLabel": "Step {step} of {total}",
-    "title": "Choose Tailor & Design",
+    "title": "Choose a Design",
     "description": "Select an approved tailor shop and pick the design style for your custom garment.",
     "loading": "Loading...",
     "loadingTailors": "Loading tailor shops...",
     "loadingDesigns": "Loading designs...",
     "tailorsTitle": "Select a Tailor",
     "designsTitle": "Select a Design",
+    "tailorLabel": "Tailor: {name}",
     "emptyTailors": "No tailor shops available.",
     "emptyDesigns": "This tailor has no designs available yet.",
     "backToFabric": "Back to fabric selection",
@@ -298,7 +299,7 @@
     "empty": "No fabrics match this filter.",
     "browseFabrics": "Browse fabric store",
     "backToTailor": "Back to tailor & design",
-    "continueToTailor": "Continue to Tailor & Design",
+    "continueToTailor": "Continue to Tailor Design",
     "continueToMeters": "Continue to Fabric Meters",
     "continue": "Continue to Tailor & Design",
     "filters": {
@@ -692,14 +693,30 @@
       "pending": "Pending",
       "inProgress": "In progress",
       "statuses": {
-        "pending": { "title": "Order placed" },
-        "confirmed": { "title": "Order confirmed" },
-        "fabric_pickup_scheduled": { "title": "Fabric pickup scheduled" },
-        "at_tailor": { "title": "At tailor shop" },
-        "in_production": { "title": "In production" },
-        "ready": { "title": "Garment ready" },
-        "out_for_delivery": { "title": "Out for delivery" },
-        "delivered": { "title": "Delivered" }
+        "pending": {
+          "title": "Order placed"
+        },
+        "confirmed": {
+          "title": "Order confirmed"
+        },
+        "fabric_pickup_scheduled": {
+          "title": "Fabric pickup scheduled"
+        },
+        "at_tailor": {
+          "title": "At tailor shop"
+        },
+        "in_production": {
+          "title": "In production"
+        },
+        "ready": {
+          "title": "Garment ready"
+        },
+        "out_for_delivery": {
+          "title": "Out for delivery"
+        },
+        "delivered": {
+          "title": "Delivered"
+        }
       }
     }
   },

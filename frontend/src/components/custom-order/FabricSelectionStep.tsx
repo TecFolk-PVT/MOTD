@@ -272,18 +272,19 @@ export default function FabricSelectionStep() {
                                         key={item._id}
                                         type="button"
                                         onClick={() => handleSelectFabric(item)}
-                                        className={`text-left border overflow-hidden transition-all duration-200 ${
+                                        className={`group text-left border rounded-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${
                                             isSelected
-                                                ? "border-black ring-2 ring-black"
-                                                : "border-(--color-border) hover:border-black"
+                                                ? "border-black ring-2 ring-black bg-[#FDFAF5]"
+                                                : "border-(--color-border) bg-white hover:border-black"
                                         }`}
                                     >
-                                        <div className="aspect-square bg-[#F0EBE3] overflow-hidden">
+                                        <div className="aspect-square bg-[#F0EBE3] overflow-hidden relative rounded-t-lg">
                                             <img
                                                 src={imageUrl}
                                                 alt={title}
-                                                className="w-full h-full object-cover"
+                                                className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                                             />
+                                            <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                         </div>
                                         <div className="p-4">
                                             <h3 className="[font-family:var(--font-display)] text-[16px] mb-1 line-clamp-2">

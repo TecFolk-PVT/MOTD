@@ -583,11 +583,14 @@ export default function FabricStorePage() {
 
                                             <div className="p-4 text-left">
                                                 <Link href={`/fabrics/${product.slug}`} className="block">
-                                                    <img
-                                                        src={imageUrl}
-                                                        alt={title}
-                                                        className="w-full h-full object-cover mb-4 transition-transform duration-300 group-hover:scale-105"
-                                                    />
+                                                    <div className="relative overflow-hidden mb-4 aspect-square bg-[#F0EBE3] rounded-sm">
+                                                        <img
+                                                            src={imageUrl}
+                                                            alt={title}
+                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                                        />
+                                                        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                                    </div>
                                                     <h3 className="[font-family:var(--font-display)] text-xs xs:text-sm sm:text-base font-normal leading-relaxed tracking-tight text-black mb-1 line-clamp-2">
                                                         {title}
                                                     </h3>

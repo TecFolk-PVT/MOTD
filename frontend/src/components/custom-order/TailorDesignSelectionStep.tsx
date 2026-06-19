@@ -17,14 +17,9 @@ import {
 } from "@/lib/customOrder";
 import {
     type TailorDesignListItem,
-    type TailorShopDetailItem,
-    type TailorShopListItem,
     formatDesignBasePrice,
-    formatTailorRating,
     getDesignDisplayFields,
-    getTailorDisplayFields,
     resolveDesignImage,
-    resolveTailorImage,
 } from "@/lib/tailors";
 import ConfiguratorStepHeader from "@/components/custom-order/ConfiguratorStepHeader";
 
@@ -40,41 +35,10 @@ export default function TailorDesignSelectionStep() {
     const { draft, isHydrated, setTailor, setDesign, setFirstStepIfUnset, resetOrder } =
         useCustomOrder();
 
-    const [tailors, setTailors] = useState<TailorShopListItem[]>([]);
     const [designs, setDesigns] = useState<TailorDesignListItem[]>([]);
-    const [loadingTailors, setLoadingTailors] = useState(true);
-    const [loadingDesigns, setLoadingDesigns] = useState(false);
-    const [tailorsError, setTailorsError] = useState<string | null>(null);
+    const [loadingDesigns, setLoadingDesigns] = useState(true);
     const [designsError, setDesignsError] = useState<string | null>(null);
     const [prefillDone, setPrefillDone] = useState(false);
-
-    useEffect(() => {
-        const fetchTailors = async () => {
-            try {
-                setLoadingTailors(true);
-                setTailorsError(null);
-
-                const data = await api.get<{ success: boolean; items: TailorShopListItem[] }>(
-                    "/api/tailors?limit=100",
-                );
-
-                if (!data?.success) {
-                    throw new Error("Failed to load tailors");
-                }
-
-                setTailors(data.items || []);
-            } catch (err: unknown) {
-                const message =
-                    (err as ApiError)?.message ||
-                    (err instanceof Error ? err.message : "Failed to load tailors");
-                setTailorsError(message);
-            } finally {
-                setLoadingTailors(false);
-            }
-        };
-
-        fetchTailors();
-    }, []);
 
     useEffect(() => {
         if (!isHydrated) return;
@@ -82,38 +46,24 @@ export default function TailorDesignSelectionStep() {
     }, [isHydrated, setFirstStepIfUnset]);
 
     useEffect(() => {
-        if (!isHydrated || prefillDone || !tailorSlugParam) return;
+        if (!isHydrated || prefillDone || !designSlugParam) return;
 
         const prefillFromParams = async () => {
             try {
                 resetOrder("tailor");
-                const tailorData = await api.get<{
+                const designData = await api.get<{
                     success: boolean;
-                    item: TailorShopDetailItem;
-                }>(`/api/tailors/${tailorSlugParam}`);
+                    item: any;
+                }>(`/api/tailors/designs/${designSlugParam}`);
 
-                if (!tailorData?.success || !tailorData.item) return;
+                if (!designData?.success || !designData.item) return;
 
-                setTailor(toCustomOrderTailorSelection(tailorData.item));
-
-                const designsData = await api.get<{
-                    success: boolean;
-                    items: TailorDesignListItem[];
-                }>(`/api/tailors/${tailorSlugParam}/designs`);
-
-                if (!designsData?.success) return;
-
-                const items = designsData.items || [];
-                setDesigns(items);
-
-                if (designSlugParam) {
-                    const match = items.find((d) => d.slug === designSlugParam);
-                    if (match) {
-                        setDesign(toCustomOrderDesignSelection(match));
-                    }
+                setDesign(toCustomOrderDesignSelection(designData.item));
+                if (designData.item.tailorShop) {
+                    setTailor(toCustomOrderTailorSelection(designData.item.tailorShop));
                 }
             } catch {
-                // Ignore invalid slug — customer can still pick manually
+                // Ignore invalid design slug — customer can still pick manually
             } finally {
                 setPrefillDone(true);
             }
@@ -126,24 +76,16 @@ export default function TailorDesignSelectionStep() {
         prefillDone,
         setDesign,
         setTailor,
-        tailorSlugParam,
+        resetOrder,
     ]);
 
     useEffect(() => {
-        if (!isHydrated || tailorSlugParam) return;
+        if (!isHydrated || designSlugParam) return;
         setPrefillDone(true);
-    }, [isHydrated, tailorSlugParam]);
+    }, [isHydrated, designSlugParam]);
 
     useEffect(() => {
-        const slug = draft.tailor?.slug;
-        if (!slug) {
-            setDesigns([]);
-            return;
-        }
-
-        if (tailorSlugParam && !prefillDone) return;
-
-        const fetchDesigns = async () => {
+        const fetchAllDesigns = async () => {
             try {
                 setLoadingDesigns(true);
                 setDesignsError(null);
@@ -151,7 +93,7 @@ export default function TailorDesignSelectionStep() {
                 const data = await api.get<{
                     success: boolean;
                     items: TailorDesignListItem[];
-                }>(`/api/tailors/${slug}/designs`);
+                }>("/api/tailors/designs/all?limit=100");
 
                 if (!data?.success) {
                     throw new Error("Failed to load designs");
@@ -169,8 +111,8 @@ export default function TailorDesignSelectionStep() {
             }
         };
 
-        fetchDesigns();
-    }, [draft.tailor?.slug, prefillDone, tailorSlugParam]);
+        fetchAllDesigns();
+    }, []);
 
     const canContinue = isTailorStepComplete(draft);
     const stepNumber = getCustomOrderStepNumber("tailor", draft.firstStep);
@@ -181,12 +123,16 @@ export default function TailorDesignSelectionStep() {
           : t("continueToFabric");
     const showBackToFabric = draft.firstStep === "fabric";
 
-    const handleSelectTailor = (item: TailorShopListItem) => {
-        setTailor(toCustomOrderTailorSelection(item));
-    };
-
     const handleSelectDesign = (item: TailorDesignListItem) => {
         setDesign(toCustomOrderDesignSelection(item));
+        if (item.tailorShopId && item.tailorSlug && item.tailorName) {
+            setTailor({
+                _id: item.tailorShopId,
+                slug: item.tailorSlug,
+                name: item.tailorName,
+                nameAr: item.tailorNameAr,
+            });
+        }
     };
 
     const handleContinue = () => {
@@ -216,138 +162,79 @@ export default function TailorDesignSelectionStep() {
             />
 
             <h2 className="[font-family:var(--font-display)] text-[22px] sm:text-[24px] font-normal mb-6">
-                {t("tailorsTitle")}
+                {t("designsTitle")}
             </h2>
 
-            {loadingTailors ? (
+            {loadingDesigns ? (
                 <p className="[font-family:var(--font-ui)] text-sm uppercase tracking-[0.2em] text-center py-16">
-                    {t("loadingTailors")}
+                    {t("loadingDesigns")}
                 </p>
-            ) : tailorsError ? (
-                <p className="text-center text-red-600 py-16">{tailorsError}</p>
-            ) : tailors.length === 0 ? (
+            ) : designsError ? (
+                <p className="text-center text-red-600 py-16">{designsError}</p>
+            ) : designs.length === 0 ? (
                 <p className="[font-family:var(--font-ui)] text-sm uppercase tracking-[0.2em] text-center py-16 text-(--color-grey-muted)">
-                    {t("emptyTailors")}
+                    {t("emptyDesigns")}
                 </p>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-12">
-                    {tailors.map((item) => {
-                        const { name, location, badge } = getTailorDisplayFields(item, locale);
-                        const imageUrl = resolveTailorImage(item.logo, item.coverImage);
-                        const isSelected = draft.tailor?._id === item._id;
-                        const rating = formatTailorRating(item.rating);
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                    {designs.map((item) => {
+                        const { name, category } = getDesignDisplayFields(item, locale);
+                        const imageUrl = resolveDesignImage(item.images?.[0]);
+                        const isSelected = draft.design?._id === item._id;
+                        const tailorName = locale === "ar" ? item.tailorNameAr || item.tailorName : item.tailorName;
 
                         return (
                             <button
                                 key={item._id}
                                 type="button"
-                                onClick={() => handleSelectTailor(item)}
-                                className={`text-left border overflow-hidden transition-all duration-200 ${
+                                onClick={() => handleSelectDesign(item)}
+                                className={`group text-left border rounded-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 ${
                                     isSelected
-                                        ? "border-black ring-2 ring-black"
-                                        : "border-(--color-border) hover:border-black"
+                                        ? "border-black ring-2 ring-black bg-[#FDFAF5]"
+                                        : "border-(--color-border) bg-white hover:border-black"
                                 }`}
                             >
-                                <div className="aspect-4/3 bg-[#F0EBE3] overflow-hidden relative">
+                                <div className="aspect-4/5 bg-[#F0EBE3] overflow-hidden relative rounded-t-lg">
                                     <img
                                         src={imageUrl}
                                         alt={name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                                     />
-                                    {badge && (
-                                        <span className="absolute bottom-3 left-3 [font-family:var(--font-ui)] text-[8px] uppercase tracking-[0.2em] bg-black text-white px-2 py-1">
-                                            {badge}
-                                        </span>
-                                    )}
+                                    <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                    <span className="absolute top-3 left-3 [font-family:var(--font-ui)] text-[8px] uppercase tracking-[0.2em] bg-black text-white px-2 py-1">
+                                        {category}
+                                    </span>
                                 </div>
                                 <div className="p-4">
                                     <h3 className="[font-family:var(--font-display)] text-[16px] mb-1 line-clamp-2">
                                         {name}
                                     </h3>
-                                    <p className="[font-family:var(--font-ui)] text-[9px] uppercase tracking-[0.2em] text-(--color-grey-muted) mb-2">
-                                        {location}
-                                    </p>
-                                    <p className="[font-family:var(--font-ui)] text-[10px] tracking-[0.16em] text-black">
-                                        ★ {rating}
-                                    </p>
+                                    {tailorName && (
+                                        <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.16em] text-(--color-grey-muted) mb-3">
+                                            {t("tailorLabel", { name: tailorName })}
+                                        </p>
+                                    )}
+                                    <div className="flex flex-col gap-1 [font-family:var(--font-ui)] text-[10px] tracking-[0.16em] uppercase text-(--color-grey-muted)">
+                                        <span>
+                                            {t("fromPrice")}{" "}
+                                            <span className="text-black">
+                                                {formatDesignBasePrice(item.basePrice, locale)}
+                                            </span>
+                                        </span>
+                                        <span>
+                                            {t("estimatedDays")}: {item.estimatedDays}{" "}
+                                            {t("days")}
+                                        </span>
+                                        <span>
+                                            {t("estimatedMeters")}: {item.estimatedMeters}{" "}
+                                            {t("meters")}
+                                        </span>
+                                    </div>
                                 </div>
                             </button>
                         );
                     })}
                 </div>
-            )}
-
-            {draft.tailor && (
-                <>
-                    <h2 className="[font-family:var(--font-display)] text-[22px] sm:text-[24px] font-normal mb-6">
-                        {t("designsTitle")}
-                    </h2>
-
-                    {loadingDesigns ? (
-                        <p className="[font-family:var(--font-ui)] text-sm uppercase tracking-[0.2em] text-center py-16">
-                            {t("loadingDesigns")}
-                        </p>
-                    ) : designsError ? (
-                        <p className="text-center text-red-600 py-16">{designsError}</p>
-                    ) : designs.length === 0 ? (
-                        <p className="[font-family:var(--font-ui)] text-sm uppercase tracking-[0.2em] text-center py-16 text-(--color-grey-muted)">
-                            {t("emptyDesigns")}
-                        </p>
-                    ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
-                            {designs.map((item) => {
-                                const { name, category } = getDesignDisplayFields(item, locale);
-                                const imageUrl = resolveDesignImage(item.images?.[0]);
-                                const isSelected = draft.design?._id === item._id;
-
-                                return (
-                                    <button
-                                        key={item._id}
-                                        type="button"
-                                        onClick={() => handleSelectDesign(item)}
-                                        className={`text-left border overflow-hidden transition-all duration-200 ${
-                                            isSelected
-                                                ? "border-black ring-2 ring-black"
-                                                : "border-(--color-border) hover:border-black"
-                                        }`}
-                                    >
-                                        <div className="aspect-4/5 bg-[#F0EBE3] overflow-hidden relative">
-                                            <img
-                                                src={imageUrl}
-                                                alt={name}
-                                                className="w-full h-full object-cover"
-                                            />
-                                            <span className="absolute top-3 left-3 [font-family:var(--font-ui)] text-[8px] uppercase tracking-[0.2em] bg-black text-white px-2 py-1">
-                                                {category}
-                                            </span>
-                                        </div>
-                                        <div className="p-4">
-                                            <h3 className="[font-family:var(--font-display)] text-[16px] mb-2 line-clamp-2">
-                                                {name}
-                                            </h3>
-                                            <div className="flex flex-col gap-1 [font-family:var(--font-ui)] text-[10px] tracking-[0.16em] uppercase text-(--color-grey-muted)">
-                                                <span>
-                                                    {t("fromPrice")}{" "}
-                                                    <span className="text-black">
-                                                        {formatDesignBasePrice(item.basePrice, locale)}
-                                                    </span>
-                                                </span>
-                                                <span>
-                                                    {t("estimatedDays")}: {item.estimatedDays}{" "}
-                                                    {t("days")}
-                                                </span>
-                                                <span>
-                                                    {t("estimatedMeters")}: {item.estimatedMeters}{" "}
-                                                    {t("meters")}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    )}
-                </>
             )}
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-6 border-t border-(--color-border)">

@@ -142,6 +142,7 @@ tailorRoutes.get('/designs/all', async (req, res) => {
       const shop = shopMap[design.tailorShopId.toString()];
       return {
         ...toDesignListItem(design),
+        tailorShopId: design.tailorShopId,
         tailorSlug: shop?.slug || '',
         tailorName: shop?.name || '',
         tailorNameAr: shop?.nameAr || '',
