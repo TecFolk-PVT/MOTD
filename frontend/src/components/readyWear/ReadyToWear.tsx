@@ -195,7 +195,7 @@ export function ReadyToWearSection() {
                     </button>
 
                     <div className="overflow-hidden py-8 -my-8" ref={emblaRef}>
-                        <div className="flex will-change-transform gap-2 xs:gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+                        <div className="flex will-change-transform -mx-1 xs:-mx-1.5 sm:-mx-2 md:-mx-2.5 lg:-mx-3">
                             {products.map((item) => {
                                 const { title, description } = getReadyMadeDisplayFields(
                                     item,
@@ -206,7 +206,7 @@ export function ReadyToWearSection() {
                                 return (
                                     <div
                                         key={item._id}
-                                        className="flex-[0_0_calc(100%-8px)] xs:flex-[0_0_calc(66.666%-12px)] sm:flex-[0_0_calc(50%-16px)] md:flex-[0_0_calc(40%-20px)] lg:flex-[0_0_calc(33.333%-24px)] xl:flex-[0_0_calc(28.571%-28px)] 2xl:flex-[0_0_calc(25%-32px)] group py-4"
+                                        className="flex-[0_0_100%] xs:flex-[0_0_66.666%] sm:flex-[0_0_50%] md:flex-[0_0_40%] lg:flex-[0_0_33.333%] xl:flex-[0_0_28.571%] 2xl:flex-[0_0_25%] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 group py-4"
                                     >
                                         <Link
                                             href={`/ready-made/${item.slug}`}

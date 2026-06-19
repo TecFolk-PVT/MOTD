@@ -250,7 +250,7 @@ export function TrendingSection() {
         <section className="bg-(--bg-page) py-12 xs:py-16 sm:py-20 md:py-24 lg:py-(--space-80) border-(--color-border) mb-12 xs:mb-16 sm:mb-20 md:mb-24 lg:mb-(--space-80)">
             <div className="w-full px-4 xs:px-6 sm:px-8 md:px-12 lg:px-(--space-40) mx-auto">
                 {/* Section Header */}
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 xs:mb-10 sm:mb-12 pb-4 xs:pb-5 sm:pb-6 border-b border-(--color-border) gap-4 sm:gap-0">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 xs:mb-10 sm:mb-12 gap-4 sm:gap-0">
                     <div>
                         <span className={eyebrowClass}>
                             <span className="block w-4 xs:w-5 h-px bg-(--color-grey-muted)"></span>
@@ -308,7 +308,7 @@ export function TrendingSection() {
 
                     {/* Embla Carousel Viewport */}
                     <div className="overflow-hidden py-8 -my-8" ref={emblaRef}>
-                        <div className="flex gap-2 xs:gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+                        <div className="flex -mx-1 xs:-mx-1.5 sm:-mx-2 md:-mx-2.5 lg:-mx-3">
                             {filteredDesigns.map((design) => {
                                 const { name, description, category } = getDesignDisplayFields(
                                     design,
@@ -324,16 +324,7 @@ export function TrendingSection() {
                                 return (
                                     <div
                                         key={design._id}
-                                        className={`
-                                            flex-[0_0_calc(100%-8px)] 
-                                            xs:flex-[0_0_calc(66.666%-12px)] 
-                                            sm:flex-[0_0_calc(50%-16px)] 
-                                            md:flex-[0_0_calc(40%-20px)] 
-                                            lg:flex-[0_0_calc(33.333%-24px)]
-                                            xl:flex-[0_0_calc(28.571%-28px)]
-                                            2xl:flex-[0_0_calc(25%-32px)]
-                                            group py-4
-                                        `}
+                                        className="flex-[0_0_100%] xs:flex-[0_0_66.666%] sm:flex-[0_0_50%] md:flex-[0_0_40%] lg:flex-[0_0_33.333%] xl:flex-[0_0_28.571%] 2xl:flex-[0_0_25%] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 group py-4"
                                     >
                                         <Link
                                             href={`/designs/${design.slug}`}
@@ -348,7 +339,7 @@ export function TrendingSection() {
                                                 <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                                 <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
                                                     <span
-                                                        className="bg-[#8B6F47] text-white px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-normal"
+                                                        className="bg-[#8B6F47] text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold"
                                                     >
                                                         {category}
                                                     </span>

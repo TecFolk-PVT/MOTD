@@ -257,7 +257,7 @@ export function PremiumFabrics() {
                         </button>
 
                         <div className="overflow-hidden py-8 -my-8" ref={emblaRef}>
-                            <div className="flex will-change-transform gap-2 xs:gap-3 sm:gap-4 md:gap-5 lg:gap-6">
+                            <div className="flex will-change-transform -mx-1 xs:-mx-1.5 sm:-mx-2 md:-mx-2.5 lg:-mx-3">
                                 {filteredItems.map((item) => {
                                     const { title, description, location } =
                                         getFabricDisplayFields(item, locale);
@@ -267,7 +267,7 @@ export function PremiumFabrics() {
                                     return (
                                         <div
                                             key={item._id}
-                                            className="flex-[0_0_calc(100%-8px)] xs:flex-[0_0_calc(66.666%-12px)] sm:flex-[0_0_calc(50%-16px)] md:flex-[0_0_calc(40%-20px)] lg:flex-[0_0_calc(33.333%-24px)] xl:flex-[0_0_calc(28.571%-28px)] 2xl:flex-[0_0_calc(25%-32px)] group py-4"
+                                            className="flex-[0_0_100%] xs:flex-[0_0_66.666%] sm:flex-[0_0_50%] md:flex-[0_0_40%] lg:flex-[0_0_33.333%] xl:flex-[0_0_28.571%] 2xl:flex-[0_0_25%] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 group py-4"
                                         >
                                             <Link
                                                 href={`/fabrics/${item.slug}`}
@@ -283,7 +283,7 @@ export function PremiumFabrics() {
                                                     {item.tag && (
                                                         <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
                                                             <span
-                                                                className={`${tagColor} text-white px-1.5 xs:px-2 py-0.5 xs:py-1 text-[8px] xs:text-[10px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-normal`}
+                                                                className={`${tagColor} text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold`}
                                                             >
                                                                 {item.tag}
                                                             </span>

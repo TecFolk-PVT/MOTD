@@ -22,6 +22,7 @@ export function HeroSection() {
     {
       loop: true,
       direction: isArabic ? "rtl" : "ltr",
+      duration: 30,
     },
     [
       Autoplay({
@@ -59,10 +60,9 @@ export function HeroSection() {
           <span
             className={`
               [font-family:var(--font-ui)] uppercase tracking-[0.28em] text-white/60 mb-3 xs:mb-4 flex items-center gap-3
-              ${
-                isArabic
-                  ? "text-[12px] xs:text-[11px] sm:text-[12px] md:text-[12px] lg:text-[14px] xl:text-[16px]"
-                  : "text-[10px] xs:text-[9px] sm:text-[10px] md:text-[9px] lg:text-[9px] xl:text-[10px]"
+              ${isArabic
+                ? "text-[12px] xs:text-[11px] sm:text-[12px] md:text-[12px] lg:text-[14px] xl:text-[16px]"
+                : "text-[10px] xs:text-[9px] sm:text-[10px] md:text-[9px] lg:text-[9px] xl:text-[10px]"
               }
             `}
           >
@@ -74,10 +74,9 @@ export function HeroSection() {
           <h1
             className={`
               [font-family:var(--font-display)] font-normal leading-[1.1] xs:leading-[1.08] sm:leading-[1.06] md:leading-[1.05] tracking-[-0.01em] text-white mb-4 xs:mb-5
-              ${
-                isArabic
-                  ? "text-[38px] xs:text-[48px] sm:text-[52px] md:text-[58px] lg:text-[64px] xl:text-[70px] 2xl:text-[80px] 3xl:text-[90px]"
-                  : "text-[32px] xs:text-[40px] sm:text-[44px] md:text-[48px] lg:text-[52px] xl:text-[56px] 2xl:text-[64px] 3xl:text-[72px]"
+              ${isArabic
+                ? "text-[38px] xs:text-[48px] sm:text-[52px] md:text-[58px] lg:text-[64px] xl:text-[70px] 2xl:text-[80px] 3xl:text-[90px]"
+                : "text-[32px] xs:text-[40px] sm:text-[44px] md:text-[48px] lg:text-[52px] xl:text-[56px] 2xl:text-[64px] 3xl:text-[72px]"
               }
             `}
           >
@@ -94,45 +93,16 @@ export function HeroSection() {
           <p
             className={`
               [font-family:var(--font-body)] leading-[1.6] xs:leading-[1.7] sm:leading-[1.8] text-white/60 max-w-100 w-full mb-6 xs:mb-8
-              ${
-                isArabic
-                  ? "text-[16px] xs:text-[15px] sm:text-[16px] md:text-[15px] lg:text-[16px] xl:text-[20px]"
-                  : "text-[14px] xs:text-[13px] sm:text-[14px] md:text-[15px]"
+              ${isArabic
+                ? "text-[16px] xs:text-[15px] sm:text-[16px] md:text-[15px] lg:text-[16px] xl:text-[20px]"
+                : "text-[14px] xs:text-[13px] sm:text-[14px] md:text-[15px]"
               }
             `}
           >
             {t.heroSection.body}
           </p>
 
-          {/* Buttons */}
-          <div className="flex flex-wrap gap-2 xs:gap-3">
-            <Link
-              href="/#fabrics"
-              className={`
-                [font-family:var(--font-body)] uppercase tracking-[0.24em] bg-white text-black px-5 xs:px-6 sm:px-7 py-2.5 xs:py-[12px] sm:py-3.25 hover:opacity-80 transition-opacity duration-150
-                ${
-                  isArabic
-                    ? "text-[14px] xs:text-[14px] sm:text-[14px] md:text-[14px] lg:text-[16px] xl:text-[18px]"
-                    : "text-[12px] xs:text-[11px] sm:text-[12px] md:text-[11px] lg:text-[11px] xl:text-[12px]"
-                }
-              `}
-            >
-              {t.heroSection.ctaShopNow}
-            </Link>
-            <Link
-              href="/#tailors"
-              className={`
-                [font-family:var(--font-body)] uppercase tracking-[0.24em] bg-transparent text-white border border-white/40 px-5 xs:px-6 sm:px-7 py-2.5 xs:py-[12px] sm:py-3.25 hover:bg-white hover:text-black transition-all duration-150
-                ${
-                  isArabic
-                    ? "text-[14px] xs:text-[14px] sm:text-[14px] md:text-[14px] lg:text-[16px] xl:text-[18px]"
-                    : "text-[12px] xs:text-[11px] sm:text-[12px] md:text-[11px] lg:text-[11px] xl:text-[12px]"
-                }
-              `}
-            >
-              {t.heroSection.ctaMeetTailors}
-            </Link>
-          </div>
+
         </div>
       </div>
     </section>
