@@ -83,43 +83,61 @@ adminRouter.post(
     const {
       name,
       nameAr,
-      slug,
+      code,
       description,
       descriptionAr,
-      images,
-      price,
-      size,
-      style,
-      city,
       tag,
+      tagAr,
       tagColor,
-      returnReason,
-      sourceCustomOrderId,
-      condition,
+      colors,
+      thumbnailImage,
+      images,
+      fabricType,
+      fabricTypeAr,
+      tailorName,
+      tailorNameAr,
+      metersPerFabric,
+      fabricPriceAED,
+      mukhawarPriceAED,
+      finalSellingPriceAED,
+      availableFabricStock,
       isActive,
     } = req.body;
+
+    // Generate slug if not provided
+    let slug = req.body.slug?.trim();
+    if (!slug) {
+      const base = name || nameAr || "ready-made";
+      slug = base.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    }
 
     const newProduct = new ReadyMadeProduct({
       name,
       nameAr,
+      code,
       slug,
       description,
       descriptionAr,
-      images,
-      price,
-      size,
-      style,
-      city,
       tag,
+      tagAr,
       tagColor,
-      returnReason: returnReason || "size_issue",
-      sourceCustomOrderId,
-      condition,
-      countInStock: 1, // Fixed based on MVP rules
+      colors,
+      thumbnailImage,
+      images,
+      fabricType,
+      fabricTypeAr,
+      tailorName,
+      tailorNameAr,
+      metersPerFabric,
+      fabricPriceAED,
+      mukhawarPriceAED,
+      finalSellingPriceAED,
+      availableFabricStock,
       isActive: isActive !== undefined ? isActive : true,
     });
 
     const createdProduct = await newProduct.save();
+
     res.status(201).send(createdProduct);
   }),
 );
@@ -130,44 +148,67 @@ adminRouter.put(
   "/ready-made/:id",
   expressAsyncHandler(async (req, res) => {
     const product = await ReadyMadeProduct.findById(req.params.id);
-
-    if (product) {
-      product.name = req.body.name || product.name;
-      product.nameAr = req.body.nameAr || product.nameAr;
-      product.slug = req.body.slug || product.slug;
-      product.description =
-        req.body.description !== undefined
-          ? req.body.description
-          : product.description;
-      product.descriptionAr =
-        req.body.descriptionAr !== undefined
-          ? req.body.descriptionAr
-          : product.descriptionAr;
-      product.images = req.body.images || product.images;
-      product.price =
-        req.body.price !== undefined ? req.body.price : product.price;
-      product.size = req.body.size || product.size;
-      product.style = req.body.style || product.style;
-      product.city = req.body.city !== undefined ? req.body.city : product.city;
-      product.tag = req.body.tag !== undefined ? req.body.tag : product.tag;
-      product.tagColor =
-        req.body.tagColor !== undefined ? req.body.tagColor : product.tagColor;
-      product.returnReason = req.body.returnReason || product.returnReason;
-      product.sourceCustomOrderId =
-        req.body.sourceCustomOrderId || product.sourceCustomOrderId;
-      product.condition = req.body.condition || product.condition;
-      product.isActive =
-        req.body.isActive !== undefined ? req.body.isActive : product.isActive;
-      // We might allow updating countInStock manually in the future, but MVP implies it stays 1 or goes 0.
-      if (req.body.countInStock !== undefined) {
-        product.countInStock = req.body.countInStock;
-      }
-
-      const updatedProduct = await product.save();
-      res.send(updatedProduct);
-    } else {
+    if (!product) {
       res.status(404).send({ message: "Ready-made product not found" });
+      return;
     }
+
+    // --- Basic fields ---
+    product.name = req.body.name ?? product.name;
+    product.nameAr = req.body.nameAr ?? product.nameAr;
+    product.slug = req.body.slug ?? product.slug;
+    product.code = req.body.code ?? product.code;
+    product.description = req.body.description ?? product.description;
+    product.descriptionAr = req.body.descriptionAr ?? product.descriptionAr;
+
+    // --- Tags ---
+    product.tag = req.body.tag ?? product.tag;
+    product.tagAr = req.body.tagAr ?? product.tagAr;
+    product.tagColor = req.body.tagColor ?? product.tagColor;
+    product.tagColorAr = req.body.tagColorAr ?? product.tagColorAr;
+
+    // --- Colors – array, assign directly ---
+    if (req.body.colors !== undefined) {
+      // Ensure it's always an array (frontend sends array)
+      product.colors = Array.isArray(req.body.colors) ? req.body.colors : [];
+    }
+
+    // --- Images ---
+    product.thumbnailImage = req.body.thumbnailImage ?? product.thumbnailImage;
+    product.images = req.body.images ?? product.images;
+
+    // --- Fabric & Tailor ---
+    product.fabricType = req.body.fabricType ?? product.fabricType;
+    product.fabricTypeAr = req.body.fabricTypeAr ?? product.fabricTypeAr;
+    product.tailorName = req.body.tailorName ?? product.tailorName;
+    product.tailorNameAr = req.body.tailorNameAr ?? product.tailorNameAr;
+
+    // --- Measurements & Pricing ---
+    product.metersPerFabric =
+      req.body.metersPerFabric ?? product.metersPerFabric;
+    product.fabricPriceAED = req.body.fabricPriceAED ?? product.fabricPriceAED;
+    product.mukhawarPriceAED =
+      req.body.mukhawarPriceAED ?? product.mukhawarPriceAED;
+    product.finalSellingPriceAED =
+      req.body.finalSellingPriceAED ?? product.finalSellingPriceAED;
+    product.availableFabricStock =
+      req.body.availableFabricStock ?? product.availableFabricStock;
+
+    // --- Active ---
+    product.isActive = req.body.isActive ?? product.isActive;
+
+    // --- (optional extras) ---
+    product.size = req.body.size ?? product.size;
+    product.style = req.body.style ?? product.style;
+    product.city = req.body.city ?? product.city;
+    product.returnReason = req.body.returnReason ?? product.returnReason;
+    product.sourceCustomOrderId =
+      req.body.sourceCustomOrderId ?? product.sourceCustomOrderId;
+    product.condition = req.body.condition ?? product.condition;
+    product.countInStock = req.body.countInStock ?? product.countInStock;
+
+    const updatedProduct = await product.save();
+    res.send(updatedProduct);
   }),
 );
 
@@ -239,7 +280,9 @@ adminRouter.post(
     const { name, email, password } = req.body;
 
     if (!name?.trim() || !email?.trim() || !password) {
-      res.status(400).send({ message: "Name, email, and password are required" });
+      res
+        .status(400)
+        .send({ message: "Name, email, and password are required" });
       return;
     }
 

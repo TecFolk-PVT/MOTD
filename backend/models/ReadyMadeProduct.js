@@ -1,75 +1,171 @@
-import mongoose from 'mongoose';
-
-const READY_MADE_STYLES = ['kandura', 'abaya', 'bisht', 'mukhawar', 'jalabiya', 'kaftan'];
-
-const RETURN_REASONS = ['size_issue'];
-
-const CONDITIONS = ['like_new', 'excellent', 'good'];
+import mongoose from "mongoose";
 
 const readyMadeProductSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    nameAr: { type: String, required: true, trim: true },
-    slug: { type: String, required: true, unique: true, trim: true, lowercase: true },
-    description: { type: String, default: '', trim: true },
-    descriptionAr: { type: String, default: '', trim: true },
+    // Product Name
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    nameAr: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    // Optional Product Code
+    code: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+     // Slug – URL‑friendly identifier (unique)
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
+    // Description
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    descriptionAr: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // Tags
+    tag: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    tagAr: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    tagColor: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // Colors (multiple selected colors)
+    colors: {
+      type: [String],
+      default: [],
+    },
+
+    // Images
+    thumbnailImage: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     images: {
       type: [String],
       default: [],
-      validate: {
-        validator(images) {
-          return images.length > 0;
-        },
-        message: 'At least one image is required',
-      },
     },
-    price: { type: Number, required: true, min: 0 },
-    size: { type: String, required: true, trim: true },
-    style: {
+
+    // Fabric Type
+    fabricType: {
       type: String,
-      enum: READY_MADE_STYLES,
       required: true,
+      trim: true,
     },
-    city: { type: String, default: '', trim: true },
-    tag: { type: String, default: '', trim: true },
-    tagColor: { type: String, default: '', trim: true },
-    returnReason: {
+
+    fabricTypeAr: {
       type: String,
-      enum: RETURN_REASONS,
-      default: 'size_issue',
       required: true,
+      trim: true,
     },
-    sourceCustomOrderId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'CustomOrder',
-    },
-    condition: {
+
+    // Tailor Name
+    tailorName: {
       type: String,
-      enum: CONDITIONS,
-      default: 'excellent',
       required: true,
+      trim: true,
     },
-    countInStock: {
+
+    tailorNameAr: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    // Fabric Details
+    metersPerFabric: {
       type: Number,
-      default: 1,
+      required: true,
       min: 0,
+    },
+
+    fabricPriceAED: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    mukhawarPriceAED: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    finalSellingPriceAED: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    // Stock
+    availableFabricStock: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
       required: true,
     },
-    isActive: { type: Boolean, default: true, required: true },
   },
   {
     timestamps: true,
+  },
+);
+
+// Useful indexes
+readyMadeProductSchema.index({ isActive: 1 });
+readyMadeProductSchema.index({ code: 1 });
+
+// Pre‑save hook to auto‑generate slug if missing
+readyMadeProductSchema.pre("save", function (next) {
+  if (!this.slug) {
+    const base = this.name || this.nameAr || "ready-made";
+    this.slug = base
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
-);
+  next();
+});
 
-readyMadeProductSchema.index({ isActive: 1, style: 1 });
-readyMadeProductSchema.index({ size: 1 });
-readyMadeProductSchema.index(
-  { sourceCustomOrderId: 1 },
-  { unique: true, sparse: true }
+const ReadyMadeProduct = mongoose.model(
+  "ReadyMadeProduct",
+  readyMadeProductSchema,
 );
-
-const ReadyMadeProduct = mongoose.model('ReadyMadeProduct', readyMadeProductSchema);
 
 export default ReadyMadeProduct;
-export { READY_MADE_STYLES, RETURN_REASONS, CONDITIONS };
