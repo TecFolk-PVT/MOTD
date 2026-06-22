@@ -189,58 +189,40 @@ export function PremiumFabrics() {
           </Link>
         </div>
 
-        <div className="flex gap-2 xs:gap-2.5 sm:gap-3 mb-6 xs:mb-8 sm:mb-10 md:mb-12 lg:mb-(--space-40) overflow-x-auto pb-2 xs:pb-3">
-          <button
-            onClick={() => setSelectedFilter("all")}
-            className={`px-3 xs:px-4 py-1.5 xs:py-2 border border-(--color-border) text-[9px] xs:text-[9px] sm:text-[10px] md:text-[9px] lg:text-[10px] xl:text-[11px] uppercase tracking-[0.24em] whitespace-nowrap [font-family:var(--font-ui)] transition-all font-normal ${
-              selectedFilter === "all"
-                ? "bg-black text-white border-black"
-                : "text-black hover:bg-black hover:text-white hover:border-black"
-            }`}
-          >
-            {t("filters.all")}
-          </button>
-          {FABRIC_FILTER_OPTIONS.map((material) => (
-            <button
-              key={material}
-              onClick={() => setSelectedFilter(material)}
-              className={`px-3 xs:px-4 py-1.5 xs:py-2 border border-(--color-border) text-[9px] xs:text-[9px] sm:text-[10px] md:text-[9px] lg:text-[10px] xl:text-[11px] uppercase tracking-[0.24em] whitespace-nowrap [font-family:var(--font-ui)] transition-all font-normal ${
-                selectedFilter === material
-                  ? "bg-black text-white border-black"
-                  : "text-black hover:bg-black hover:text-white hover:border-black"
-              }`}
-            >
-              {t(`filters.${material}`)}
-            </button>
-          ))}
-        </div>
+                        <div className="overflow-hidden py-8 -my-8" ref={emblaRef}>
+                            <div className="flex will-change-transform -mx-1 xs:-mx-1.5 sm:-mx-2 md:-mx-2.5 lg:-mx-3">
+                                {filteredItems.map((item) => {
+                                    const { title, description, location } =
+                                        getFabricDisplayFields(item, locale);
+                                    const imageUrl = resolveFabricImage(item.images?.[0]);
+                                    const tagColor = item.tagColor || "bg-[#5B4A3A]";
 
-        {filteredItems.length === 0 ? (
-          <div className="text-center [font-family:var(--font-ui)] text-sm uppercase tracking-[0.2em] text-(--color-grey-muted) py-8">
-            {t("emptyFilter")}
-          </div>
-        ) : (
-          <div className="relative group/carousel">
-            <button
-              onClick={scrollPrev}
-              disabled={!prevBtnEnabled}
-              className={`hidden sm:flex absolute left-2 xs:left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 xs:w-9 sm:w-10 h-8 xs:h-9 sm:h-10 rounded-full bg-white border border-[#E5E5E0] items-center justify-center transition-all duration-300 shadow-md opacity-0 group-hover/carousel:opacity-100 pointer-events-auto hover:scale-110 hover:bg-[#1A2A3A] hover:border-[#1A2A3A] group/prev ${
-                !prevBtnEnabled ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-              aria-label="Previous slide"
-            >
-              <svg
-                className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-[#1A2A3A] group-hover/prev:text-white transition-colors duration-200"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-            </button>
+                                    return (
+                                        <div
+                                            key={item._id}
+                                            className="flex-[0_0_100%] xs:flex-[0_0_66.666%] sm:flex-[0_0_50%] md:flex-[0_0_40%] lg:flex-[0_0_33.333%] xl:flex-[0_0_28.571%] 2xl:flex-[0_0_25%] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 group py-4"
+                                        >
+                                            <Link
+                                                href={`/fabrics/${item.slug}`}
+                                                className="block bg-(--bg-page) border border-(--color-border) rounded-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 h-full flex flex-col hover:cursor-pointer"
+                                            >
+                                                <div className="aspect-9/9 relative overflow-hidden rounded-t-lg">
+                                                    <img
+                                                        src={imageUrl}
+                                                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                                                        alt={title}
+                                                    />
+                                                    <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                                    {item.tag && (
+                                                        <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
+                                                            <span
+                                                                className={`${tagColor} text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold`}
+                                                            >
+                                                                {item.tag}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
 
             <button
               onClick={scrollNext}

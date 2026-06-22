@@ -69,7 +69,7 @@ export default function DesignGallery({
                                 />
                                 <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                                 <div className="absolute top-3 left-3">
-                                    <span className="[font-family:var(--font-ui)] text-[8px] uppercase tracking-[0.2em] bg-black text-white px-2.5 py-1">
+                                    <span className="[font-family:var(--font-ui)] text-[10px] xs:text-[12px] uppercase tracking-[0.24em] bg-[#8B6F47] text-white px-2.5 xs:px-3 py-1 xs:py-1.25 font-bold">
                                         {category}
                                     </span>
                                 </div>
