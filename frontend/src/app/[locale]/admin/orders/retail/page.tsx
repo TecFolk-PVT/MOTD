@@ -3,7 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { api, getApiErrorMessage } from "@/lib/api/client";
-import { PackageSearch, AlertTriangle, RefreshCw, Search, Loader2 } from "lucide-react";
+import {
+  PackageSearch,
+  AlertTriangle,
+  RefreshCw,
+  Search,
+  Loader2,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import StatusBadge from "@/components/admin/StatusBadge";
 import AdminOrdersTabs from "@/components/admin/AdminOrdersTabs";
@@ -23,33 +29,37 @@ type RetailOrder = {
   }[];
   totalPrice: number;
   currency: string;
-  status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
+  status: "pending" | "confirmed" | "shipped" | "delivered" | "cancelled";
   createdAt: string;
 };
 
-const RETAIL_ORDER_STATUSES: RetailOrder['status'][] = [
-  'pending',
-  'confirmed',
-  'shipped',
-  'delivered',
-  'cancelled',
+const RETAIL_ORDER_STATUSES: RetailOrder["status"][] = [
+  "pending",
+  "confirmed",
+  "shipped",
+  "delivered",
+  "cancelled",
 ];
 
-const RETAIL_ORDER_PIPELINE: RetailOrder['status'][] = [
-  'pending',
-  'confirmed',
-  'shipped',
-  'delivered',
+const RETAIL_ORDER_PIPELINE: RetailOrder["status"][] = [
+  "pending",
+  "confirmed",
+  "shipped",
+  "delivered",
 ];
 
-function getNextRetailOrderStatus(status: string): RetailOrder['status'] | null {
-  const index = RETAIL_ORDER_PIPELINE.indexOf(status as RetailOrder['status']);
+function getNextRetailOrderStatus(
+  status: string,
+): RetailOrder["status"] | null {
+  const index = RETAIL_ORDER_PIPELINE.indexOf(status as RetailOrder["status"]);
   if (index < 0 || index >= RETAIL_ORDER_PIPELINE.length - 1) return null;
   return RETAIL_ORDER_PIPELINE[index + 1];
 }
 
-function getPreviousRetailOrderStatus(status: string): RetailOrder['status'] | null {
-  const index = RETAIL_ORDER_PIPELINE.indexOf(status as RetailOrder['status']);
+function getPreviousRetailOrderStatus(
+  status: string,
+): RetailOrder["status"] | null {
+  const index = RETAIL_ORDER_PIPELINE.indexOf(status as RetailOrder["status"]);
   if (index <= 0) return null;
   return RETAIL_ORDER_PIPELINE[index - 1];
 }
@@ -92,7 +102,8 @@ const ERROR_TOAST = {
 const translations = {
   en: {
     title: "Retail Orders",
-    subtitle: "Monitor and update delivery fulfillment status pipelines for ready-made items.",
+    subtitle:
+      "Monitor and update delivery fulfillment status pipelines for ready-made items.",
     refresh: "Refresh",
     loading: "Loading retail orders...",
     errorTitle: "Error Loading Orders",
@@ -157,13 +168,14 @@ const translations = {
     revertTo: "إرجاع إلى {status}",
     advanceTo: "ترقية إلى {status}",
     cancelOrder: "إلغاء الطلب",
-  }
+  },
 };
 
 export default function AdminRetailOrdersPage() {
   const params = useParams();
   const locale = (params?.locale as string) || "en";
-  const t = translations[locale as keyof typeof translations] || translations.en;
+  const t =
+    translations[locale as keyof typeof translations] || translations.en;
 
   const [orders, setOrders] = useState<RetailOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -186,7 +198,9 @@ export default function AdminRetailOrdersPage() {
   // Filters State
   const [filterCustomer, setFilterCustomer] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
-  const [filterFrom, setFilterFrom] = useState<string>(getFirstDayOfMonthString());
+  const [filterFrom, setFilterFrom] = useState<string>(
+    getFirstDayOfMonthString(),
+  );
   const [filterTo, setFilterTo] = useState<string>(getTodayString());
 
   const fetchOrders = async () => {
@@ -195,7 +209,8 @@ export default function AdminRetailOrdersPage() {
     try {
       const queryParams = new URLSearchParams();
       if (filterStatus) queryParams.append("status", filterStatus);
-      if (filterCustomer.trim()) queryParams.append("customer", filterCustomer.trim());
+      if (filterCustomer.trim())
+        queryParams.append("customer", filterCustomer.trim());
       if (filterFrom) queryParams.append("from", filterFrom);
       if (filterTo) queryParams.append("to", filterTo);
 
@@ -217,22 +232,30 @@ export default function AdminRetailOrdersPage() {
     return () => clearTimeout(delayDebounceFn);
   }, [filterCustomer, filterStatus, filterFrom, filterTo]);
 
-  const handleStatusChange = async (orderId: string, status: RetailOrder['status']) => {
+  const handleStatusChange = async (
+    orderId: string,
+    status: RetailOrder["status"],
+  ) => {
     setUpdatingOrderId(orderId);
     try {
       const response = await api.patch<any>(
         `/api/admin/orders/${orderId}/status`,
-        { status }
+        { status },
       );
-      
+
       const updatedOrder = response?.order || response?.data?.order || response;
       const finalStatus = updatedOrder?.status || status;
 
       setOrders((prevOrders) =>
-        prevOrders.map((o) => (o._id === orderId ? { ...o, status: finalStatus } : o))
+        prevOrders.map((o) =>
+          o._id === orderId ? { ...o, status: finalStatus } : o,
+        ),
       );
 
-      toast.success(t.toastSuccess.replace("{status}", finalStatus), SUCCESS_TOAST);
+      toast.success(
+        t.toastSuccess.replace("{status}", finalStatus),
+        SUCCESS_TOAST,
+      );
     } catch (err: any) {
       console.error("Status update error details:", err);
       toast.error(getApiErrorMessage(err, t.toastError), ERROR_TOAST);
@@ -248,11 +271,14 @@ export default function AdminRetailOrdersPage() {
     }).format(amount);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(locale === "ar" ? "ar-EG" : "en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
+    return new Date(dateString).toLocaleDateString(
+      locale === "ar" ? "ar-EG" : "en-GB",
+      {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      },
+    );
   };
 
   if (loading && orders.length === 0) {
@@ -333,7 +359,10 @@ export default function AdminRetailOrdersPage() {
             value: orders.filter((o) => o.status === "delivered").length,
           },
         ].map((stat) => (
-          <div key={stat.label} className="bg-white border rounded-2xl p-4 shadow-sm border-gray-100">
+          <div
+            key={stat.label}
+            className="bg-white border rounded-2xl p-4 shadow-sm border-gray-100"
+          >
             <p className="text-xs text-gray-400">{stat.label}</p>
             <p className="text-xl font-light mt-1">{stat.value}</p>
           </div>
@@ -408,7 +437,10 @@ export default function AdminRetailOrdersPage() {
       {/* Orders List Section */}
       {orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center bg-white rounded-2xl border py-20 shadow-sm border-gray-100">
-          <PackageSearch className="w-16 h-16 text-gray-300 mb-4" strokeWidth={1} />
+          <PackageSearch
+            className="w-16 h-16 text-gray-300 mb-4"
+            strokeWidth={1}
+          />
           <p className="text-gray-500 mt-1 max-w-sm">{t.empty}</p>
         </div>
       ) : (
@@ -442,7 +474,9 @@ export default function AdminRetailOrdersPage() {
                       {order.userId?.name || t.unknownCustomer}
                     </p>
                     {order.userId?.email && (
-                      <p className="text-xs text-gray-500">{order.userId.email}</p>
+                      <p className="text-xs text-gray-500">
+                        {order.userId.email}
+                      </p>
                     )}
                   </div>
 
@@ -452,12 +486,18 @@ export default function AdminRetailOrdersPage() {
                     </p>
                     <p
                       className="text-sm text-black truncate max-w-[200px]"
-                      title={order.orderItems.map((item) => item.name).join(", ")}
+                      title={order.orderItems
+                        .map((item) => item.name)
+                        .join(", ")}
                     >
                       {order.orderItems.map((item) => item.name).join(", ")}
                     </p>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {order.orderItems.reduce((acc, item) => acc + item.quantity, 0)} items
+                      {order.orderItems.reduce(
+                        (acc, item) => acc + item.quantity,
+                        0,
+                      )}{" "}
+                      items
                     </p>
                   </div>
 
@@ -472,7 +512,9 @@ export default function AdminRetailOrdersPage() {
                     <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">
                       {t.columns.date}
                     </p>
-                    <p className="text-sm text-black">{formatDate(order.createdAt)}</p>
+                    <p className="text-sm text-black">
+                      {formatDate(order.createdAt)}
+                    </p>
                   </div>
                 </div>
 
@@ -491,7 +533,9 @@ export default function AdminRetailOrdersPage() {
                     {previousStatus && (
                       <button
                         type="button"
-                        onClick={() => handleStatusChange(order._id, previousStatus)}
+                        onClick={() =>
+                          handleStatusChange(order._id, previousStatus)
+                        }
                         disabled={isUpdating}
                         className="border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-1 min-w-[140px] hover:bg-gray-100 disabled:opacity-50 hover:cursor-pointer transition"
                       >
@@ -503,12 +547,12 @@ export default function AdminRetailOrdersPage() {
                       </button>
                     )}
 
-
-
                     {nextStatus && (
                       <button
                         type="button"
-                        onClick={() => handleStatusChange(order._id, nextStatus)}
+                        onClick={() =>
+                          handleStatusChange(order._id, nextStatus)
+                        }
                         disabled={isUpdating}
                         className="bg-black text-white px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-1 min-w-[140px] disabled:opacity-50 hover:cursor-pointer transition"
                       >

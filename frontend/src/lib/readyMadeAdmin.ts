@@ -9,7 +9,6 @@ export interface ReadyMadeFormData {
 
   tag: string;
   tagAr: string;
-  tagColor: string;
 
   colors: string[];
 
@@ -80,7 +79,6 @@ export function defaultReadyMadeForm(): ReadyMadeFormData {
 
     tag: "",
     tagAr: "",
-    tagColor: "",
 
     colors: [],
 
@@ -128,7 +126,6 @@ export function fromApiProduct(
 
     tag: typeof product.tag === "string" ? product.tag : "",
     tagAr: typeof product.tagAr === "string" ? product.tagAr : "",
-    tagColor: typeof product.tagColor === "string" ? product.tagColor : "",
 
     colors: Array.isArray(product.colors) ? (product.colors as string[]) : [],
 
@@ -183,7 +180,6 @@ export function toApiPayload(form: ReadyMadeFormData): Record<string, unknown> {
 
     tag: form.tag.trim(),
     tagAr: form.tagAr.trim(),
-    tagColor: form.tagColor.trim(),
 
     colors: form.colors,
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, FormEvent, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { api, getApiErrorMessage } from "@/lib/api/client";
 import FormField from "@/components/admin/FormField";
@@ -12,8 +12,9 @@ import {
   toApiPayload,
   type ReadyMadeFormData,
 } from "@/lib/readyMadeAdmin";
+import toast from "react-hot-toast";
 
-// Predefined tag and color options
+// Predefined tag and color options (same as create form)
 const TAG_OPTIONS = [
   { value: "new", en: "New", ar: "جديد" },
   { value: "bestseller", en: "Bestseller", ar: "الأكثر مبيعاً" },
@@ -23,16 +24,53 @@ const TAG_OPTIONS = [
 ];
 
 const COLOR_OPTIONS = [
-  { value: "red", en: "Red", ar: "أحمر" },
-  { value: "blue", en: "Blue", ar: "أزرق" },
-  { value: "green", en: "Green", ar: "أخضر" },
   { value: "black", en: "Black", ar: "أسود" },
   { value: "white", en: "White", ar: "أبيض" },
-  { value: "gold", en: "Gold", ar: "ذهبي" },
+  { value: "red", en: "Red", ar: "أحمر" },
+  { value: "maroon", en: "Maroon", ar: "خمري" },
+  { value: "burgundy", en: "Burgundy", ar: "عنابي" },
+  { value: "pink", en: "Pink", ar: "وردي" },
+  { value: "hot-pink", en: "Hot Pink", ar: "وردي فاقع" },
+  { value: "rose", en: "Rose", ar: "وردي فاتح" },
+  { value: "purple", en: "Purple", ar: "بنفسجي" },
+  { value: "lavender", en: "Lavender", ar: "لافندر" },
+  { value: "blue", en: "Blue", ar: "أزرق" },
+  { value: "navy", en: "Navy Blue", ar: "كحلي" },
+  { value: "royal-blue", en: "Royal Blue", ar: "أزرق ملكي" },
+  { value: "sky-blue", en: "Sky Blue", ar: "أزرق سماوي" },
+  { value: "turquoise", en: "Turquoise", ar: "فيروزي" },
+  { value: "green", en: "Green", ar: "أخضر" },
+  { value: "emerald", en: "Emerald Green", ar: "أخضر زمردي" },
+  { value: "olive", en: "Olive Green", ar: "أخضر زيتوني" },
+  { value: "mint", en: "Mint Green", ar: "أخضر نعناعي" },
+  { value: "yellow", en: "Yellow", ar: "أصفر" },
+  { value: "mustard", en: "Mustard", ar: "أصفر خردلي" },
+  { value: "orange", en: "Orange", ar: "برتقالي" },
+  { value: "peach", en: "Peach", ar: "خوخي" },
+  { value: "brown", en: "Brown", ar: "بني" },
+  { value: "chocolate", en: "Chocolate Brown", ar: "بني شوكولاتة" },
+  { value: "beige", en: "Beige", ar: "بيج" },
+  { value: "camel", en: "Camel", ar: "جملي" },
+  { value: "grey", en: "Grey", ar: "رمادي" },
   { value: "silver", en: "Silver", ar: "فضي" },
+  { value: "gold", en: "Gold", ar: "ذهبي" },
+  { value: "champagne", en: "Champagne", ar: "شامبين" },
+  { value: "bronze", en: "Bronze", ar: "برونزي" },
+  { value: "cream", en: "Cream", ar: "كريمي" },
+  { value: "ivory", en: "Ivory", ar: "عاجي" },
+  { value: "multi", en: "Multi Color", ar: "متعدد الألوان" },
 ];
 
-// Sanitize name fields
+const FABRIC_TYPES = [
+  { value: "chiffon", en: "Chiffon", ar: "شيفون" },
+  { value: "silk velvet", en: "Silk Velvet", ar: "مخمل حرير" },
+  {
+    value: "tana linen cotton",
+    en: "Tana Linen Cotton",
+    ar: "تانة قطن الكتان",
+  },
+];
+
 const sanitizeName = (value: string) =>
   value.replace(/[^a-zA-Z\u0600-\u06FF\s\-']/g, "");
 
@@ -45,12 +83,28 @@ export default function EditReadyMadePage() {
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [formData, setFormData] = useState<ReadyMadeFormData | null>(null);
   const [fabricWidth, setFabricWidth] = useState<"single" | "double">("single");
+  const [colorsOpen, setColorsOpen] = useState(false);
+  const colorsDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        colorsDropdownRef.current &&
+        !colorsDropdownRef.current.contains(event.target as Node)
+      ) {
+        setColorsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch item
   useEffect(() => {
@@ -80,7 +134,7 @@ export default function EditReadyMadePage() {
         }
 
         if (!found) {
-          setError("Product not found");
+          toast.error("Product not found");
           return;
         }
 
@@ -93,7 +147,7 @@ export default function EditReadyMadePage() {
       } catch (err: unknown) {
         const message =
           err instanceof Error ? err.message : "Failed to load product";
-        setError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -108,9 +162,6 @@ export default function EditReadyMadePage() {
     if (fieldErrors[field]) {
       setFieldErrors((prev) => ({ ...prev, [field]: "" }));
     }
-    // Clear success/error when user makes a change
-    setSuccess(null);
-    setError(null);
   };
 
   const handleNameChange = (
@@ -160,6 +211,7 @@ export default function EditReadyMadePage() {
     handleChange("images", newImages);
   };
 
+  // Color toggle
   const toggleColor = (colorValue: string) => {
     if (!formData) return;
     const current = formData.colors;
@@ -178,7 +230,7 @@ export default function EditReadyMadePage() {
 
     if (!formData.name.trim()) errors.name = "Name required";
     if (!formData.fabricType.trim()) errors.fabricType = "Fabric type required";
-    if (!formData.tailorName.trim()) errors.tailorName = "Tailor required";
+    // tailorName is optional – no validation
 
     const hasImage = formData.images.some((img) => img.trim() !== "");
     if (!hasImage) errors.images = "At least one image is required";
@@ -201,11 +253,19 @@ export default function EditReadyMadePage() {
   // Submit
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!formData || !validate()) return;
+    if (!formData) return;
+
+    if (!validate()) {
+      const errorMessages = Object.values(fieldErrors).filter(Boolean);
+      let errorText = "Please check the highlighted fields and try again.";
+      if (errorMessages.length > 0) {
+        errorText = `Please fix: ${errorMessages.join("; ")}.`;
+      }
+      toast.error(errorText);
+      return;
+    }
 
     setSubmitting(true);
-    setError(null);
-    setSuccess(null);
 
     const firstImage = formData.images.find((img) => img.trim() !== "") || "";
     const payload = toApiPayload({
@@ -216,13 +276,12 @@ export default function EditReadyMadePage() {
 
     try {
       await api.put(`/api/admin/ready-made/${id}`, payload);
-      setSuccess("Product updated successfully!");
-      // Optionally redirect after a short delay
+      toast.success("Product updated successfully!");
       setTimeout(() => {
         router.push("/admin/ready-made");
       }, 2000);
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, "Failed to update product"));
+      toast.error(getApiErrorMessage(err, "Failed to update product"));
     } finally {
       setSubmitting(false);
     }
@@ -238,17 +297,15 @@ export default function EditReadyMadePage() {
     );
   }
 
-  if (error && !formData) {
+  if (!formData) {
     return (
       <div className="max-w-5xl mx-auto p-6">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+          Product not found
         </div>
       </div>
     );
   }
-
-  if (!formData) return null;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -274,48 +331,54 @@ export default function EditReadyMadePage() {
             <input
               value={formData.name}
               onChange={(e) => handleNameChange("name", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              placeholder="Chiffon Silk Mukhawar"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start"
             />
           </FormField>
 
           {/* NAME AR */}
-          <FormField label="Name (AR)" name="nameAr">
+          <FormField
+            label="Name (AR)"
+            name="nameAr"
+            required
+            error={fieldErrors.nameAr}
+          >
             <input
               value={formData.nameAr}
               onChange={(e) => handleNameChange("nameAr", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              placeholder="مخاوير شيفون حرير"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end"
             />
           </FormField>
 
           {/* DESCRIPTION (EN) */}
-          <div className="md:col-span-2">
-            <FormField label="Description">
-              <textarea
-                rows={2}
-                value={formData.description}
-                onChange={(e) => handleChange("description", e.target.value)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-              />
-            </FormField>
-          </div>
+          <FormField label="Description">
+            <textarea
+              rows={2}
+              value={formData.description}
+              onChange={(e) => handleChange("description", e.target.value)}
+              placeholder="Buy our Premium Mukhawar ...."
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent resize-none overflow-hidden leading-[1.6]"
+            />
+          </FormField>
 
           {/* DESCRIPTION (AR) */}
-          <div className="md:col-span-2">
-            <FormField label="Description (AR)">
-              <textarea
-                rows={2}
-                value={formData.descriptionAr}
-                onChange={(e) => handleChange("descriptionAr", e.target.value)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-              />
-            </FormField>
-          </div>
+          <FormField label="Description (AR)">
+            <textarea
+              rows={2}
+              value={formData.descriptionAr}
+              onChange={(e) => handleChange("descriptionAr", e.target.value)}
+              placeholder="... اشترِ مخورنا الفاخر"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent resize-none overflow-hidden leading-[1.6]"
+            />
+          </FormField>
 
           {/* CODE */}
           <FormField label="Code (OPTIONAL)" name="code">
             <input
               value={formData.code}
               onChange={(e) => handleChange("code", e.target.value)}
+              placeholder="0000"
               className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
             />
           </FormField>
@@ -324,11 +387,13 @@ export default function EditReadyMadePage() {
           <FormField
             label="Available Stock"
             error={fieldErrors.availableFabricStock}
+            required
           >
             <input
               type="number"
               min="0"
               step="1"
+              placeholder="05"
               value={getNumberDisplay(formData.availableFabricStock)}
               onChange={(e) =>
                 handleNumberChange("availableFabricStock", e.target.value)
@@ -339,28 +404,43 @@ export default function EditReadyMadePage() {
 
           {/* FABRIC TYPE */}
           <FormField label="Fabric Type (ENG)" name="fabricType" required>
-            <input
+            <select
               value={formData.fabricType}
               onChange={(e) => handleChange("fabricType", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-            />
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent"
+            >
+              <option value="">Select Fabric Type</option>
+              {FABRIC_TYPES.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.en}
+                </option>
+              ))}
+            </select>
           </FormField>
 
           {/* FABRIC TYPE AR */}
-          <FormField label="Fabric Type (AR)" name="fabricTypeAr">
-            <input
+          <FormField label="Fabric Type (AR)" name="fabricTypeAr" required>
+            <select
               value={formData.fabricTypeAr}
               onChange={(e) => handleChange("fabricTypeAr", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-            />
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent text-right"
+            >
+              <option value="">اختر نوع القماش</option>
+              {FABRIC_TYPES.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.ar}
+                </option>
+              ))}
+            </select>
           </FormField>
 
           {/* TAILOR NAME */}
-          <FormField label="Tailor Name (ENG)" name="tailorName" required>
+          <FormField label="Tailor Name (ENG)" name="tailorName">
             <input
               value={formData.tailorName}
               onChange={(e) => handleNameChange("tailorName", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              placeholder="Zahra Bint Qasim"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start"
             />
           </FormField>
 
@@ -369,7 +449,8 @@ export default function EditReadyMadePage() {
             <input
               value={formData.tailorNameAr}
               onChange={(e) => handleNameChange("tailorNameAr", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              placeholder="زهرة بنت قاسم"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end"
             />
           </FormField>
 
@@ -377,11 +458,13 @@ export default function EditReadyMadePage() {
           <FormField
             label="Fabric length (in meters)"
             error={fieldErrors.metersPerFabric}
+            required
           >
             <input
               type="number"
               min="0"
               step="0.1"
+              placeholder="3.5"
               value={getNumberDisplay(formData.metersPerFabric)}
               onChange={(e) => {
                 if (e.target.value === "") {
@@ -429,119 +512,156 @@ export default function EditReadyMadePage() {
           </div>
 
           {/* PRICES */}
-          <FormField
-            label="Fabric Price AED"
-            error={fieldErrors.fabricPriceAED}
-          >
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={getNumberDisplay(formData.fabricPriceAED)}
-              onChange={(e) =>
-                handleNumberChange("fabricPriceAED", e.target.value)
-              }
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-            />
-          </FormField>
-
-          <FormField
-            label="Mukhawar Price AED"
-            error={fieldErrors.mukhawarPriceAED}
-          >
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={getNumberDisplay(formData.mukhawarPriceAED)}
-              onChange={(e) =>
-                handleNumberChange("mukhawarPriceAED", e.target.value)
-              }
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-            />
-          </FormField>
-
-          <FormField
-            label="Final Selling Price AED"
-            error={fieldErrors.finalSellingPriceAED}
-          >
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={getNumberDisplay(formData.finalSellingPriceAED)}
-              onChange={(e) =>
-                handleNumberChange("finalSellingPriceAED", e.target.value)
-              }
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-            />
-          </FormField>
-
-          {/* TAG dropdowns */}
-          <FormField label="Tag (EN)" name="tag">
-            <select
-              value={formData.tag}
-              onChange={(e) => handleChange("tag", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField
+              label="Fabric Price AED"
+              error={fieldErrors.fabricPriceAED}
             >
-              <option value="">Select tag</option>
-              {TAG_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.en}
-                </option>
-              ))}
-            </select>
-          </FormField>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="450"
+                value={getNumberDisplay(formData.fabricPriceAED)}
+                onChange={(e) =>
+                  handleNumberChange("fabricPriceAED", e.target.value)
+                }
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
 
-          <FormField label="Tag (AR)" name="tagAr">
-            <select
-              value={formData.tagAr}
-              onChange={(e) => handleChange("tagAr", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+            <FormField
+              label="Mukhawar Price AED"
+              error={fieldErrors.mukhawarPriceAED}
             >
-              <option value="">اختر الوسم</option>
-              {TAG_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.ar}
-                </option>
-              ))}
-            </select>
-          </FormField>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="650"
+                value={getNumberDisplay(formData.mukhawarPriceAED)}
+                onChange={(e) =>
+                  handleNumberChange("mukhawarPriceAED", e.target.value)
+                }
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
 
-          {/* TAG COLOR */}
-          <FormField label="Tag Color (EN)" name="tagColor">
-            <select
-              value={formData.tagColor}
-              onChange={(e) => handleChange("tagColor", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+            <FormField
+              label="Final Selling Price AED"
+              error={fieldErrors.finalSellingPriceAED}
+              required
             >
-              <option value="">Select color</option>
-              {COLOR_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.en}
-                </option>
-              ))}
-            </select>
-          </FormField>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="1250"
+                value={getNumberDisplay(formData.finalSellingPriceAED)}
+                onChange={(e) =>
+                  handleNumberChange("finalSellingPriceAED", e.target.value)
+                }
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
+          </div>
 
-          {/* COLORS – checkboxes */}
-          <div className="md:col-span-2">
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
-              Colors (select multiple)
-            </label>
-            <div className="flex flex-wrap gap-4">
-              {COLOR_OPTIONS.map((opt) => (
-                <label key={opt.value} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.colors.includes(opt.value)}
-                    onChange={() => toggleColor(opt.value)}
-                    className="accent-black"
-                  />
-                  {opt.en} / {opt.ar}
-                </label>
-              ))}
-            </div>
+          {/* TAG + Color in one line */}
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <FormField label="Tag (ENG)" name="tag">
+              <select
+                value={formData.tag}
+                onChange={(e) => handleChange("tag", e.target.value)}
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent"
+              >
+                <option value="">Select tag</option>
+                {TAG_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.en}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField label="Tag (AR)" name="tagAr">
+              <select
+                value={formData.tagAr}
+                onChange={(e) => handleChange("tagAr", e.target.value)}
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent"
+              >
+                <option value="">اختر الوسم</option>
+                {TAG_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.ar}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+
+            <FormField label="Colors" name="colors" required>
+              <div className="relative" ref={colorsDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setColorsOpen((prev) => !prev)}
+                  className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center"
+                >
+                  {formData.colors.length === 0 ? (
+                    <span className="text-xs text-black/60 leading-none">
+                      Select colors
+                    </span>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {COLOR_OPTIONS.filter((c) =>
+                        formData.colors.includes(c.value),
+                      ).map((c) => (
+                        <span
+                          key={c.value}
+                          className="inline-flex items-center justify-center"
+                          title={c.en}
+                        >
+                          <span
+                            className="w-5 h-5 rounded-full border border-gray-200"
+                            style={{ background: c.value }}
+                          />
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </button>
+
+                {colorsOpen && (
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3 z-50">
+                    <div className="max-h-44 overflow-auto flex flex-col gap-2">
+                      {COLOR_OPTIONS.map((opt) => {
+                        const selected = formData.colors.includes(opt.value);
+                        return (
+                          <label
+                            key={opt.value}
+                            className="flex items-center gap-2 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={() => toggleColor(opt.value)}
+                              className="accent-black"
+                            />
+                            <span className="inline-flex items-center gap-2">
+                              <span
+                                className="w-4 h-4 rounded-full border border-gray-200"
+                                style={{ background: opt.value }}
+                              />
+                              <span className="text-xs">
+                                {opt.en} / {opt.ar}
+                              </span>
+                            </span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </FormField>
           </div>
 
           {/* IMAGES */}
@@ -604,20 +724,6 @@ export default function EditReadyMadePage() {
             </FormField>
           </div>
         </div>
-
-        {/* Success Message */}
-        {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm mt-2">
-            {success}
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm mt-2">
-            {error}
-          </div>
-        )}
 
         {/* SUBMIT */}
         <div className="flex gap-3 pt-6 mt-3 border-t border-gray-100">
