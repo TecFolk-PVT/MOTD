@@ -74,13 +74,14 @@ function ToggleModal({
   );
 }
 
+// ✅ Correct interface – use availableFabricStock
 interface ReadyMadeItem {
   _id: string;
   name: string;
   fabricType: string;
   tailorName: string;
   finalSellingPriceAED: number;
-  countInStock: number;
+  availableFabricStock: number; // ✅ correct field
   status: "available" | "sold";
   createdAt: string;
   updatedAt: string;
@@ -94,7 +95,6 @@ export default function AdminReadyMadePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  // Modal state
   const [modalOpen, setModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ReadyMadeItem | null>(null);
 
@@ -116,29 +116,29 @@ export default function AdminReadyMadePage() {
     }
   };
 
-  // Safe filter with optional chaining and default values
+  // ✅ Filter using availableFabricStock
   const filteredItems = useMemo(() => {
     if (!searchTerm) return items;
     const term = searchTerm.toLowerCase();
     return items.filter((item) => {
       const name = item.name?.toLowerCase() || "";
-      const fabric_type = item.fabricType?.toLowerCase() || "";
-      const tailor_name = item.tailorName?.toLowerCase() || "";
-      const final_selling_price_AED = item.finalSellingPriceAED || 0;
-      const status = item.countInStock > 0 ? "available" : "sold";
+      const fabricType = item.fabricType?.toLowerCase() || "";
+      const tailorName = item.tailorName?.toLowerCase() || "";
+      const priceStr = String(item.finalSellingPriceAED || 0);
+      const status = item.availableFabricStock > 0 ? "available" : "sold";
       return (
         name.includes(term) ||
-        fabric_type.includes(term) ||
-        tailor_name.includes(term) ||
-        final_selling_price_AED ||
+        fabricType.includes(term) ||
+        tailorName.includes(term) ||
+        priceStr.includes(term) ||
         status.includes(term)
       );
     });
   }, [items, searchTerm]);
 
-  // Available items = countInStock > 0
-  const availableItems = items.filter((i) => i.countInStock > 0).length;
-  const soldItems = items.filter((i) => i.countInStock === 0).length;
+  // ✅ Stats using availableFabricStock
+  const availableItems = items.filter((i) => i.availableFabricStock > 0).length;
+  const soldItems = items.filter((i) => i.availableFabricStock === 0).length;
 
   const StatusBadge = ({ status }: { status: string }) => {
     const normalized = status?.toLowerCase().trim();
@@ -156,19 +156,16 @@ export default function AdminReadyMadePage() {
     );
   };
 
-  // ----- Open modal when delete button is clicked -----
   const openDeleteModal = (item: ReadyMadeItem) => {
     setItemToDelete(item);
     setModalOpen(true);
   };
 
-  // ----- Close modal without deleting -----
   const closeDeleteModal = () => {
     setModalOpen(false);
     setItemToDelete(null);
   };
 
-  // ----- Actual delete handler (called from modal confirm) -----
   const handleDeleteConfirm = async () => {
     if (!itemToDelete) return;
     const id = itemToDelete._id;
@@ -176,12 +173,12 @@ export default function AdminReadyMadePage() {
     setDeletingId(id);
     try {
       await api.delete(`/api/admin/ready-made/${id}`);
-      toast.success(`"${itemName}" has been deleted`); // <<-- toast success
+      toast.success(`"${itemName}" has been deleted`);
       await fetchItems();
       closeDeleteModal();
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, "Failed to delete the item.")); // <<-- toast error
-      closeDeleteModal(); // close modal on error (optional)
+      toast.error(getApiErrorMessage(err, "Failed to delete the item."));
+      closeDeleteModal();
     } finally {
       setDeletingId(null);
     }
@@ -246,7 +243,6 @@ export default function AdminReadyMadePage() {
 
   return (
     <div className="space-y-6">
-      {/* ------ Delete Confirmation Modal ------ */}
       <ToggleModal
         isOpen={modalOpen}
         title="Delete Item"
@@ -264,7 +260,7 @@ export default function AdminReadyMadePage() {
             Ready-made Inventory
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            Manage size‑return pieces and their availability
+            Manage ready‑made pieces and their availability
           </p>
         </div>
         <Link
@@ -304,7 +300,7 @@ export default function AdminReadyMadePage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by name, size, reason, order..."
+            placeholder="Search by name, fabric, tailor, price, or status..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition"
@@ -356,6 +352,9 @@ export default function AdminReadyMadePage() {
                     Price
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Stock
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -364,50 +363,55 @@ export default function AdminReadyMadePage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filteredItems.map((item) => (
-                  <tr
-                    key={item._id}
-                    className="group hover:bg-gray-50 transition-all duration-200"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">
-                      {item.name || "—"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {item.fabricType || "—"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {item.tailorName || "—"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-                      <span className="text-gray-500">
-                        {"AED" + " " + item.finalSellingPriceAED}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge
-                        status={item.countInStock > 0 ? "available" : "sold"}
-                      />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-left">
-                      <div className="flex items-center gap-3">
-                        <Link
-                          href={`/admin/ready-made/${item._id}/edit`}
-                          className="inline-flex items-center gap-1 text-gray-400 group-hover:text-black transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                          <span className="text-sm">Edit</span>
-                        </Link>
-                        <button
-                          onClick={() => openDeleteModal(item)}
-                          disabled={deletingId === item._id}
-                          className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filteredItems.map((item) => {
+                  const status =
+                    item.availableFabricStock > 0 ? "available" : "sold";
+                  return (
+                    <tr
+                      key={item._id}
+                      className="group hover:bg-gray-50 transition-all duration-200"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black">
+                        {item.name || "—"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {item.fabricType || "—"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {item.tailorName || "—"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                        <span className="text-gray-500">
+                          AED {item.finalSellingPriceAED}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {item.availableFabricStock}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <StatusBadge status={status} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-left">
+                        <div className="flex items-center gap-3">
+                          <Link
+                            href={`/admin/ready-made/${item._id}/edit`}
+                            className="inline-flex items-center gap-1 text-gray-400 group-hover:text-black transition-colors"
+                          >
+                            <Edit className="w-4 h-4" />
+                            <span className="text-sm">Edit</span>
+                          </Link>
+                          <button
+                            onClick={() => openDeleteModal(item)}
+                            disabled={deletingId === item._id}
+                            className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

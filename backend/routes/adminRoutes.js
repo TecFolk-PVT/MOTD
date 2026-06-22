@@ -88,7 +88,6 @@ adminRouter.post(
       descriptionAr,
       tag,
       tagAr,
-      tagColor,
       colors,
       thumbnailImage,
       images,
@@ -108,7 +107,10 @@ adminRouter.post(
     let slug = req.body.slug?.trim();
     if (!slug) {
       const base = name || nameAr || "ready-made";
-      slug = base.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      slug = base
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
     }
 
     const newProduct = new ReadyMadeProduct({
@@ -120,7 +122,6 @@ adminRouter.post(
       descriptionAr,
       tag,
       tagAr,
-      tagColor,
       colors,
       thumbnailImage,
       images,
@@ -164,8 +165,6 @@ adminRouter.put(
     // --- Tags ---
     product.tag = req.body.tag ?? product.tag;
     product.tagAr = req.body.tagAr ?? product.tagAr;
-    product.tagColor = req.body.tagColor ?? product.tagColor;
-    product.tagColorAr = req.body.tagColorAr ?? product.tagColorAr;
 
     // --- Colors – array, assign directly ---
     if (req.body.colors !== undefined) {
@@ -412,6 +411,19 @@ adminRouter.get(
   }),
 );
 
+// GET api/admin/fabrics/:id
+// Admin can edit the details of a selected fabric
+adminRouter.get(
+  "/fabrics/:id",
+  expressAsyncHandler(async (req, res) => {
+    const fabric = await Fabric.findById(req.params.id);
+    if (!fabric) {
+      return res.status(404).send({ message: "Fabric not found" });
+    }
+    res.send(fabric);
+  }),
+);
+
 // POST /api/admin/fabrics
 // Create a new fabric catalog entry
 adminRouter.post(
@@ -425,11 +437,12 @@ adminRouter.post(
       descriptionAr,
       images,
       material,
-      color,
-      city,
+      materialAr,
+      colors,
       tag,
-      tagColor,
+      tagAr,
       pricePerMeter,
+      stockInMeters,
       listedByStore,
       storePickupAddress,
       isActive,
@@ -449,11 +462,12 @@ adminRouter.post(
       descriptionAr,
       images,
       material,
-      color,
-      city,
+      materialAr: materialAr || "",
+      colors: colors || [],
       tag,
-      tagColor,
+      tagAr: tagAr || "",
       pricePerMeter,
+      stockInMeters: stockInMeters || 0,
       listedByStore,
       storePickupAddress,
       isActive: isActive !== undefined ? isActive : true,
@@ -471,54 +485,62 @@ adminRouter.put(
   expressAsyncHandler(async (req, res) => {
     const fabric = await Fabric.findById(req.params.id);
 
-    if (fabric) {
-      if (req.body.listedByStore) {
-        const partnerCheck = await assertFabricStorePartner(
-          req.body.listedByStore,
-        );
-        if (!partnerCheck.ok) {
-          res.status(400).send({ message: partnerCheck.message });
-          return;
-        }
-        fabric.listedByStore = req.body.listedByStore;
-      }
-
-      fabric.name = req.body.name || fabric.name;
-      fabric.nameAr = req.body.nameAr || fabric.nameAr;
-      fabric.slug = req.body.slug || fabric.slug;
-      fabric.description =
-        req.body.description !== undefined
-          ? req.body.description
-          : fabric.description;
-      fabric.descriptionAr =
-        req.body.descriptionAr !== undefined
-          ? req.body.descriptionAr
-          : fabric.descriptionAr;
-      fabric.images = req.body.images || fabric.images;
-      fabric.material = req.body.material || fabric.material;
-      fabric.color =
-        req.body.color !== undefined ? req.body.color : fabric.color;
-      fabric.city = req.body.city !== undefined ? req.body.city : fabric.city;
-      fabric.tag = req.body.tag !== undefined ? req.body.tag : fabric.tag;
-      fabric.tagColor =
-        req.body.tagColor !== undefined ? req.body.tagColor : fabric.tagColor;
-      fabric.pricePerMeter =
-        req.body.pricePerMeter !== undefined
-          ? req.body.pricePerMeter
-          : fabric.pricePerMeter;
-
-      if (req.body.storePickupAddress) {
-        fabric.storePickupAddress = req.body.storePickupAddress;
-      }
-
-      fabric.isActive =
-        req.body.isActive !== undefined ? req.body.isActive : fabric.isActive;
-
-      const updatedFabric = await fabric.save();
-      res.send(updatedFabric);
-    } else {
-      res.status(404).send({ message: "Fabric not found" });
+    if (!fabric) {
+      return res.status(404).send({ message: "Fabric not found" });
     }
+
+    // Handle listedByStore (ObjectId or "MOTD")
+    if (req.body.listedByStore) {
+      const partnerCheck = await assertFabricStorePartner(
+        req.body.listedByStore,
+      );
+      if (!partnerCheck.ok) {
+        return res.status(400).send({ message: partnerCheck.message });
+      }
+      fabric.listedByStore = req.body.listedByStore;
+    }
+
+    // Update all fields
+    fabric.name = req.body.name ?? fabric.name;
+    fabric.nameAr = req.body.nameAr ?? fabric.nameAr;
+    fabric.slug = req.body.slug ?? fabric.slug;
+    fabric.description = req.body.description ?? fabric.description;
+    fabric.descriptionAr = req.body.descriptionAr ?? fabric.descriptionAr;
+    fabric.images = req.body.images ?? fabric.images;
+    fabric.material = req.body.material ?? fabric.material;
+    fabric.materialAr = req.body.materialAr ?? fabric.materialAr;
+    fabric.colors = Array.isArray(req.body.colors)
+      ? req.body.colors
+      : fabric.colors;
+    fabric.tag = req.body.tag ?? fabric.tag;
+    fabric.tagAr = req.body.tagAr ?? fabric.tagAr;
+    fabric.pricePerMeter = req.body.pricePerMeter ?? fabric.pricePerMeter;
+    fabric.stockInMeters = req.body.stockInMeters ?? fabric.stockInMeters;
+
+    // Update pickup address fields individually (✅ ensures changes are detected)
+    if (req.body.storePickupAddress) {
+      const addr = req.body.storePickupAddress;
+      fabric.storePickupAddress.emirate =
+        addr.emirate ?? fabric.storePickupAddress.emirate;
+      fabric.storePickupAddress.city =
+        addr.city ?? fabric.storePickupAddress.city;
+      fabric.storePickupAddress.street =
+        addr.street ?? fabric.storePickupAddress.street;
+      fabric.storePickupAddress.building =
+        addr.building ?? fabric.storePickupAddress.building;
+      fabric.storePickupAddress.phone =
+        addr.phone ?? fabric.storePickupAddress.phone;
+    }
+
+    fabric.isActive = req.body.isActive ?? fabric.isActive;
+
+    // Backward-compatible old fields (optional)
+    fabric.color = req.body.color ?? fabric.color;
+    fabric.city = req.body.city ?? fabric.city;
+    fabric.tagColor = req.body.tagColor ?? fabric.tagColor;
+
+    const updatedFabric = await fabric.save();
+    res.send(updatedFabric);
   }),
 );
 
@@ -1037,6 +1059,107 @@ adminRouter.put(
       message:
         "Global platform configuration variables locked and synchronized successfully",
       settings: updatedSettings,
+    });
+  }),
+);
+
+// GET /api/admin/customers
+// Fetch all users with role "customer", with optional search and status filter
+adminRouter.get(
+  "/customers",
+  expressAsyncHandler(async (req, res) => {
+    const { search, status, page = 1, limit = 20 } = req.query;
+
+    const filter = { role: "customer" };
+
+    // Status filter (isActive)
+    if (status === "active") filter.isActive = true;
+    else if (status === "inactive") filter.isActive = false;
+
+    // Search by name or email
+    if (search && typeof search === "string") {
+      const regex = new RegExp(search, "i");
+      filter.$or = [{ name: regex }, { email: regex }];
+    }
+
+    const pageNumber = Math.max(Number(page) || 1, 1);
+    const limitNumber = Math.min(Math.max(Number(limit) || 20, 1), 100);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const [customers, total] = await Promise.all([
+      User.find(filter)
+        .select("-password") // exclude password
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNumber),
+      User.countDocuments(filter),
+    ]);
+
+    // Summary stats
+    const totalActive = await User.countDocuments({
+      role: "customer",
+      isActive: true,
+    });
+    const totalInactive = await User.countDocuments({
+      role: "customer",
+      isActive: false,
+    });
+    const newThisMonth = await User.countDocuments({
+      role: "customer",
+      createdAt: {
+        $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      },
+    });
+
+    res.send({
+      success: true,
+      page: pageNumber,
+      limit: limitNumber,
+      total,
+      totalPages: Math.ceil(total / limitNumber) || 0,
+      stats: {
+        totalCustomers: total,
+        active: totalActive,
+        inactive: totalInactive,
+        newThisMonth,
+      },
+      items: customers,
+    });
+  }),
+);
+
+// DELETE /api/admin/customers/:id
+adminRouter.delete(
+  "/customers/:id",
+  expressAsyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).send({ message: "Customer not found" });
+    }
+    if (user.role !== "customer") {
+      return res.status(400).send({ message: "User is not a customer" });
+    }
+    await user.deleteOne();
+    res.send({ message: "Customer deleted successfully" });
+  }),
+);
+
+// PATCH /api/admin/customers/:id/toggle-active
+adminRouter.patch(
+  "/customers/:id/toggle-active",
+  expressAsyncHandler(async (req, res) => {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).send({ message: "Customer not found" });
+    }
+    if (user.role !== "customer") {
+      return res.status(400).send({ message: "User is not a customer" });
+    }
+    user.isActive = !user.isActive;
+    await user.save();
+    res.send({
+      message: `Customer ${user.isActive ? "activated" : "deactivated"} successfully`,
+      isActive: user.isActive,
     });
   }),
 );
