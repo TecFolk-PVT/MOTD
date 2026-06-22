@@ -22,6 +22,7 @@ export function HeroSection() {
     {
       loop: true,
       direction: isArabic ? "rtl" : "ltr",
+      duration: 30,
     },
     [
       Autoplay({
@@ -104,35 +105,7 @@ export function HeroSection() {
             {t.heroSection.body}
           </p>
 
-          {/* Buttons */}
-          <div className="flex flex-wrap gap-2 xs:gap-3">
-            <Link
-              href="/#fabrics"
-              className={`
-                [font-family:var(--font-body)] uppercase tracking-[0.24em] bg-white text-black px-5 xs:px-6 sm:px-7 py-2.5 xs:py-[12px] sm:py-3.25 hover:opacity-80 transition-opacity duration-150
-                ${
-                  isArabic
-                    ? "text-[14px] xs:text-[14px] sm:text-[14px] md:text-[14px] lg:text-[16px] xl:text-[18px]"
-                    : "text-[12px] xs:text-[11px] sm:text-[12px] md:text-[11px] lg:text-[11px] xl:text-[12px]"
-                }
-              `}
-            >
-              {t.heroSection.ctaShopNow}
-            </Link>
-            <Link
-              href="/#tailors"
-              className={`
-                [font-family:var(--font-body)] uppercase tracking-[0.24em] bg-transparent text-white border border-white/40 px-5 xs:px-6 sm:px-7 py-2.5 xs:py-[12px] sm:py-3.25 hover:bg-white hover:text-black transition-all duration-150
-                ${
-                  isArabic
-                    ? "text-[14px] xs:text-[14px] sm:text-[14px] md:text-[14px] lg:text-[16px] xl:text-[18px]"
-                    : "text-[12px] xs:text-[11px] sm:text-[12px] md:text-[11px] lg:text-[11px] xl:text-[12px]"
-                }
-              `}
-            >
-              {t.heroSection.ctaMeetTailors}
-            </Link>
-          </div>
+
         </div>
       </div>
     </section>

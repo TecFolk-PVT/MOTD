@@ -576,7 +576,7 @@ export default function FabricStorePage() {
                                     >
                                         <div className="relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500">
                                             {product.pricePerMeter > 500 && (
-                                                <span className="absolute top-4 left-4 z-10 bg-black text-white text-[8px] tracking-[0.16em] uppercase px-2.5 py-1 rounded-full">
+                                                <span className="absolute top-4 left-4 z-10 bg-[#8B6F47] text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold">
                                                     Premium
                                                 </span>
                                             )}
