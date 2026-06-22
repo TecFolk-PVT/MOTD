@@ -24,7 +24,6 @@ const readyMadeProductSchema = new mongoose.Schema(
      // Slug – URL‑friendly identifier (unique)
     slug: {
       type: String,
-      required: true,
       unique: true,
       trim: true,
     },
@@ -53,16 +52,11 @@ const readyMadeProductSchema = new mongoose.Schema(
       trim: true,
     },
 
-    tagColor: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-
     // Colors (multiple selected colors)
     colors: {
       type: [String],
       default: [],
+      required: true,
     },
 
     // Images
@@ -93,13 +87,11 @@ const readyMadeProductSchema = new mongoose.Schema(
     // Tailor Name
     tailorName: {
       type: String,
-      required: true,
       trim: true,
     },
 
     tailorNameAr: {
       type: String,
-      required: true,
       trim: true,
     },
 
@@ -112,13 +104,11 @@ const readyMadeProductSchema = new mongoose.Schema(
 
     fabricPriceAED: {
       type: Number,
-      required: true,
       min: 0,
     },
 
     mukhawarPriceAED: {
       type: Number,
-      required: true,
       min: 0,
     },
 

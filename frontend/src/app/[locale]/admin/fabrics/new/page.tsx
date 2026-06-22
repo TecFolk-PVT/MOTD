@@ -106,7 +106,6 @@ export default function NewFabricPage() {
         <FabricAdminFormFields
           formData={formData}
           fieldErrors={fieldErrors}
-          copy={t.adminFabrics}
           onFieldChange={handleChange}
           onPickupChange={handlePickupAddressChange}
           onImageChange={handleImageChange}
