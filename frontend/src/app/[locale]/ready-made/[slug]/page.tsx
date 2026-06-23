@@ -7,8 +7,8 @@ import MainLayout from "../../main/layout";
 import FadeInSection from "@/components/shared/fadeInSection";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { useWishlist } from "@/context/WishlistContext";
 
-// Color mapping for tag and swatches
 const colorMap: Record<string, string> = {
   red: "#EF4444",
   blue: "#3B82F6",
@@ -24,16 +24,19 @@ export default function ReadyMadeDetailPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const locale = params.locale as string;
-  const { addItem } = useCart();
+  const { addItem: addToCart } = useCart();
+  const {
+    wishItems,
+    addItem: addToWishlist,
+    removeItem: removeFromWishlist,
+  } = useWishlist();
 
   const [product, setProduct] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState<string>("");
-  const [isWishlisted, setIsWishlisted] = useState(false);
 
-  // Fetch product
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -54,31 +57,49 @@ export default function ReadyMadeDetailPage() {
     if (slug) fetchProduct();
   }, [slug]);
 
-  // Handlers
   const handleAddToCart = () => {
     if (!product) return;
     const price = product.finalSellingPriceAED || 0;
     const maxStock = product.availableFabricStock || 0;
     for (let i = 0; i < quantity; i++) {
-      addItem({
+      addToCart({
         id: product._id,
         slug: product.slug,
         name: product.name,
         image: product.images?.[0] || "/placeholder.png",
         price,
-        size: "N/A",
+        size,
         maxStock,
       });
     }
+    console.log(addToCart);
   };
 
   const handleBuyNow = () => {
     console.log("Buy now:", { product, quantity });
   };
 
-  const toggleWishlist = () => setIsWishlisted(!isWishlisted);
+  // Wishlist toggle – uses context
+  const liked = product
+    ? wishItems.some((item) => item.id === product._id)
+    : false;
+  const toggleWishlist = () => {
+    if (!product) return;
+    if (liked) {
+      removeFromWishlist(product._id);
+    } else {
+      addToWishlist({
+        id: product._id,
+        slug: product.slug,
+        name: product.name,
+        image: product.images?.[0] || "/placeholder.png",
+        price: product.finalSellingPriceAED || 0,
+        maxStock: product.availableFabricStock || 0,
+      });
+    }
+  };
 
-  // Loading / Error states
+  // Loading state
   if (loading) {
     return (
       <MainLayout>
@@ -94,6 +115,7 @@ export default function ReadyMadeDetailPage() {
     );
   }
 
+  // Error or missing product
   if (error || !product) {
     return (
       <MainLayout>
@@ -141,7 +163,10 @@ export default function ReadyMadeDetailPage() {
     );
   }
 
-  // Product data
+  // Extra guard (fixes edge case)
+  if (!product) return null;
+
+  // Product data (safe now)
   const title = product.name;
   const desc = product.description;
   const images = product.images?.length ? product.images : ["/placeholder.png"];
@@ -151,8 +176,8 @@ export default function ReadyMadeDetailPage() {
   const tagColor = product.tagColor;
   const fabricType = product.fabricType;
   const colors = product.colors || [];
+  const size = product.metersPerFabric;
 
-  // Tag styling
   const bgColor = tagColor ? colorMap[tagColor] || "#000000" : "#000000";
   const textColor = ["white", "gold", "silver"].includes(tagColor || "")
     ? "#000000"
@@ -193,7 +218,7 @@ export default function ReadyMadeDetailPage() {
 
             {/* Product Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 xs:gap-10 md:gap-12 lg:gap-(--space-40)">
-              {/* Left: Gallery with Tag overlay */}
+              {/* Left: Gallery */}
               <div className="space-y-4">
                 <div className="aspect-4/5 relative overflow-hidden bg-[#F5F5F0] rounded-lg group">
                   <img
@@ -201,14 +226,10 @@ export default function ReadyMadeDetailPage() {
                     alt={title}
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
-                  {/* Tag badge on top-left corner */}
                   {tag && (
                     <div
                       className="absolute top-3 left-3 z-10 px-2.5 py-1 text-xs font-medium rounded shadow-sm"
-                      style={{
-                        backgroundColor: bgColor,
-                        color: textColor,
-                      }}
+                      style={{ backgroundColor: bgColor, color: textColor }}
                     >
                       {tag}
                     </div>
@@ -220,11 +241,7 @@ export default function ReadyMadeDetailPage() {
                       <button
                         key={idx}
                         onClick={() => setSelectedImage(img)}
-                        className={`shrink-0 w-20 xs:w-24 h-20 xs:h-24 rounded-md overflow-hidden border-2 transition-all duration-200 ${
-                          selectedImage === img
-                            ? "border-black"
-                            : "border-transparent opacity-60 hover:opacity-100"
-                        }`}
+                        className={`shrink-0 w-20 xs:w-24 h-20 xs:h-24 rounded-md overflow-hidden border-2 transition-all duration-200 ${selectedImage === img ? "border-black" : "border-transparent opacity-60 hover:opacity-100"}`}
                       >
                         <img
                           src={img}
@@ -239,7 +256,6 @@ export default function ReadyMadeDetailPage() {
 
               {/* Right: Details */}
               <div className="flex flex-col">
-                {/* Header with wishlist */}
                 <div className="flex justify-between items-start gap-4 mb-2">
                   <h1 className="[font-family:var(--font-display)] text-[28px] xs:text-[32px] sm:text-[36px] md:text-[40px] lg:text-[44px] xl:text-[48px] font-normal leading-[1.1] tracking-[-0.01em] text-black">
                     {title}
@@ -250,11 +266,7 @@ export default function ReadyMadeDetailPage() {
                     aria-label="Add to wishlist"
                   >
                     <svg
-                      className={`w-6 h-6 transition-colors ${
-                        isWishlisted
-                          ? "fill-red-500 stroke-red-500"
-                          : "stroke-black fill-none"
-                      }`}
+                      className={`w-6 h-6 transition-colors ${liked ? "fill-red-500 stroke-red-500" : "stroke-black fill-none"}`}
                       viewBox="0 0 24 24"
                       strokeWidth="1.5"
                       stroke="currentColor"
@@ -272,59 +284,64 @@ export default function ReadyMadeDetailPage() {
                   </p>
                 </div>
 
-                {/* Fabric Type */}
-                {fabricType && (
-                  <div className="mb-3">
-                    <span className="[font-family:var(--font-ui)] text-[10px] xs:text-[11px] uppercase tracking-[0.24em] text-(--color-grey-muted) block">
-                      Fabric Type
-                    </span>
-                    <p className="[font-family:var(--font-body)] text-[14px] xs:text-[15px] sm:text-[16px] text-black">
-                      {fabricType}
-                    </p>
-                  </div>
-                )}
-
-                {/* Colors (swatches) */}
-                {colors.length > 0 && (
-                  <div className="mb-4">
-                    <span className="[font-family:var(--font-ui)] text-[10px] xs:text-[11px] uppercase tracking-[0.24em] text-(--color-grey-muted) block mb-2">
-                      Colors
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {colors.map((c: string, idx: number) => {
-                        const color = colorMap[c] || "#000000";
-                        return (
-                          <span
-                            key={`${c}-${idx}`}
-                            className="w-6 h-6 rounded-full border border-black/85 shadow-sm"
-                            style={{ backgroundColor: color }}
-                            aria-label={`Color ${c}`}
-                          />
-                        );
-                      })}
+                <div className="flex flex-row gap-x-6 my-2">
+                  {fabricType && (
+                    <div className="flex-1">
+                      <span className="[font-family:var(--font-ui)] text-[10px] xs:text-[11px] uppercase tracking-[0.24em] text-(--color-grey-muted) block">
+                        Fabric Type
+                      </span>
+                      <p className="[font-family:var(--font-body)] text-[14px] xs:text-[15px] sm:text-[16px] text-black">
+                        {fabricType}
+                      </p>
                     </div>
-                  </div>
-                )}
-
-                {/* Availability */}
-                <div className="mb-4">
-                  <span className="[font-family:var(--font-ui)] text-[10px] xs:text-[11px] uppercase tracking-[0.24em] text-(--color-grey-muted) block mb-1">
-                    Availability
-                  </span>
-                  <p
-                    className={`[font-family:var(--font-body)] text-[14px] xs:text-[15px] sm:text-[16px] font-medium ${
-                      stock > 0 ? "text-green-700" : "text-red-600"
-                    }`}
-                  >
-                    {stock > 0
-                      ? `In stock (${stock} available)`
-                      : "Out of stock"}
-                  </p>
+                  )}
+                  {size && (
+                    <div className="flex-1">
+                      <span className="[font-family:var(--font-ui)] text-[10px] xs:text-[11px] uppercase tracking-[0.24em] text-(--color-grey-muted) block">
+                        Size
+                      </span>
+                      <p className="[font-family:var(--font-body)] text-[14px] xs:text-[15px] sm:text-[16px] text-black">
+                        {size + " meters"}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                {/* Description */}
+                <div className="grid grid-cols-2 gap-x-6 my-2">
+                  {colors.length > 0 && (
+                    <div>
+                      <span className="[font-family:var(--font-ui)] text-[10px] xs:text-[11px] uppercase tracking-[0.24em] text-(--color-grey-muted) block mb-2">
+                        Colors
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {colors.map((c: string, idx: number) => {
+                          const color = colorMap[c] || "#000000";
+                          return (
+                            <span
+                              key={`${c}-${idx}`}
+                              className="w-6 h-6 rounded-full border border-black/85 shadow-sm"
+                              style={{ backgroundColor: color }}
+                              aria-label={`Color ${c}`}
+                            />
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <span className="[font-family:var(--font-ui)] text-[10px] xs:text-[11px] uppercase tracking-[0.24em] text-(--color-grey-muted) block mb-1">
+                      Availability
+                    </span>
+                    <p
+                      className={`[font-family:var(--font-body)] text-[14px] xs:text-[15px] sm:text-[16px] font-medium ${stock > 0 ? "text-green-700" : "text-red-600"}`}
+                    >
+                      {stock > 0 ? `In stock (${stock})` : "Out of stock"}
+                    </p>
+                  </div>
+                </div>
+
                 {desc && (
-                  <div className="mb-6">
+                  <div className="my-6">
                     <span className="[font-family:var(--font-ui)] text-[10px] xs:text-[11px] uppercase tracking-[0.24em] text-(--color-grey-muted) block mb-2">
                       Description
                     </span>
@@ -334,10 +351,8 @@ export default function ReadyMadeDetailPage() {
                   </div>
                 )}
 
-                {/* Quantity & Action Buttons */}
                 <div className="mt-2 pt-4 border-t border-(--color-border)">
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-6">
-                    {/* Quantity selector */}
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -346,11 +361,9 @@ export default function ReadyMadeDetailPage() {
                       >
                         <span className="text-lg">−</span>
                       </button>
-
                       <span className="w-8 text-center text-sm [font-family:var(--font-body)]">
                         {quantity}
                       </span>
-
                       <button
                         onClick={() =>
                           setQuantity((q) => Math.min(stock, q + 1))
@@ -361,34 +374,18 @@ export default function ReadyMadeDetailPage() {
                         <span className="text-lg">+</span>
                       </button>
                     </div>
-
                     <div className="flex-1 flex gap-3 w-full sm:w-auto">
                       <button
                         onClick={handleAddToCart}
                         disabled={stock < 1}
-                        className={`
-                          flex-1 sm:flex-none py-3 px-6 border border-black text-[10px] xs:text-[11px] tracking-[0.24em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:cursor-pointer
-                          ${
-                            stock < 1
-                              ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300"
-                              : "bg-black text-white hover:bg-white hover:text-black hover:border-black"
-                          }
-                        `}
+                        className={`flex-1 sm:flex-none py-3 px-6 border border-black text-[10px] xs:text-[11px] tracking-[0.24em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:cursor-pointer ${stock < 1 ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300" : "bg-black text-white hover:bg-white hover:text-black hover:border-black"}`}
                       >
                         Add to Cart
                       </button>
                       <button
                         onClick={handleBuyNow}
                         disabled={stock < 1}
-                        className={`
-                          flex-1 sm:flex-none py-3 px-6 border border-black bg-transparent text-[10px] xs:text-[11px] tracking-[0.24em] uppercase
-                          [font-family:var(--font-ui)] transition-all duration-300 hover:cursor-pointer
-                          ${
-                            stock < 1
-                              ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300"
-                              : "hover:bg-black hover:text-white"
-                          }
-                        `}
+                        className={`flex-1 sm:flex-none py-3 px-6 border border-black bg-transparent text-[10px] xs:text-[11px] tracking-[0.24em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:cursor-pointer ${stock < 1 ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300" : "hover:bg-black hover:text-white"}`}
                       >
                         Buy Now
                       </button>
@@ -401,7 +398,7 @@ export default function ReadyMadeDetailPage() {
         </div>
       </FadeInSection>
 
-      {/* Mobile Sticky Add-to-Cart Bar */}
+      {/* Mobile sticky bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-(--color-border) p-4 shadow-lg z-30">
         <div className="flex gap-3">
           <button

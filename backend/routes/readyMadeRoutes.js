@@ -34,8 +34,7 @@ readyMadeRoutes.get("/", async (req, res) => {
             finalSellingPriceAED: p.finalSellingPriceAED,
             tag: p.tag,
             tagAr: p.tagAr,
-            tagColor: p.tagColor,
-            tagColorAr: p.tagColorAr,
+            availableFabricStock: p.availableFabricStock
         }));
 
         res.json({

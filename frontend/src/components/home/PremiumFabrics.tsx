@@ -269,7 +269,6 @@ export function PremiumFabrics() {
                   const { title, description, location } =
                     getFabricDisplayFields(item, locale);
                   const imageUrl = resolveFabricImage(item.images?.[0]);
-                  const tagColor = item.tagColor || "bg-[#5B4A3A]";
 
                   return (
                     <div
@@ -278,7 +277,7 @@ export function PremiumFabrics() {
                     >
                       <Link
                         href={`/fabrics/${item.slug}`}
-                        className="block bg-(--bg-page) border border-(--color-border) rounded-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 h-full flex flex-col hover:cursor-pointer"
+                        className="bg-(--bg-page) border border-(--color-border) rounded-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 h-full flex flex-col hover:cursor-pointer"
                       >
                         <div className="aspect-9/9 relative overflow-hidden rounded-t-lg">
                           <img
@@ -286,11 +285,12 @@ export function PremiumFabrics() {
                             className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                             alt={title}
                           />
+
                           <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                           {item.tag && (
                             <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
                               <span
-                                className={`${tagColor} text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold`}
+                                className={`bg-black text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold`}
                               >
                                 {item.tag}
                               </span>

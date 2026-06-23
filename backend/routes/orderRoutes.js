@@ -473,7 +473,7 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
 
       const quantity = item.quantity || 1;
 
-      if (product.countInStock < quantity) {
+      if (product.availableFabricStock < quantity) {
         return res.status(400).json({
           success: false,
           message: `${product.name} is out of stock`,
@@ -486,12 +486,12 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
         nameAr: product.nameAr,
         slug: product.slug,
         image: product.images?.[0] || "",
-        size: product.size,
-        price: product.price,
+        size: product.metersPerFabric,
+        price: product.finalSellingPriceAED,
         quantity,
       });
 
-      itemsPrice += product.price * quantity;
+      itemsPrice += (product.finalSellingPriceAED || 0) * quantity;
     }
 
     const shippingPrice = 0;
@@ -521,10 +521,10 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
 
       const quantity = item.quantity || 1;
 
-      product.countInStock -= quantity;
+      product.availableFabricStock -= quantity;
 
-      if (product.countInStock <= 0) {
-        product.countInStock = 0;
+      if (product.availableFabricStock <= 0) {
+        product.availableFabricStock = 0;
         product.isActive = false;
       }
 
@@ -550,11 +550,9 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
 // This route is for getting only my orders means the logged-in user orders
 orderRoutes.get("/retail/mine", isAuth, async (req, res) => {
   try {
-    const orders = await RetailOrder.find({
-      userId: req.user._id,
-    })
+    const orders = await RetailOrder.find({ userId: req.user._id })
       .sort({ createdAt: -1 })
-      .select("_id createdAt status totalPrice currency orderItems userId");
+      .select("_id createdAt status totalPrice currency orderItems");
 
     const formatted = orders.map((order) => ({
       id: order._id,
@@ -562,28 +560,22 @@ orderRoutes.get("/retail/mine", isAuth, async (req, res) => {
       status: order.status,
       totalPrice: order.totalPrice,
       currency: order.currency,
-      userId: order.userId,
-
-      // lightweight preview for UI
-      firstItem: order.orderItems?.[0]
-        ? {
-            name: order.orderItems[0].name,
-            image: order.orderItems[0].image,
-            size: order.orderItems[0].size,
-          }
-        : null,
+      items:
+        order.orderItems?.map((item) => ({
+          name: item.name,
+          image: item.image,
+          size: item.size,
+          price: item.price,
+          quantity: item.quantity,
+        })) || [],
     }));
 
-    res.json({
-      success: true,
-      orders: formatted,
-    });
+    res.json({ success: true, orders: formatted });
   } catch (error) {
     console.error("GET /retail/mine error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch user orders",
-    });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch user orders" });
   }
 });
 

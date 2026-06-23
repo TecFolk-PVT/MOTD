@@ -113,7 +113,7 @@ export default function AdminLayout({
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition
                             ${
                               isActive
-                                ? "bg-white text-black"
+                                ? "bg-white text-black shadow-md"
                                 : "text-white/70 hover:bg-white/10"
                             }`}
             >

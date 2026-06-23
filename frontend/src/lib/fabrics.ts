@@ -33,6 +33,7 @@ export interface FabricListItem {
   tag?: string;
   pricePerMeter: number;
   listedByStore?: string | FabricStoreInfo | null;
+  stockInMeters: number;
 }
 
 export interface FabricDetailItem extends FabricListItem {
