@@ -76,7 +76,9 @@ export default function ReadyMadeDetailPage() {
   };
 
   const handleBuyNow = () => {
-    console.log("Buy now:", { product, quantity });
+    if (!product) return;
+    handleAddToCart();
+    router.push(`/${locale}/checkout`);
   };
 
   // Wishlist toggle – uses context
