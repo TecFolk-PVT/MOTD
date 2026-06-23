@@ -12,6 +12,7 @@ import {
   ReadyMadeListItem,
   resolveReadyMadeImage,
 } from "@/lib/readyMade";
+import WishlistButton from "../shared/wishlistButton";
 
 export function ReadyToWearSection() {
   // Map color string to a CSS color (fallback to black if not recognized)
@@ -238,7 +239,7 @@ export function ReadyToWearSection() {
                   ? "#000000"
                   : "#FFFFFF";
 
-                 const price = item.finalSellingPriceAED ?? 0;
+                const price = item.finalSellingPriceAED ?? 0;
 
                 return (
                   <div
@@ -255,6 +256,20 @@ export function ReadyToWearSection() {
                             className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
                           />
                           {/* Overlay gradient */}
+                          <WishlistButton
+                            item={{
+                              id: item._id,
+                              name: title,
+                              image: image,
+                              price: item.finalSellingPriceAED || 0,
+                              slug: item.slug,
+                              quantity: 1,
+                              // don't pass 0 for unknown stock; undefined = unknown/unlimited
+                              ...(Number.isFinite(item.availableFabricStock)
+                                ? { maxStock: item.availableFabricStock }
+                                : {}),
+                            }}
+                          />
                           <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                           {/* Tag – placed after overlay so it stays on top */}
                           {tag && (

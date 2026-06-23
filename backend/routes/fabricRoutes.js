@@ -18,6 +18,7 @@ const toListItem = (fabric) => ({
   tagColor: fabric.tagColor,
   pricePerMeter: fabric.pricePerMeter,
   listedByStore: fabric.listedByStore,
+  stockInMeters: fabric.stockInMeters,
 });
 
 // GET /api/fabrics — active fabrics for homepage carousel and fabric selection
@@ -83,6 +84,7 @@ const toDetailItem = (fabric) => ({
   tag: fabric.tag,
   tagColor: fabric.tagColor,
   pricePerMeter: fabric.pricePerMeter,
+  stockInMeters: fabric.stockInMeters,
   storePickupAddress: fabric.storePickupAddress,
   listedByStore: fabric.listedByStore
     ? {
