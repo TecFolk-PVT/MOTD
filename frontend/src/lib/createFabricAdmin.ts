@@ -10,15 +10,13 @@ export const FABRIC_MATERIALS = [
 export type FabricMaterialValue = (typeof FABRIC_MATERIALS)[number]["value"];
 
 export const FABRIC_TAGS = [
-  { value: "NEW", en: "NEW", ar: "جديد" },
-  { value: "BESTSELLER", en: "BESTSELLER", ar: "الأكثر مبيعاً" },
-  { value: "PREMIUM", en: "PREMIUM", ar: "ممتاز" },
-  { value: "ARTISANAL", en: "ARTISANAL", ar: "حرفي" },
-  { value: "SALE", en: "SALE", ar: "تخفيض" },
-  { value: "HERITAGE", en: "HERITAGE", ar: "تراثي" },
-  { value: "SUSTAINABLE", en: "SUSTAINABLE", ar: "مستدام" },
-  { value: "EXCLUSIVE", en: "EXCLUSIVE", ar: "حصري" },
-  { value: "BREATHABLE", en: "BREATHABLE", ar: "قابل للتنفس" },
+  { value: "new", en: "New", ar: "جديد" },
+  { value: "bestseller", en: "Bestseller", ar: "الأكثر مبيعاً" },
+  { value: "premium", en: "Premium", ar: "ممتاز" },
+  { value: "limited", en: "Limited", ar: "محدود" },
+  { value: "exclusive", en: "Exclusive", ar: "حصري" }, // replaced Eid Special
+  { value: "trending", en: "Trending", ar: "رائج" },
+  { value: "handmade", en: "Handmade", ar: "يدوي" },
 ] as const;
 export type FabricTagValue = (typeof FABRIC_TAGS)[number]["value"];
 
@@ -181,7 +179,6 @@ export function fromApiFabric(
   const listedByStore =
     typeof product.listedByStore === "string" ? product.listedByStore : "";
 
-    
   const pickupAddress = (() => {
     // Backend stores these under `storePickupAddress`.
     const source =
@@ -195,8 +192,7 @@ export function fromApiFabric(
           emirate: typeof source.emirate === "string" ? source.emirate : "",
           city: typeof source.city === "string" ? source.city : "",
           street: typeof source.street === "string" ? source.street : "",
-          building:
-            typeof source.building === "string" ? source.building : "",
+          building: typeof source.building === "string" ? source.building : "",
           phone: typeof source.phone === "string" ? source.phone : "",
         }
       : defaultForm.pickupAddress;

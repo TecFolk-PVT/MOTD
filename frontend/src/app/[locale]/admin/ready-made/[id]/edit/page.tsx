@@ -20,7 +20,9 @@ const TAG_OPTIONS = [
   { value: "bestseller", en: "Bestseller", ar: "الأكثر مبيعاً" },
   { value: "premium", en: "Premium", ar: "ممتاز" },
   { value: "limited", en: "Limited", ar: "محدود" },
-  { value: "custom", en: "Custom", ar: "مخصص" },
+  { value: "exclusive", en: "Exclusive", ar: "حصري" },
+  { value: "trending", en: "Trending", ar: "رائج" },
+  { value: "handmade", en: "Handmade", ar: "يدوي" },
 ];
 
 const COLOR_OPTIONS = [

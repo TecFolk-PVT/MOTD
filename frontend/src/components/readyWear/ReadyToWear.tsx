@@ -14,17 +14,24 @@ import {
 } from "@/lib/readyMade";
 import WishlistButton from "../shared/wishlistButton";
 
+// Define TAG COLORS
+const TAG_COLORS: Record<string, { bg: string; text: string }> = {
+  new: { bg: "#2D5A3D", text: "#FFFFFF" }, // Deep muted green
+  bestseller: { bg: "#8B7355", text: "#FFFFFF" }, // Warm taupe
+  premium: { bg: "#4A4A4A", text: "#FFFFFF" }, // Charcoal (matches theme)
+  limited: { bg: "#8B3A3A", text: "#FFFFFF" }, // Muted burgundy
+  exclusive: { bg: "#C4A47A", text: "#000000" }, // Soft gold/beige
+  trending: { bg: "#3A5A78", text: "#FFFFFF" }, // Muted navy
+  handmade: { bg: "#6B4F3C", text: "#FFFFFF" }, // Earthy brown
+};
+
+const getTagStyles = (tagValue?: string) => {
+  if (!tagValue) return { bg: "#1A1A1A", text: "#FFFFFF" };
+  const key = tagValue.toLowerCase().trim();
+  return TAG_COLORS[key] || { bg: "#1A1A1A", text: "#FFFFFF" };
+};
+
 export function ReadyToWearSection() {
-  // Map color string to a CSS color (fallback to black if not recognized)
-  const colorMap: Record<string, string> = {
-    red: "#EF4444",
-    blue: "#3B82F6",
-    green: "#22C55E",
-    black: "#000000",
-    white: "#FFFFFF",
-    gold: "#F59E0B",
-    silver: "#9CA3AF",
-  };
   const params = useParams();
   const locale = params.locale === "ar" ? "ar" : "en";
   const t = getTranslation(locale);
@@ -228,25 +235,19 @@ export function ReadyToWearSection() {
 
                 // Localized tag (use item.tagAr for Arabic, fallback to tag)
                 const tag = locale === "ar" ? item.tagAr || item.tag : item.tag;
-                const tagColor = item.tagColor;
-
-                const bgColor = tagColor
-                  ? colorMap[tagColor] || "#000000"
-                  : "#000000";
-                const textColor = ["white", "gold", "silver"].includes(
-                  tagColor || "",
-                )
-                  ? "#000000"
-                  : "#FFFFFF";
 
                 const price = item.finalSellingPriceAED ?? 0;
+                const { bg, text } = getTagStyles(item.tag);
 
                 return (
                   <div
                     key={item._id}
                     className="flex-[0_0_100%] xs:flex-[0_0_66.666%] sm:flex-[0_0_50%] md:flex-[0_0_40%] lg:flex-[0_0_33.333%] xl:flex-[0_0_28.571%] 2xl:flex-[0_0_25%] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 group py-4"
                   >
-                    <Link href={`/ready-made/${item.slug}`} className="block h-full">
+                    <Link
+                      href={`/ready-made/${item.slug}`}
+                      className="block h-full"
+                    >
                       <div className="group bg-(--bg-page) border border-(--color-border) rounded-lg overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 h-full flex flex-col hover:cursor-pointer text-left">
                         {/* Image with overlay and tag – now 4:3 and max-height */}
                         <div className="relative overflow-hidden bg-(--color-border)/10 rounded-t-lg">
@@ -275,10 +276,7 @@ export function ReadyToWearSection() {
                           {tag && (
                             <div
                               className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10 px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold shadow-sm"
-                              style={{
-                                backgroundColor: bgColor,
-                                color: textColor,
-                              }}
+                              style={{ backgroundColor: bg, color: text }}
                             >
                               {tag}
                             </div>
@@ -294,10 +292,14 @@ export function ReadyToWearSection() {
                             AED {price.toFixed(2)}
                           </span>
                           {(() => {
-                            const tName = locale === "ar" ? item.tailorNameAr || item.tailorName : item.tailorName;
+                            const tName =
+                              locale === "ar"
+                                ? item.tailorNameAr || item.tailorName
+                                : item.tailorName;
                             return tName ? (
                               <p className="[font-family:var(--font-ui)] text-[9px] xs:text-[8px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-3 font-normal">
-                                {locale === "ar" ? "الخياط: " : "TAILOR: "}{tName.toUpperCase()}
+                                {locale === "ar" ? "الخياط: " : "TAILOR: "}
+                                {tName.toUpperCase()}
                               </p>
                             ) : null;
                           })()}

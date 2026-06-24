@@ -8,13 +8,12 @@ import { useAuth } from "@/context/AuthContext";
 import { useParams } from "next/navigation";
 import MainLayout from "../main/layout";
 import FadeInSection from "@/components/shared/fadeInSection";
-import { Link } from "@/i18n/navigation";
-import { ShoppingBag } from "lucide-react";
 import { getTranslation } from "@/lib/getTranslation";
 import { useLocale } from "next-intl";
 import SuccessModal from "@/components/shared/SuccessModal";
 import { api } from "@/lib/api/client";
 import type { CartItem } from "@/context/CartContext";
+import { resolveMediaUrl } from "@/lib/media";
 
 const EMIRATES = [
   "Abu Dhabi",
@@ -310,7 +309,7 @@ export default function CheckoutPage() {
                         <li key={item.id} className="flex items-start gap-4">
                           <div className="w-20 h-20 shrink-0 bg-[#F5F5F0] rounded-md overflow-hidden">
                             <img
-                              src={item.image}
+                              src={resolveMediaUrl(item.image)}
                               className="w-full object-cover"
                               alt={item.name}
                             />

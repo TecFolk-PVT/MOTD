@@ -42,17 +42,37 @@ export interface FabricDetailItem extends FabricListItem {
   listedByStore: FabricStoreInfo | null;
 }
 
-const LEGACY_IMAGE_PATHS: Record<string, string> = {
-  "/images/dress-1.png": "/images/fab1.png",
-  "/images/dress-2.png": "/images/fab2.png",
-  "/images/dress-3.png": "/images/fab3.png",
-  "/images/dress-4.png": "/images/fab4.png",
-  "/images/dress-5.png": "/images/fab5.png",
-};
+// lib/fabrics.ts – add/update helpers if missing
+function isUploadedImage(url: string): boolean {
+  if (!url) return false;
+  return url.startsWith("/uploads/") || url.includes("uploads/");
+}
 
-export function resolveFabricImage(url: string | undefined): string {
-  if (!url) return "/images/fab1.png";
-  return LEGACY_IMAGE_PATHS[url] ?? url;
+function resolveMediaUrl(raw: string): string {
+  if (!raw) return "";
+  if (raw.startsWith("http")) return raw;
+  const base = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") || "";
+  const clean = raw.replace(/^\//, "");
+  return `${base}/${clean}`;
+}
+
+export const DEFAULT_FABRIC_IMAGE = "/images/placeholder-fabric.jpg";
+
+export function resolveFabricImage(images?: string | string[]): string {
+  let raw = DEFAULT_FABRIC_IMAGE;
+
+  // Handle array or single
+  const firstImage = Array.isArray(images) ? images[0] : images;
+  const image = firstImage?.trim() || "";
+
+  if (isUploadedImage(image)) {
+    raw = image;
+  } else if (image) {
+    raw = image; // fallback to raw (maybe absolute URL)
+  }
+
+  const resolved = resolveMediaUrl(raw);
+  return resolved || DEFAULT_FABRIC_IMAGE;
 }
 
 export function getFabricDisplayFields(

@@ -14,8 +14,25 @@ import {
   filterFabricsByMaterial,
   formatPricePerMeter,
   getFabricDisplayFields,
-  resolveFabricImage,
 } from "@/lib/fabrics";
+import { resolveMediaUrl } from "@/lib/media";
+
+// Define TAG COLORS
+const TAG_COLORS: Record<string, { bg: string; text: string }> = {
+  new: { bg: "#2D5A3D", text: "#FFFFFF" }, // Deep muted green
+  bestseller: { bg: "#8B7355", text: "#FFFFFF" }, // Warm taupe
+  premium: { bg: "#4A4A4A", text: "#FFFFFF" }, // Charcoal (matches theme)
+  limited: { bg: "#8B3A3A", text: "#FFFFFF" }, // Muted burgundy
+  exclusive: { bg: "#C4A47A", text: "#000000" }, // Soft gold/beige
+  trending: { bg: "#3A5A78", text: "#FFFFFF" }, // Muted navy
+  handmade: { bg: "#6B4F3C", text: "#FFFFFF" }, // Earthy brown
+};
+
+const getTagStyles = (tagValue?: string) => {
+  if (!tagValue) return { bg: "#1A1A1A", text: "#FFFFFF" };
+  const key = tagValue.toLowerCase().trim();
+  return TAG_COLORS[key] || { bg: "#1A1A1A", text: "#FFFFFF" };
+};
 
 export function PremiumFabrics() {
   const t = useTranslations("PremiumFabrics");
@@ -268,8 +285,8 @@ export function PremiumFabrics() {
                 {filteredItems.map((item) => {
                   const { title, description, location } =
                     getFabricDisplayFields(item, locale);
-                  const imageUrl = resolveFabricImage(item.images?.[0]);
-
+                  const imageUrl = resolveMediaUrl(item.images?.[0]);
+                  const { bg, text } = getTagStyles(item.tag);
                   return (
                     <div
                       key={item._id}
@@ -291,6 +308,7 @@ export function PremiumFabrics() {
                             <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
                               <span
                                 className={`bg-black text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold`}
+                                style={{ backgroundColor: bg, color: text }}
                               >
                                 {item.tag}
                               </span>
