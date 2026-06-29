@@ -1,5 +1,6 @@
 import type { Locale } from "@/i18n/routing";
 import { formatCurrency } from "@/lib/format";
+import { resolveMediaUrl } from "@/lib/media";
 
 export type FabricMaterial = "wool" | "silk" | "linen" | "cashmere" | "cotton";
 
@@ -52,7 +53,8 @@ const LEGACY_IMAGE_PATHS: Record<string, string> = {
 
 export function resolveFabricImage(url: string | undefined): string {
   if (!url) return "/images/fab1.png";
-  return LEGACY_IMAGE_PATHS[url] ?? url;
+  const resolved = LEGACY_IMAGE_PATHS[url] ?? url;
+  return resolveMediaUrl(resolved) || "/images/fab1.png";
 }
 
 export function getFabricDisplayFields(
