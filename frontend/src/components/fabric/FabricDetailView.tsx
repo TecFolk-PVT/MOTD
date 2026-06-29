@@ -8,9 +8,11 @@ import {
   formatMaterialLabel,
   formatPricePerMeter,
   getFabricDisplayFields,
-  resolveFabricImage,
 } from "@/lib/fabrics";
 import StoreAttribution from "@/components/fabric/StoreAttribution";
+import { resolveMediaUrl } from "@/lib/media";
+import InnerImageZoom from "react-inner-image-zoom";
+import "react-inner-image-zoom/lib/styles.min.css";
 
 type FabricDetailViewProps = {
   fabric: FabricDetailItem;
@@ -35,8 +37,8 @@ export default function FabricDetailView({
 }: FabricDetailViewProps) {
   const { title, description } = getFabricDisplayFields(fabric, locale);
   const images = fabric.images?.length
-    ? fabric.images.map(resolveFabricImage)
-    : [resolveFabricImage(undefined)];
+    ? fabric.images.map(resolveMediaUrl)
+    : [resolveMediaUrl(undefined)];
   const [activeImage, setActiveImage] = useState(0);
 
   const customOrderHref = `/custom-order/fabric?fabricSlug=${encodeURIComponent(fabric.slug)}`;
@@ -60,10 +62,9 @@ export default function FabricDetailView({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           <div className="space-y-4">
             <div className="aspect-square bg-[#F5F4F0] overflow-hidden rounded-sm">
-              <img
+              <InnerImageZoom
                 src={images[activeImage]}
-                alt={title}
-                className="w-full h-full object-cover"
+                zoomScale={1.5}
               />
             </div>
             {images.length > 1 && (
@@ -128,7 +129,9 @@ export default function FabricDetailView({
                   {labels.color}
                 </p>
                 <p className="[font-family:var(--font-body)] text-base text-black mt-1">
-                  {Array.isArray(fabric.color) && fabric.color.length ? fabric.color.join(", ") : "—"}
+                  {Array.isArray(fabric.color) && fabric.color.length
+                    ? fabric.color.join(", ")
+                    : "—"}
                 </p>
               </div>
             </div>

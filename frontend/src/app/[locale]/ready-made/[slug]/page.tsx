@@ -9,8 +9,11 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { resolveMediaUrl } from "@/lib/media";
+import InnerImageZoom from "react-inner-image-zoom";
+import "react-inner-image-zoom/lib/styles.min.css";
 import { resolveReadyMadeImage } from "@/lib/readyMade";
 
+// Product color mapping (for swatches)
 const colorMap: Record<string, string> = {
   red: "#EF4444",
   blue: "#3B82F6",
@@ -19,6 +22,24 @@ const colorMap: Record<string, string> = {
   white: "#FFFFFF",
   gold: "#F59E0B",
   silver: "#9CA3AF",
+};
+
+// Tag color palette – elegant, muted, brand‑compliant
+const TAG_COLORS: Record<string, { bg: string; text: string }> = {
+  new: { bg: "#2D5A3D", text: "#FFFFFF" }, // Deep muted green
+  bestseller: { bg: "#8B7355", text: "#FFFFFF" }, // Warm taupe
+  premium: { bg: "#4A4A4A", text: "#FFFFFF" }, // Charcoal
+  limited: { bg: "#8B3A3A", text: "#FFFFFF" }, // Muted burgundy
+  exclusive: { bg: "#C4A47A", text: "#000000" }, // Soft gold/beige
+  trending: { bg: "#3A5A78", text: "#FFFFFF" }, // Muted navy
+  handmade: { bg: "#6B4F3C", text: "#FFFFFF" }, // Earthy brown
+};
+
+// Helper to get tag styles from key
+const getTagStyles = (tagKey?: string) => {
+  if (!tagKey) return { bg: "#1A1A1A", text: "#FFFFFF" };
+  const key = tagKey.toLowerCase().trim();
+  return TAG_COLORS[key] || { bg: "#1A1A1A", text: "#FFFFFF" };
 };
 
 export default function ReadyMadeDetailPage() {
@@ -69,7 +90,7 @@ export default function ReadyMadeDetailPage() {
       name: product.name,
       image: resolveReadyMadeImage(product.images?.[0]),
       price,
-      size,
+      size: product.metersPerFabric,
       maxStock,
     });
   };
@@ -82,14 +103,14 @@ export default function ReadyMadeDetailPage() {
       name: product.name,
       image: resolveReadyMadeImage(product.images?.[0]),
       price: String(product.finalSellingPriceAED || 0),
-      size: product.size || "",
+      size: product.metersPerFabric || "",
       quantity: String(quantity),
       maxStock: String(product.availableFabricStock || 0),
     });
     router.push(`/${locale}/checkout?buyNow=true&${params.toString()}`);
   };
 
-  // Wishlist toggle – uses context
+  // Wishlist toggle
   const liked = product
     ? wishItems.some((item) => item.id === product._id)
     : false;
@@ -173,25 +194,22 @@ export default function ReadyMadeDetailPage() {
     );
   }
 
-  // Extra guard (fixes edge case)
+  // Extra guard
   if (!product) return null;
 
-  // Product data (safe now)
+  // Product data
   const title = product.name;
   const desc = product.description;
   const images = product.images?.length ? product.images : ["/placeholder.png"];
   const price = product.finalSellingPriceAED || 0;
   const stock = product.availableFabricStock || 0;
-  const tag = product.tag;
-  const tagColor = product.tagColor;
+  const tag = product.tag; // key like "new", "bestseller", etc.
   const fabricType = product.fabricType;
   const colors = product.colors || [];
   const size = product.metersPerFabric;
 
-  const bgColor = tagColor ? colorMap[tagColor] || "#000000" : "#000000";
-  const textColor = ["white", "gold", "silver"].includes(tagColor || "")
-    ? "#000000"
-    : "#FFFFFF";
+  // Tag styles based on key (no longer using tagColor from DB)
+  const tagStyles = getTagStyles(tag);
 
   return (
     <MainLayout>
@@ -231,15 +249,18 @@ export default function ReadyMadeDetailPage() {
               {/* Left: Gallery */}
               <div className="space-y-4">
                 <div className="aspect-4/5 relative overflow-hidden bg-[#F5F5F0] rounded-lg group">
-                  <img
-                    src={selectedImage}
-                    alt={title}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                  <InnerImageZoom
+                    src={resolveMediaUrl(selectedImage)}
+                    zoomScale={1.5}
+                    className="w-full h-full"
                   />
                   {tag && (
                     <div
-                      className="absolute top-3 left-3 z-10 px-2.5 py-1 text-xs font-medium rounded shadow-sm"
-                      style={{ backgroundColor: bgColor, color: textColor }}
+                      className="absolute top-3 left-3 z-10 px-2.5 py-1 text-xs font-medium rounded shadow-sm uppercase"
+                      style={{
+                        backgroundColor: tagStyles.bg,
+                        color: tagStyles.text,
+                      }}
                     >
                       {tag}
                     </div>
@@ -251,7 +272,11 @@ export default function ReadyMadeDetailPage() {
                       <button
                         key={idx}
                         onClick={() => setSelectedImage(resolveMediaUrl(img))}
-                        className={`shrink-0 w-20 xs:w-24 h-20 xs:h-24 rounded-md overflow-hidden border-2 transition-all duration-200 ${selectedImage === img ? "border-black" : "border-transparent opacity-60 hover:opacity-100"}`}
+                        className={`shrink-0 w-20 xs:w-24 h-20 xs:h-24 rounded-md overflow-hidden border-2 transition-all duration-200 ${
+                          selectedImage === img
+                            ? "border-black"
+                            : "border-transparent opacity-60 hover:opacity-100"
+                        }`}
                       >
                         <img
                           src={resolveMediaUrl(img)}
@@ -276,7 +301,11 @@ export default function ReadyMadeDetailPage() {
                     aria-label="Add to wishlist"
                   >
                     <svg
-                      className={`w-6 h-6 transition-colors ${liked ? "fill-red-500 stroke-red-500" : "stroke-black fill-none"}`}
+                      className={`w-6 h-6 transition-colors ${
+                        liked
+                          ? "fill-red-500 stroke-red-500"
+                          : "stroke-black fill-none"
+                      }`}
                       viewBox="0 0 24 24"
                       strokeWidth="1.5"
                       stroke="currentColor"
@@ -343,7 +372,9 @@ export default function ReadyMadeDetailPage() {
                       Availability
                     </span>
                     <p
-                      className={`[font-family:var(--font-body)] text-[14px] xs:text-[15px] sm:text-[16px] font-medium ${stock > 0 ? "text-green-700" : "text-red-600"}`}
+                      className={`[font-family:var(--font-body)] text-[14px] xs:text-[15px] sm:text-[16px] font-medium ${
+                        stock > 0 ? "text-green-700" : "text-red-600"
+                      }`}
                     >
                       {stock > 0 ? `In stock (${stock})` : "Out of stock"}
                     </p>
@@ -389,7 +420,11 @@ export default function ReadyMadeDetailPage() {
                       <button
                         onClick={handleBuyNow}
                         disabled={stock < 1}
-                        className={`w-full py-3 px-6 border border-black bg-transparent text-[12px] md:text-[13px] tracking-[0.24em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:cursor-pointer ${stock < 1 ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300" : "hover:bg-black hover:text-white"}`}
+                        className={`w-full py-3 px-6 border border-black bg-transparent text-[12px] md:text-[13px] tracking-[0.24em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:cursor-pointer ${
+                          stock < 1
+                            ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300"
+                            : "hover:bg-black hover:text-white"
+                        }`}
                       >
                         Buy Now
                       </button>
@@ -399,7 +434,11 @@ export default function ReadyMadeDetailPage() {
                     <button
                       onClick={handleAddToCart}
                       disabled={stock < 1}
-                      className={`w-full py-3 px-6 border border-black text-[12px] md:text-[13px] tracking-[0.24em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:cursor-pointer ${stock < 1 ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300" : "bg-black text-white hover:bg-white hover:text-black hover:border-black"}`}
+                      className={`w-full py-3 px-6 border border-black text-[12px] md:text-[13px] tracking-[0.24em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:cursor-pointer ${
+                        stock < 1
+                          ? "opacity-50 cursor-not-allowed bg-gray-100 text-gray-500 border-gray-300"
+                          : "bg-black text-white hover:bg-white hover:text-black hover:border-black"
+                      }`}
                     >
                       Add to Cart
                     </button>

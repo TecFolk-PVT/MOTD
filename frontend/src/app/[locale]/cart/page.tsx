@@ -6,6 +6,7 @@ import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from "lucide-react";
 import MainLayout from "../main/layout";
 import FadeInSection from "@/components/shared/fadeInSection";
 import { useCart } from "@/context/CartContext";
+import { resolveMediaUrl } from "@/lib/media";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart } = useCart();
@@ -107,7 +108,9 @@ export default function CartPage() {
                       {/* Image */}
                       <div className="w-full sm:w-28 h-28 bg-[#F5F5F0] rounded-md overflow-hidden shrink-0">
                         <img
-                          src={item.image || "/placeholder.png"}
+                          src={
+                            resolveMediaUrl(item.image) || "/placeholder.png"
+                          }
                           alt={item.name}
                           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                         />

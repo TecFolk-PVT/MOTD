@@ -22,7 +22,9 @@ const TAG_OPTIONS = [
   { value: "bestseller", en: "Bestseller", ar: "الأكثر مبيعاً" },
   { value: "premium", en: "Premium", ar: "ممتاز" },
   { value: "limited", en: "Limited", ar: "محدود" },
-  { value: "eid special", en: "Eid Special", ar: "خاص بالعيد" },
+  { value: "exclusive", en: "Exclusive", ar: "حصري" }, // replaced Eid Special
+  { value: "trending", en: "Trending", ar: "رائج" },
+  { value: "handmade", en: "Handmade", ar: "يدوي" },
 ];
 
 const COLOR_OPTIONS = [
