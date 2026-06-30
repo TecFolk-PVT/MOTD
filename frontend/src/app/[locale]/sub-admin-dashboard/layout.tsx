@@ -16,7 +16,6 @@ import {
   Menu,
   X,
   UserRoundPlus,
-  UserRoundPen,
 } from "lucide-react";
 import white_logo from "../../../../public/PNG/White/MOTD_Wordmark_White.png";
 
@@ -45,7 +44,7 @@ export default function AdminLayout({
         router.push(`/${locale}/auth/login`);
         return;
       }
-      if (user.role !== "admin") {
+      if (user.role !== "sub-admin") {
         router.push("/");
       }
     }
@@ -61,26 +60,37 @@ export default function AdminLayout({
   }
 
   // ===================== REDIRECT FOR NON-ADMIN =====================
-  if (!user || user.role !== "admin") {
+  if (!user || user.role !== "sub-admin") {
     return null;
   }
 
   const navItems = [
-    { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-    { label: "Customers", href: "/admin/customers", icon: UserRoundPlus },
-    { label: "Ready-Made", href: "/admin/ready-made", icon: Shirt },
-    { label: "Fabrics", href: "/admin/fabrics", icon: Scissors },
-    { label: "Tailors", href: "/admin/tailors", icon: Users },
-    { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
-    { label: "Partners", href: "/admin/partners", icon: Store },
-    { label: "Sub Admin", href: "/admin/sub-admin", icon: UserRoundPen },
-    { label: "Settings", href: "/admin/settings", icon: Settings },
+    { label: "Dashboard", href: "/sub-admin-dashboard", icon: LayoutDashboard },
+    {
+      label: "Customers",
+      href: "/sub-admin-dashboard/customers",
+      icon: UserRoundPlus,
+    },
+    {
+      label: "Ready-Made",
+      href: "/sub-admin-dashboard/ready-made",
+      icon: Shirt,
+    },
+    { label: "Fabrics", href: "/sub-admin-dashboard/fabrics", icon: Scissors },
+    { label: "Tailors", href: "/sub-admin-dashboard/tailors", icon: Users },
+    { label: "Orders", href: "/sub-admin-dashboard/orders", icon: ShoppingBag },
+    { label: "Partners", href: "/sub-admin-dashboard/partners", icon: Store },
+    {
+      label: "Settings",
+      href: "/sub-admin-dashboard/settings",
+      icon: Settings,
+    },
   ];
 
   // Helper to check active link (exact or subpath)
   const isActiveLink = (href: string) => {
     const fullHref = `/${locale}${href}`;
-    if (href === "/admin") {
+    if (href === "/sub-admin-dashboard") {
       return pathname === fullHref;
     }
     return pathname.startsWith(fullHref);
@@ -91,7 +101,10 @@ export default function AdminLayout({
     <>
       {/* BRAND */}
       <div className="mb-8 lg:mb-10">
-        <Link href="/admin" onClick={() => setIsSidebarOpen(false)}>
+        <Link
+          href="/sub-admin-dashboard"
+          onClick={() => setIsSidebarOpen(false)}
+        >
           <img
             src={white_logo.src}
             alt="MOTD Admin Logo"

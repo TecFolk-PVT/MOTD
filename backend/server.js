@@ -13,6 +13,7 @@ import tailorPortalRoutes from "./routes/tailorPortalRoutes.js";
 import { isAuth, isAdmin, isApprovedTailor } from "./middleware/auth.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import customerRouter from "./routes/customerRoutes.js";
+import subAdminRouter from "./routes/subAdminRoutes.js";
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use("/api/tailor", isAuth, isApprovedTailor, tailorPortalRoutes);
 app.use("/api/orders", orderRoutes); // for orders
 app.use("/api/admin", isAuth, isAdmin, adminRouter); // admin protected routes
 app.use("/api/customer", customerRouter);
+app.use("/api/subadmins", isAuth, subAdminRouter);
 app.use(notFound);
 app.use(errorHandler);
 

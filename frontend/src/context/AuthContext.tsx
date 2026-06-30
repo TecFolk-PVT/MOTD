@@ -21,6 +21,7 @@ interface ApiUserResponse {
     isAdmin?: boolean;
     approvalStatus?: string;
     token?: string;
+    perms: Record<string, boolean>;
 }
 
 export interface User {
@@ -31,6 +32,7 @@ export interface User {
     role: string;
     isAdmin?: boolean;
     approvalStatus?: string;
+    perms: Record<string, boolean>;
 }
 
 function mapApiUser(data: ApiUserResponse): User {
@@ -42,6 +44,7 @@ function mapApiUser(data: ApiUserResponse): User {
         role: data.role,
         isAdmin: data.isAdmin,
         approvalStatus: data.approvalStatus,
+        perms: data.perms || {},
     };
 }
 
