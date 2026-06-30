@@ -38,6 +38,18 @@ export default function AdminLayout({
     setIsSidebarOpen(false);
   }, [pathname]);
 
+  // Remove lenis classes so scrolling works properly in the dashboard
+  useEffect(() => {
+    document.documentElement.classList.remove("lenis", "lenis-smooth");
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   // ===================== GUARD (C-11) =====================
   useEffect(() => {
     if (!isLoading) {
@@ -72,7 +84,7 @@ export default function AdminLayout({
     { label: "Fabrics", href: "/admin/fabrics", icon: Scissors },
     { label: "Tailors", href: "/admin/tailors", icon: Users },
     { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
-    { label: "Partners", href: "/admin/partners", icon: Store },
+    { label: "Fabric Stores", href: "/admin/partners", icon: Store },
     { label: "Sub Admin", href: "/admin/sub-admin", icon: UserRoundPen },
     { label: "Settings", href: "/admin/settings", icon: Settings },
   ];

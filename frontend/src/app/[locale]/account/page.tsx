@@ -23,6 +23,7 @@ import ProfileTab from "./profile/page";
 import EditProfileForm from "./profile/edit/page";
 import FamilyMembersPage from "./family-members/page";
 import CustomerReviewsView from "@/components/reviews/CustomerReviewsView";
+import ChangePasswordForm from "@/components/account/ChangePasswordForm";
 
 const NAV_ITEMS = [
   { id: "profile", label: "Profile", icon: User },
@@ -128,6 +129,20 @@ export default function AccountPage() {
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname]);
+
+  // Redirect non-customer roles to their portals
+  useEffect(() => {
+    if (!authLoading && user) {
+      const role = user.role.toLowerCase();
+      if (role === "admin") {
+        router.replace("/admin");
+      } else if (role === "tailor") {
+        router.replace("/tailor");
+      } else if (role === "fabric_store") {
+        router.replace("/fabric");
+      }
+    }
+  }, [user, authLoading, router]);
 
   // Sync tab with URL
   useEffect(() => {
@@ -327,9 +342,7 @@ export default function AccountPage() {
                   className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm"
                 >
                   <h2 className="text-xl font-semibold mb-4">Settings</h2>
-                  <p className="text-gray-500">
-                    Preferences and account settings coming soon.
-                  </p>
+                  <ChangePasswordForm hasPassword={user.hasPassword === true} />
                 </motion.div>
               )}
             </AnimatePresence>

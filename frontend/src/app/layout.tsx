@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { EXTENSION_HYDRATION_GUARD_SCRIPT } from "@/lib/extension-hydration-guard";
 import { AuthProvider } from "@/context/AuthContext";
+import { AuthGoogleProvider } from "@/components/auth/AuthGoogleProvider";
 import { CartProvider } from "@/context/CartContext";
 import { CustomOrderProvider } from "@/context/CustomOrderContext";
 import { Toaster } from "react-hot-toast";
@@ -29,7 +30,8 @@ export default function RootLayout({
         /> */}
       </head>
       <body className="bg-[#FFFDF9] text-[#000000]" suppressHydrationWarning>
-        <AuthProvider>
+        <AuthGoogleProvider>
+          <AuthProvider>
           <CartProvider>
             <WishlistProvider>
               <CustomOrderProvider>
@@ -67,7 +69,8 @@ export default function RootLayout({
               </CustomOrderProvider>
             </WishlistProvider>
           </CartProvider>
-        </AuthProvider>
+          </AuthProvider>
+        </AuthGoogleProvider>
       </body>
     </html>
   );

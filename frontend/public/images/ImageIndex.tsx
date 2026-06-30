@@ -23,6 +23,7 @@ import tailor3 from './tailor-3.png';
 import tailor4 from './tailor-4.png';
 import measure1 from './measure1.jpeg';
 import sub1 from './sub-1.png';
+import sub2 from './sub-2.png';
 import hero_image from './hero-image.png';
 import apple_icon from './apple_icon.svg';
 import google_icon from './google_icon.svg';
@@ -54,6 +55,7 @@ export {
 
     // Subscription Section Image
     sub1,
+    sub2,
 
     // icons
     apple_icon, google_icon, heart_icon, cart_icon,

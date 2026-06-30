@@ -56,6 +56,10 @@ const fabricSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    fabricShopId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "FabricShop",
+    },
     storePickupAddress: {
       type: storePickupAddressSchema,
       required: true,
