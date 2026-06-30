@@ -8,6 +8,13 @@ import { useLocale } from "next-intl";
 import { motion } from "framer-motion";
 import { getTranslation } from "@/lib/getTranslation";
 import { useAuth } from "@/context/AuthContext";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import PasswordChecklist from "@/components/auth/PasswordChecklist";
+import {
+    getPasswordValidationMessage,
+    isPasswordValid,
+} from "@/lib/auth/passwordValidation";
+import { getPostLoginPath } from "@/lib/auth/postLoginRedirect";
 import logoBlack from "../../../public/PNG/Black/MOTD_Wordmark_Black.png";
 import * as images from "../../../public/images/ImageIndex";
 
@@ -18,7 +25,7 @@ export default function RegisterForm() {
 
     const router = useRouter();
     const locale = useLocale();
-    const { register } = useAuth();
+    const { register, loginWithGoogle } = useAuth();
 
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
@@ -37,6 +44,12 @@ export default function RegisterForm() {
 
         if (password !== confirmPassword) {
             setError(t.signup.passwordMismatch || "Passwords do not match.");
+            return;
+        }
+
+        const passwordMessage = getPasswordValidationMessage(password);
+        if (passwordMessage) {
+            setError(passwordMessage);
             return;
         }
 
@@ -62,8 +75,22 @@ export default function RegisterForm() {
         }
     };
 
-    const handleGoogleSignUp = () => console.log("Google sign up clicked");
-    const handleAppleSignUp = () => console.log("Apple sign up clicked");
+    const handleGoogleSignUp = async (credential: string) => {
+        setError("");
+        setSuccess("");
+        setIsLoading(true);
+        try {
+            const loggedInUser = await loginWithGoogle(credential);
+            setSuccess(t.signup.successMessage || "Account created! Redirecting...");
+            setTimeout(() => {
+                router.replace(getPostLoginPath(loggedInUser));
+                router.refresh();
+            }, 1500);
+        } catch (err: any) {
+            setError(err.message || "Google sign-up failed.");
+            setIsLoading(false);
+        }
+    };
 
     return (
         <main className="min-h-screen w-full flex flex-col md:flex-row bg-[#FFFDF9]">
@@ -216,6 +243,7 @@ export default function RegisterForm() {
                                         )}
                                     </button>
                                 </div>
+                                <PasswordChecklist password={password} />
                             </div>
 
                             {/* Confirm Password */}
@@ -253,7 +281,7 @@ export default function RegisterForm() {
 
                             <button
                                 type="submit"
-                                disabled={isLoading}
+                                disabled={isLoading || !isPasswordValid(password)}
                                 className="w-full h-12 md:h-13 bg-black text-white font-label-sm text-[12px] md:text-[13px] uppercase tracking-[0.25em] hover:bg-black/80 transition-all duration-300 active:scale-[0.98] mt-6 md:mt-7 disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
                             >
                                 {isLoading ? (
@@ -278,28 +306,12 @@ export default function RegisterForm() {
                                 <div className="grow border-t border-black/10"></div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 md:gap-4">
-                                <button
-                                    type="button"
-                                    onClick={handleGoogleSignUp}
-                                    className="h-11 md:h-12 w-full border border-black/15 bg-transparent hover:border-black hover:bg-black transition-all duration-300 group hover:cursor-pointer"
-                                >
-                                    <span className="flex items-center justify-center gap-2 h-full leading-none">
-                                        <Image src={images.google_icon.src} alt="Google icon" width={16} height={16} className="block shrink-0 group-hover:invert transition-all duration-300" />
-                                        <span className="text-[10px] md:text-[11px] uppercase tracking-[0.12em] text-black/70 group-hover:text-white leading-none flex items-center">Google</span>
-                                    </span>
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleAppleSignUp}
-                                    className="h-11 md:h-12 w-full border border-black/15 bg-transparent hover:border-black hover:bg-black transition-all duration-300 group hover:cursor-pointer"
-                                >
-                                    <span className="flex items-center justify-center gap-2 h-full leading-none">
-                                        <Image src={images.apple_icon.src} alt="Apple icon" width={16} height={16} className="block shrink-0 group-hover:invert transition-all duration-300" />
-                                        <span className="text-[10px] md:text-[11px] uppercase tracking-[0.12em] text-black/70 group-hover:text-white leading-none flex items-center">Apple</span>
-                                    </span>
-                                </button>
-                            </div>
+                            <GoogleSignInButton
+                                onSuccess={handleGoogleSignUp}
+                                disabled={isLoading}
+                                label="Google"
+                                onError={(message) => setError(message)}
+                            />
                         </form>
 
                         <footer className="mt-10 md:mt-12 pt-6 border-t border-black/10 text-center fade-in">

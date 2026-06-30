@@ -20,6 +20,8 @@ interface ApiUserResponse {
     role: string;
     isAdmin?: boolean;
     approvalStatus?: string;
+    authProvider?: string;
+    hasPassword?: boolean;
     token?: string;
 }
 
@@ -31,6 +33,8 @@ export interface User {
     role: string;
     isAdmin?: boolean;
     approvalStatus?: string;
+    authProvider?: string;
+    hasPassword?: boolean;
 }
 
 function mapApiUser(data: ApiUserResponse): User {
@@ -42,6 +46,8 @@ function mapApiUser(data: ApiUserResponse): User {
         role: data.role,
         isAdmin: data.isAdmin,
         approvalStatus: data.approvalStatus,
+        authProvider: data.authProvider,
+        hasPassword: data.hasPassword,
     };
 }
 
@@ -49,8 +55,10 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     login: (email: string, password: string) => Promise<User>;
+    loginWithGoogle: (credential: string) => Promise<User>;
     register: (username: string, email: string, password: string, phone: string) => Promise<void>;
     registerTailor: (name: string, email: string, password: string) => Promise<User>;
+    forgotPassword: (email: string) => Promise<string>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -92,20 +100,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
         loadUser();
     }, []);
 
-    // SIGN IN
-    const login = async (email: string, password: string): Promise<User> => {
-        const response = await api.post<ApiUserResponse>('/api/users/signin', {
-            email,
-            password,
-        });
+    const persistSession = (response: ApiUserResponse) => {
         saveToken(response.token!);
         const mappedUser = mapApiUser(response);
         setUser(mappedUser);
         return mappedUser;
     };
 
+    const login = async (email: string, password: string): Promise<User> => {
+        const response = await api.post<ApiUserResponse>('/api/users/signin', {
+            email,
+            password,
+        });
+        return persistSession(response);
+    };
 
-    // SIGN UP
+    const loginWithGoogle = async (credential: string): Promise<User> => {
+        const response = await api.post<ApiUserResponse>('/api/users/auth/google', {
+            credential,
+        });
+        return persistSession(response);
+    };
+
     const register = async (name: string, email: string, password: string, phone: string) => {
         const response = await api.post<ApiUserResponse>('/api/users/signup', {
             name,
@@ -114,8 +130,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             phone,
         });
 
-        saveToken(response.token!);
-        setUser(mapApiUser(response));
+        persistSession(response);
     };
 
     const registerTailor = async (name: string, email: string, password: string) => {
@@ -125,10 +140,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
             password,
         });
 
-        saveToken(response.token!);
-        const mappedUser = mapApiUser(response);
-        setUser(mappedUser);
-        return mappedUser;
+        return persistSession(response);
+    };
+
+    const forgotPassword = async (email: string) => {
+        const response = await api.post<{ message: string }>('/api/users/forgot-password', {
+            email,
+        });
+        return response.message;
     };
 
     const logout = () => {
@@ -140,8 +159,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         isLoading,
         login,
+        loginWithGoogle,
         register,
         registerTailor,
+        forgotPassword,
         logout,
         isAuthenticated: !!user,
     };
