@@ -130,6 +130,20 @@ export default function AccountPage() {
     setSidebarOpen(false);
   }, [pathname]);
 
+  // Redirect non-customer roles to their portals
+  useEffect(() => {
+    if (!authLoading && user) {
+      const role = user.role.toLowerCase();
+      if (role === "admin") {
+        router.replace("/admin");
+      } else if (role === "tailor") {
+        router.replace("/tailor");
+      } else if (role === "fabric_store") {
+        router.replace("/fabric");
+      }
+    }
+  }, [user, authLoading, router]);
+
   // Sync tab with URL
   useEffect(() => {
     if (isAccountTab(tabFromUrl) && tabFromUrl !== activeTab) {

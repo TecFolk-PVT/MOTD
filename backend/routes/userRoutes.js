@@ -27,6 +27,7 @@ const sendUserResponse = (res, user) => {
     role: user.role,
     isAdmin: user.isAdmin,
     approvalStatus: user.approvalStatus,
+    isActive: user.isActive,
     authProvider: user.authProvider,
     hasPassword: Boolean(user.password),
     token: generateToken(user),
@@ -315,6 +316,35 @@ userRouter.post(
       role: 'tailor',
       approvalStatus: 'pending',
       authProvider: 'local',
+    });
+
+    const createdUser = await user.save();
+    sendUserResponse(res, createdUser);
+  })
+);
+
+userRouter.post(
+  '/signup/fabricStore',
+  expressAsyncHandler(async (req, res) => {
+    const { name, email, password } = req.body;
+    if (!name || !email || !password) {
+      res.status(400).send({ message: 'Name, email, and password are required' });
+      return;
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      res.status(400).send({ message: 'User already exists' });
+      return;
+    }
+
+    const user = new User({
+      name: name.trim(),
+      email: normalizedEmail,
+      password: bcrypt.hashSync(password, BCRYPT_ROUNDS),
+      role: 'fabric_store',
+      approvalStatus: 'pending',
     });
 
     const createdUser = await user.save();

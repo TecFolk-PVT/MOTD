@@ -20,6 +20,7 @@ interface ApiUserResponse {
     role: string;
     isAdmin?: boolean;
     approvalStatus?: string;
+    isActive?: boolean;
     authProvider?: string;
     hasPassword?: boolean;
     token?: string;
@@ -33,6 +34,7 @@ export interface User {
     role: string;
     isAdmin?: boolean;
     approvalStatus?: string;
+    isActive?: boolean;
     authProvider?: string;
     hasPassword?: boolean;
 }
@@ -46,6 +48,7 @@ function mapApiUser(data: ApiUserResponse): User {
         role: data.role,
         isAdmin: data.isAdmin,
         approvalStatus: data.approvalStatus,
+        isActive: data.isActive,
         authProvider: data.authProvider,
         hasPassword: data.hasPassword,
     };
@@ -58,6 +61,7 @@ interface AuthContextType {
     loginWithGoogle: (credential: string) => Promise<User>;
     register: (username: string, email: string, password: string, phone: string) => Promise<void>;
     registerTailor: (name: string, email: string, password: string) => Promise<User>;
+    registerFabricStore: (name: string, email: string, password: string) => Promise<User>;
     forgotPassword: (email: string) => Promise<string>;
     logout: () => void;
     isAuthenticated: boolean;
@@ -150,6 +154,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return response.message;
     };
 
+    const registerFabricStore = async (name: string, email: string, password: string) => {
+        const response = await api.post<ApiUserResponse>('/api/users/signup/fabricStore', {
+            name,
+            email,
+            password,
+        });
+
+        saveToken(response.token!);
+        const mappedUser = mapApiUser(response);
+        setUser(mappedUser);
+        return mappedUser;
+    };
+
     const logout = () => {
         clearToken();
         setUser(null);
@@ -162,6 +179,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         loginWithGoogle,
         register,
         registerTailor,
+        registerFabricStore,
         forgotPassword,
         logout,
         isAuthenticated: !!user,

@@ -398,6 +398,222 @@
     "goHome": "Return to homepage",
     "imageCaption": "Master tailoring, presented to the world"
   },
+  "FabricRegister": {
+    "eyebrow": "Partner with MOTD",
+    "title": "Fabric Store Registration",
+    "description": "Create your store owner account to publish premium fabrics and receive custom orders on MOTD. Your application will be reviewed by our team before going live.",
+    "nameLabel": "Full Name / Store Representative",
+    "namePlaceholder": "Your full name",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "store@example.com",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Confirm Password",
+    "passwordHint": "Minimum 8 characters recommended",
+    "passwordMismatch": "Passwords do not match",
+    "submit": "Submit Application",
+    "submitting": "Submitting...",
+    "approvalNote": "After registration, MOTD admin must approve your account before you can publish your store and catalog.",
+    "alreadyHaveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "customerRegister": "Register as a customer",
+    "successTitle": "Application Submitted",
+    "successMessage": "Thank you for applying. Your fabric vendor account is awaiting MOTD admin approval. We'll review your details shortly.",
+    "successStatus": "Status: Pending approval",
+    "goHome": "Return to homepage",
+    "imageCaption": "Fine luxury fabrics, sourced from the finest looms"
+  },
+  "FabricPortal": {
+    "loading": "Loading fabric portal...",
+    "portalLabel": "Fabric Portal",
+    "logout": "Sign out",
+    "nav": {
+      "dashboard": "Dashboard",
+      "shop": "Store Profile",
+      "fabrics": "Fabrics",
+      "orders": "Orders"
+    },
+    "pending": {
+      "eyebrow": "Fabric Portal",
+      "title": "Awaiting Approval",
+      "description": "Your fabric store account is under review by the MOTD team. You'll get access to store and fabric management once approved.",
+      "status": "Status: Pending approval",
+      "goHome": "Return to homepage"
+    },
+    "rejected": {
+      "eyebrow": "Fabric Portal",
+      "title": "Application Not Approved",
+      "description": "Unfortunately your fabric store application was not approved at this time.",
+      "contact": "If you believe this was a mistake or would like more information, please contact the MOTD team.",
+      "contactCta": "Contact support",
+      "goHome": "Return to homepage"
+    },
+    "dashboard": {
+      "eyebrow": "Fabric Dashboard",
+      "title": "Welcome, {name}",
+      "description": "Manage your store profile and premium fabric catalog from here.",
+      "shopCardEyebrow": "Step 1",
+      "shopCardTitle": "Set up your store",
+      "fabricsCardEyebrow": "Step 2",
+      "fabricsCardTitle": "Manage your fabrics"
+    },
+    "shop": {
+      "loading": "Loading store profile...",
+      "eyebrow": "Store Profile",
+      "createTitle": "Create your store profile",
+      "editTitle": "Edit store profile",
+      "createDescription": "Set up your public fabric store profile. Name and slug are required; you can add descriptions, images, and contact details.",
+      "editDescription": "Update how customers see your fabric store on MOTD.",
+      "createCta": "Create store",
+      "saveCta": "Save changes",
+      "saving": "Saving...",
+      "backToDashboard": "Back to dashboard",
+      "successCreated": "Your store profile was created successfully.",
+      "successUpdated": "Your store profile was updated successfully.",
+      "imageSaved": "Image saved to your store profile.",
+      "imageRemoved": "Image removed successfully.",
+      "meta": {
+        "rating": "Rating",
+        "reviews": "Reviews",
+        "status": "Status",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "sections": {
+        "identity": "Store identity",
+        "about": "About your store",
+        "media": "Images",
+        "contact": "Location & contact"
+      },
+      "fields": {
+        "name": "Store name (English)",
+        "nameAr": "Store name (Arabic)",
+        "slug": "URL slug",
+        "description": "Description (English)",
+        "descriptionAr": "Description (Arabic)",
+        "logo": "Store logo",
+        "coverImage": "Cover image",
+        "city": "City",
+        "location": "Address / area",
+        "phone": "Phone"
+      },
+      "placeholders": {
+        "name": "e.g. Hanayan Fabrics",
+        "nameAr": "مثال: أقمشة حناين",
+        "slug": "e.g. hanayan-fabrics",
+        "description": "Tell customers about your fabrics collection...",
+        "descriptionAr": "عرّف العملاء بتشكيلة الأقمشة لديكم...",
+        "city": "Dubai",
+        "location": "Al Fahidi Historical District",
+        "phone": "501234567"
+      },
+      "hints": {
+        "slug": "Lowercase letters, numbers, and hyphens only. Used in your public URL.",
+        "logoUpload": "Square store mark. Used when no cover image is set.",
+        "coverUpload": "Wide hero photo — shown on the homepage and your public profile."
+      },
+      "upload": {
+        "chooseFile": "Choose image",
+        "uploading": "Uploading...",
+        "failed": "Upload failed",
+        "remove": "Remove"
+      },
+      "validation": {
+        "nameRequired": "English store name is required.",
+        "nameArRequired": "Arabic store name is required.",
+        "slugRequired": "URL slug is required.",
+        "slugInvalid": "Slug must use lowercase letters, numbers, and hyphens only.",
+        "phoneRequired": "Phone number is required.",
+        "phoneInvalid": "Phone number must be exactly 9 digits."
+      },
+      "errors": {
+        "loadFailed": "Failed to load store profile.",
+        "createFailed": "Failed to create store profile.",
+        "updateFailed": "Failed to update store profile.",
+        "conflict": "Store URL slug is already in use."
+      }
+    },
+    "fabrics": {
+      "loading": "Loading fabrics catalog...",
+      "eyebrow": "Fabrics Catalog",
+      "title": "Manage Fabrics",
+      "description": "Create, edit, and keep track of your fabric catalog inventory.",
+      "addFabric": "Add New Fabric",
+      "empty": "No fabrics found in your catalog yet.",
+      "addFirst": "Add Your First Fabric",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "deleted": "Fabric deleted successfully",
+      "confirmDelete": "Are you sure you want to delete \"{name}\"?",
+      "pricePerMeter": "Price: AED {price} / m",
+      "stockInMeters": "Stock: {stock} meters",
+      "inStock": "In Stock",
+      "shopRequiredTitle": "Store Profile Required",
+      "shopRequiredDescription": "Please set up your store profile first before managing your fabrics.",
+      "shopRequiredCta": "Set up store profile",
+      "backToList": "Back to fabrics catalog",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "createCta": "Create Fabric",
+      "saveCta": "Save Changes",
+      "editTitle": "Edit Fabric",
+      "createTitle": "Add New Fabric",
+      "editDescription": "Update fabric details, inventory count, and color options.",
+      "createDescription": "Add a new luxury fabric to the MOTD marketplace.",
+      "sections": {
+        "identity": "Fabric identity",
+        "about": "Fabric description",
+        "pricing": "Pricing & inventory",
+        "tags": "Tags & categories",
+        "images": "Fabric images"
+      },
+      "fields": {
+        "name": "Fabric name (English)",
+        "nameAr": "Fabric name (Arabic)",
+        "slug": "URL slug",
+        "material": "Material (English)",
+        "materialAr": "Material (Arabic)",
+        "description": "Description (English)",
+        "descriptionAr": "Description (Arabic)",
+        "pricePerMeter": "Price per meter (AED)",
+        "stockInMeters": "Stock quantity (meters)",
+        "tag": "Search tag (English)",
+        "tagAr": "Search tag (Arabic)",
+        "image": "Image {number}",
+        "isActive": "Active (visible on store catalog)"
+      },
+      "hints": {
+        "slug": "Used in the public fabric details URL."
+      },
+      "upload": {
+        "chooseFile": "Choose image",
+        "uploading": "Uploading...",
+        "failed": "Upload failed",
+        "remove": "Remove"
+      },
+      "addImage": "+ Add another image",
+      "validation": {
+        "nameRequired": "Fabric name is required.",
+        "nameArRequired": "Arabic fabric name is required.",
+        "slugRequired": "Slug is required.",
+        "slugInvalid": "Slug must use lowercase letters, numbers, and hyphens only.",
+        "imagesRequired": "At least one image is required.",
+        "pricePerMeterInvalid": "Please enter a valid price.",
+        "stockInMetersInvalid": "Please enter a valid stock amount."
+      },
+      "successCreated": "Fabric created successfully.",
+      "successUpdated": "Fabric updated successfully.",
+      "errors": {
+        "loadFailed": "Failed to load fabric details.",
+        "deleteFailed": "Failed to delete fabric.",
+        "conflict": "Fabric slug is already in use.",
+        "createFailed": "Failed to create fabric.",
+        "updateFailed": "Failed to update fabric."
+      }
+    }
+  },
   "TailorPortal": {
     "loading": "Loading tailor portal...",
     "portalLabel": "Tailor Portal",
