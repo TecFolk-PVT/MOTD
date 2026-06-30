@@ -119,11 +119,11 @@ export default function FabricAdminFormFields({
         name="description"
         error={fieldErrors.description}
       >
-        <textarea
-          rows={2}
+        <input
+          type="text"
           value={formData.description}
           onChange={(e) => onFieldChange("description", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent resize-none overflow-hidden leading-[1.6]"
+          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
           placeholder="Describe the fabric..."
         />
       </FormField>
@@ -134,11 +134,11 @@ export default function FabricAdminFormFields({
         name="descriptionAr"
         error={fieldErrors.descriptionAr}
       >
-        <textarea
-          rows={2}
+        <input
+          type="text"
           value={formData.descriptionAr}
           onChange={(e) => onFieldChange("descriptionAr", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-right bg-transparent resize-none overflow-hidden leading-[1.6]"
+          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right"
           placeholder="وصف القماش..."
         />
       </FormField>
@@ -157,7 +157,7 @@ export default function FabricAdminFormFields({
             onChange={(e) =>
               onFieldChange("material", e.target.value as FabricMaterialValue)
             }
-            className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
+            className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none cursor-pointer"
           >
             <option value="">Select material</option>
             {materialOptionsEn.map((opt) => (
@@ -178,7 +178,7 @@ export default function FabricAdminFormFields({
           <select
             value={formData.materialAr}
             onChange={(e) => onFieldChange("materialAr", e.target.value)}
-            className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right"
+            className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right cursor-pointer"
           >
             <option value="">اختر النوع</option>
             {materialOptionsAr.map((opt) => (
@@ -283,7 +283,7 @@ export default function FabricAdminFormFields({
         <select
           value={formData.tag}
           onChange={(e) => onFieldChange("tag", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
+          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none cursor-pointer"
         >
           <option value="">Select tag (optional)</option>
           {tagOptionsEn.map((opt) => (
@@ -299,7 +299,7 @@ export default function FabricAdminFormFields({
         <select
           value={formData.tagAr}
           onChange={(e) => onFieldChange("tagAr", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right"
+          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right cursor-pointer"
         >
           <option value="">اختر الوسم (اختياري)</option>
           {tagOptionsAr.map((opt) => (
@@ -318,13 +318,14 @@ export default function FabricAdminFormFields({
         error={fieldErrors.pricePerMeter}
       >
         <input
-          type="number"
-          step="0.01"
-          min="0"
+          type="text"
+          inputMode="decimal"
           value={formData.pricePerMeter === 0 ? "" : formData.pricePerMeter}
           onChange={(e) => {
             const val = e.target.value;
-            onFieldChange("pricePerMeter", val === "" ? 0 : parseFloat(val));
+            if (val === "" || /^\d*\.?\d*$/.test(val)) {
+              onFieldChange("pricePerMeter", val);
+            }
           }}
           className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
           placeholder="0.00"
@@ -339,15 +340,14 @@ export default function FabricAdminFormFields({
         required
       >
         <input
-          type="number"
-          min="0"
-          step="1"
-          value={
-            formData.stockInMeters === 0 ? "" : String(formData.stockInMeters)
-          }
+          type="text"
+          inputMode="numeric"
+          value={formData.stockInMeters === 0 ? "" : formData.stockInMeters}
           onChange={(e) => {
             const val = e.target.value;
-            onFieldChange("stockInMeters", val === "" ? 0 : Number(val));
+            if (val === "" || /^\d*$/.test(val)) {
+              onFieldChange("stockInMeters", val);
+            }
           }}
           className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
           placeholder="e.g., 100"
@@ -369,7 +369,7 @@ export default function FabricAdminFormFields({
             <select
               value={formData.pickupAddress.emirate}
               onChange={(e) => onPickupChange("emirate", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
+              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none cursor-pointer"
             >
               <option value="">Select emirate</option>
               {UAE_EMIRATES.map((emirate) => (
@@ -417,13 +417,23 @@ export default function FabricAdminFormFields({
             error={fieldErrors["pickupAddress.phone"]}
             required
           >
-            <input
-              type="text"
-              value={formData.pickupAddress.phone}
-              onChange={(e) => onPickupChange("phone", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
-              placeholder="e.g., +971501234567 or 0501234567"
-            />
+            <div className="flex items-center border-b border-gray-300 focus-within:border-black bg-transparent">
+              <span className="inline-flex items-center px-3 py-1 bg-neutral-50 text-neutral-400 text-[14px] [font-family:var(--font-ui)] select-none border-r border-gray-200">
+                +971
+              </span>
+              <input
+                type="text"
+                value={formData.pickupAddress.phone}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if ((val === "" || /^\d*$/.test(val)) && val.length <= 9) {
+                    onPickupChange("phone", val);
+                  }
+                }}
+                className="w-full py-1 pl-3 bg-transparent text-[14px] focus:outline-none"
+                placeholder="123456777"
+              />
+            </div>
           </FormField>
         </div>
       </div>
@@ -479,9 +489,9 @@ export default function FabricAdminFormFields({
               id="isActive"
               checked={formData.isActive}
               onChange={(e) => onFieldChange("isActive", e.target.checked)}
-              className="w-4 h-4"
+              className="w-4 h-4 cursor-pointer"
             />
-            <label htmlFor="isActive" className="text-sm text-gray-700">
+            <label htmlFor="isActive" className="text-sm text-gray-700 cursor-pointer">
               Product is active (visible to customers)
             </label>
           </div>

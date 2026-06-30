@@ -224,35 +224,6 @@ export default function FabricShopForm() {
                 </p>
             </div>
 
-            {!isCreateMode && shop && (
-                <div className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="border border-(--color-border) bg-white p-4">
-                        <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.2em] text-(--color-grey-muted) mb-1">
-                            {t("meta.rating")}
-                        </p>
-                        <p className="[font-family:var(--font-display)] text-[20px] text-black">
-                            {Number(shop.rating ?? 0).toFixed(1)}
-                        </p>
-                    </div>
-                    <div className="border border-(--color-border) bg-white p-4">
-                        <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.2em] text-(--color-grey-muted) mb-1">
-                            {t("meta.reviews")}
-                        </p>
-                        <p className="[font-family:var(--font-display)] text-[20px] text-black">
-                            {shop.reviewCount ?? 0}
-                        </p>
-                    </div>
-                    <div className="border border-(--color-border) bg-white p-4">
-                        <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.2em] text-(--color-grey-muted) mb-1">
-                            {t("meta.status")}
-                        </p>
-                        <p className="[font-family:var(--font-display)] text-[20px] text-black">
-                            {shop.isActive ? t("meta.active") : t("meta.inactive")}
-                        </p>
-                    </div>
-                </div>
-            )}
-
             <form
                 onSubmit={handleSubmit}
                 className="border border-(--color-border) bg-white p-6 sm:p-8 space-y-8"
@@ -400,17 +371,22 @@ export default function FabricShopForm() {
                             error={fieldErrors.phone}
                             required
                         >
-                            <div className="flex">
-                                <span className="inline-flex items-center px-4 border border-r-0 border-(--color-border) bg-neutral-50 text-neutral-400 text-xs [font-family:var(--font-ui)]">
+                            <div className="flex items-center border border-(--color-border) bg-transparent focus-within:border-black rounded-sm">
+                                <span className="inline-flex items-center px-4 bg-neutral-50 text-neutral-400 text-xs [font-family:var(--font-ui)] select-none border-r border-(--color-border) py-1.5">
                                     +971
                                 </span>
                                 <input
                                     id="phone"
                                     value={formData.phone}
-                                    onChange={(e) => handleChange("phone", e.target.value)}
-                                    placeholder={t("placeholders.phone")}
-                                    className={INPUT_CLASS}
-                                    type="tel"
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        if ((val === "" || /^\d*$/.test(val)) && val.length <= 9) {
+                                            handleChange("phone", val);
+                                        }
+                                    }}
+                                    placeholder="123456777"
+                                    className="w-full py-1 pl-3 bg-transparent text-[14px] focus:outline-none"
+                                    type="text"
                                     required
                                 />
                             </div>

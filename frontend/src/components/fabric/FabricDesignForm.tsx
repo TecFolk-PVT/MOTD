@@ -267,6 +267,8 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
     }
     if (!formData.storePickupAddress.phone.trim()) {
       errors["storePickupAddress.phone"] = "Phone is required";
+    } else if (!/^\d{9}$/.test(formData.storePickupAddress.phone.trim())) {
+      errors["storePickupAddress.phone"] = "Phone number must be exactly 9 digits";
     }
 
     setFieldErrors(errors);
@@ -375,9 +377,10 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* NAME (EN) */}
           <FormField
-            label="NAME (EN) *"
+            label="NAME (EN)"
             name="name"
             error={fieldErrors.name}
+            required
           >
             <input
               type="text"
@@ -390,9 +393,10 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
           {/* NAME (AR) */}
           <FormField
-            label="NAME (AR) *"
+            label="NAME (AR)"
             name="nameAr"
             error={fieldErrors.nameAr}
+            required
           >
             <input
               type="text"
@@ -439,14 +443,15 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* MATERIAL (EN) */}
             <FormField
-              label="MATERIAL (EN) *"
+              label="MATERIAL (EN)"
               name="material"
               error={fieldErrors.material}
+              required
             >
               <select
                 value={formData.material}
                 onChange={(e) => handleChange("material", e.target.value)}
-                className={INPUT_CLASS}
+                className={`${INPUT_CLASS} cursor-pointer`}
               >
                 <option value="">Select material</option>
                 {FABRIC_MATERIALS.map((opt) => (
@@ -459,14 +464,15 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
             {/* MATERIAL (AR) */}
             <FormField
-              label="MATERIAL (AR) *"
+              label="MATERIAL (AR)"
               name="materialAr"
               error={fieldErrors.materialAr}
+              required
             >
               <select
                 value={formData.materialAr}
                 onChange={(e) => handleChange("materialAr", e.target.value)}
-                className={`${INPUT_CLASS} text-right`}
+                className={`${INPUT_CLASS} text-right cursor-pointer`}
                 dir="rtl"
               >
                 <option value="">اختر النوع</option>
@@ -480,15 +486,16 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
             {/* COLORS */}
             <FormField
-              label="COLORS *"
+              label="COLORS"
               name="colors"
               error={fieldErrors.colors}
+              required
             >
               <div className="relative" ref={colorDropdownRef}>
                 <button
                   type="button"
                   onClick={() => setIsColorDropdownOpen((prev) => !prev)}
-                  className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center"
+                  className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center cursor-pointer"
                 >
                   {selectedColors.length === 0 ? (
                     <span className="text-xs text-black/60 leading-none">
@@ -551,7 +558,7 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
           {/* STORE PARTNER (Extract from store profile, read-only) */}
           <div className="md:col-span-2">
-            <FormField label="STORE PARTNER *" name="storePartner">
+            <FormField label="STORE PARTNER" name="storePartner" required>
               <input
                 type="text"
                 value={shopName}
@@ -567,7 +574,7 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
             <select
               value={formData.tag}
               onChange={(e) => handleChange("tag", e.target.value)}
-              className={INPUT_CLASS}
+              className={`${INPUT_CLASS} cursor-pointer`}
             >
               <option value="">Select tag (optional)</option>
               {FABRIC_TAGS.map((opt) => (
@@ -583,7 +590,7 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
             <select
               value={formData.tagAr}
               onChange={(e) => handleChange("tagAr", e.target.value)}
-              className={`${INPUT_CLASS} text-right`}
+              className={`${INPUT_CLASS} text-right cursor-pointer`}
               dir="rtl"
             >
               <option value="">اختر الوسم (اختياري)</option>
@@ -597,18 +604,20 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
           {/* PRICE PER METER (AED) */}
           <FormField
-            label="PRICE PER METER (AED) *"
+            label="PRICE PER METER (AED)"
             name="pricePerMeter"
             error={fieldErrors.pricePerMeter}
+            required
           >
             <input
-              type="number"
-              step="0.01"
-              min="0"
+              type="text"
+              inputMode="decimal"
               value={formData.pricePerMeter === 0 ? "" : formData.pricePerMeter}
               onChange={(e) => {
                 const val = e.target.value;
-                handleChange("pricePerMeter", val === "" ? 0 : parseFloat(val));
+                if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                  handleChange("pricePerMeter", val);
+                }
               }}
               className={INPUT_CLASS}
               placeholder="0.00"
@@ -617,18 +626,20 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
           {/* STOCK IN METERS */}
           <FormField
-            label="STOCK IN METERS *"
+            label="STOCK IN METERS"
             name="stockInMeters"
             error={fieldErrors.stockInMeters}
+            required
           >
             <input
-              type="number"
-              min="0"
-              step="1"
-              value={formData.stockInMeters === 0 ? "" : String(formData.stockInMeters)}
+              type="text"
+              inputMode="numeric"
+              value={formData.stockInMeters === 0 ? "" : formData.stockInMeters}
               onChange={(e) => {
                 const val = e.target.value;
-                handleChange("stockInMeters", val === "" ? 0 : Number(val));
+                if (val === "" || /^\d*$/.test(val)) {
+                  handleChange("stockInMeters", val);
+                }
               }}
               className={INPUT_CLASS}
               placeholder="e.g., 100"
@@ -643,14 +654,15 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* EMIRATE */}
               <FormField
-                label="EMIRATE *"
+                label="EMIRATE"
                 name="storePickupAddress.emirate"
                 error={fieldErrors["storePickupAddress.emirate"]}
+                required
               >
                 <select
                   value={formData.storePickupAddress.emirate}
                   onChange={(e) => handlePickupChange("emirate", e.target.value)}
-                  className={INPUT_CLASS}
+                  className={`${INPUT_CLASS} cursor-pointer`}
                 >
                   <option value="">Select emirate</option>
                   {UAE_EMIRATES.map((opt) => (
@@ -663,9 +675,10 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
               {/* CITY */}
               <FormField
-                label="CITY *"
+                label="CITY"
                 name="storePickupAddress.city"
                 error={fieldErrors["storePickupAddress.city"]}
+                required
               >
                 <input
                   type="text"
@@ -678,9 +691,10 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
               {/* STREET */}
               <FormField
-                label="STREET *"
+                label="STREET"
                 name="storePickupAddress.street"
                 error={fieldErrors["storePickupAddress.street"]}
+                required
               >
                 <input
                   type="text"
@@ -693,9 +707,10 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
               {/* BUILDING */}
               <FormField
-                label="BUILDING *"
+                label="BUILDING"
                 name="storePickupAddress.building"
                 error={fieldErrors["storePickupAddress.building"]}
+                required
               >
                 <input
                   type="text"
@@ -706,19 +721,29 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
                 />
               </FormField>
 
-              {/* PHONE */}
               <FormField
-                label="PHONE *"
+                label="PHONE"
                 name="storePickupAddress.phone"
                 error={fieldErrors["storePickupAddress.phone"]}
+                required
               >
-                <input
-                  type="text"
-                  value={formData.storePickupAddress.phone}
-                  onChange={(e) => handlePickupChange("phone", e.target.value)}
-                  className={INPUT_CLASS}
-                  placeholder="e.g., +971501234567 or 0501234567"
-                />
+                <div className="flex items-center border-b border-gray-300 focus-within:border-black bg-transparent">
+                  <span className="inline-flex items-center px-3 py-1 bg-neutral-50 text-neutral-400 text-[14px] [font-family:var(--font-ui)] select-none border-r border-gray-200">
+                    +971
+                  </span>
+                  <input
+                    type="text"
+                    value={formData.storePickupAddress.phone}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if ((val === "" || /^\d*$/.test(val)) && val.length <= 9) {
+                        handlePickupChange("phone", val);
+                      }
+                    }}
+                    className="w-full py-1 pl-3 bg-transparent text-[14px] focus:outline-none"
+                    placeholder="123456777"
+                  />
+                </div>
               </FormField>
             </div>
           </div>
@@ -727,7 +752,7 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
           <div className="md:col-span-2">
             <div className="mb-2 flex justify-between items-center">
               <span className="font-label-sm text-[11px] text-black/60 uppercase tracking-[0.2em]">
-                IMAGES (MAX 5) *
+                IMAGES (MAX 5) <span className="text-red-500 ml-1">*</span>
               </span>
               {formData.images.length < 5 && (
                 <button
@@ -792,7 +817,7 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
           <button
             type="submit"
             disabled={submitting}
-            className="px-8 py-3 bg-black text-white text-[11px] tracking-[0.22em] uppercase hover:bg-neutral-800 transition disabled:opacity-50 font-semibold"
+            className="px-8 py-3 bg-black text-white text-[11px] tracking-[0.22em] uppercase hover:bg-neutral-800 transition disabled:opacity-50 font-semibold cursor-pointer"
           >
             {submitting
               ? t("saving")
@@ -802,7 +827,7 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
           </button>
           <Link
             href="/fabric/fabrics"
-            className="text-center px-8 py-3 border border-black text-black text-[11px] tracking-[0.22em] uppercase hover:bg-black hover:text-white transition font-semibold"
+            className="text-center px-8 py-3 border border-black text-black text-[11px] tracking-[0.22em] uppercase hover:bg-black hover:text-white transition font-semibold cursor-pointer"
           >
             {t("cancel")}
           </Link>

@@ -189,6 +189,7 @@ type PartnerFormData = {
   name: string;
   email: string;
   password?: string;
+  shopName: string;
 };
 
 interface PartnerFormModalProps {
@@ -207,12 +208,14 @@ function PartnerFormModal({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [shopName, setShopName] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       setName("");
       setEmail("");
       setPassword("");
+      setShopName("");
     }
   }, [isOpen]);
 
@@ -220,7 +223,7 @@ function PartnerFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ name, email, password });
+    onSubmit({ name, email, password, shopName });
   };
 
   const inputClassName =
@@ -236,13 +239,25 @@ function PartnerFormModal({
           Add Fabric Store Partner
         </h2>
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          <FormField label="Name" name="name" required>
+          <FormField label="Store Name" name="shopName" required>
+            <input
+              id="shopName"
+              type="text"
+              value={shopName}
+              onChange={(e) => setShopName(e.target.value)}
+              required
+              placeholder="e.g. Luxury Velvet Store"
+              className={inputClassName}
+            />
+          </FormField>
+          <FormField label="Owner Name" name="name" required>
             <input
               id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              placeholder="e.g. John Doe"
               className={inputClassName}
             />
           </FormField>
@@ -253,6 +268,7 @@ function PartnerFormModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              placeholder="e.g. john@example.com"
               className={inputClassName}
             />
           </FormField>
@@ -267,6 +283,7 @@ function PartnerFormModal({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              placeholder="••••••••"
               minLength={6}
               className={inputClassName}
             />
@@ -275,14 +292,14 @@ function PartnerFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-black bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              className="px-4 py-2 text-sm font-medium text-black bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-black/80 transition disabled:opacity-50 inline-flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-black/80 transition disabled:opacity-50 inline-flex items-center gap-2 cursor-pointer"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               Create

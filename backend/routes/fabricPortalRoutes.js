@@ -2,6 +2,7 @@ import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import FabricShop from "../models/FabricShop.js";
 import Fabric from "../models/Fabric.js";
+import CustomOrder from "../models/CustomOrder.js";
 import {
   uploadSingleImageMiddleware,
   processTailorShopImage,
@@ -386,6 +387,56 @@ fabricPortalRouter.delete(
       return;
     }
     res.json({ success: true, message: "Fabric deleted successfully" });
+  })
+);
+
+// GET /api/fabric/orders — get all custom orders containing fabric from this store
+fabricPortalRouter.get(
+  "/orders",
+  expressAsyncHandler(async (req, res) => {
+    const orders = await CustomOrder.find({
+      fabricStoreId: req.user._id,
+    })
+      .populate("userId", "name email phone")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      items: orders,
+    });
+  })
+);
+
+// PATCH /api/fabric/orders/:id/status — update order status by the fabric store
+fabricPortalRouter.patch(
+  "/orders/:id/status",
+  expressAsyncHandler(async (req, res) => {
+    const { status, note } = req.body;
+
+    const order = await CustomOrder.findOne({
+      _id: req.params.id,
+      fabricStoreId: req.user._id,
+    });
+    if (!order) {
+      res.status(404).json({ success: false, message: "Order not found" });
+      return;
+    }
+
+    if (status) {
+      order.status = status;
+      order.statusHistory.push({
+        status,
+        note: typeof note === 'string' ? note.trim() : '',
+        changedAt: new Date(),
+        changedBy: req.user._id,
+      });
+      await order.save();
+    }
+
+    res.json({
+      success: true,
+      order,
+    });
   })
 );
 

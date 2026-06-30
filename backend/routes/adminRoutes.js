@@ -277,12 +277,12 @@ adminRouter.get(
 adminRouter.post(
   "/create-partners",
   expressAsyncHandler(async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, shopName } = req.body;
 
-    if (!name?.trim() || !email?.trim() || !password) {
+    if (!name?.trim() || !email?.trim() || !password || !shopName?.trim()) {
       res
         .status(400)
-        .send({ message: "Name, email, and password are required" });
+        .send({ message: "Name, email, password, and store name are required" });
       return;
     }
 
@@ -293,17 +293,37 @@ adminRouter.post(
       return;
     }
 
+    const slug = shopName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    const existingShop = await FabricShop.findOne({ slug });
+    if (existingShop) {
+      res.status(400).send({ message: "A store with this name already exists (slug taken)" });
+      return;
+    }
+
     const user = new User({
       name: name.trim(),
       email: normalizedEmail,
       password: bcrypt.hashSync(password, BCRYPT_ROUNDS),
       role: "fabric_store",
+      approvalStatus: "approved",
+      isActive: true,
     });
     await user.save();
+
+    const shop = new FabricShop({
+      name: shopName.trim(),
+      nameAr: shopName.trim(),
+      slug,
+      ownerId: user._id,
+      isActive: true,
+      phone: "500000000",
+    });
+    await shop.save();
 
     res.status(201).send({
       message: "Partner created",
       user: partnerPublicFields(user),
+      shop,
     });
   }),
 );
@@ -361,6 +381,9 @@ async function toggleFabricStorePartnerActive(req, res) {
 
   user.isActive = !user.isActive;
   const updated = await user.save();
+
+  // Sync associated FabricShop document isActive status
+  await FabricShop.findOneAndUpdate({ ownerId: user._id }, { isActive: user.isActive });
 
   res.send({
     success: true,
@@ -800,6 +823,11 @@ async function toggleTailorShopActive(req, res) {
   const updatedShop = await shop.save();
   await updatedShop.populate(tailorShopOwnerPopulate);
 
+  // Sync owner User document isActive status
+  if (shop.ownerId) {
+    await User.findByIdAndUpdate(shop.ownerId, { isActive: shop.isActive });
+  }
+
   res.send({
     success: true,
     message: `Tailor shop successfully ${updatedShop.isActive ? "activated" : "deactivated"}`,
@@ -857,6 +885,11 @@ async function toggleFabricShopActive(req, res) {
   shop.isActive = !shop.isActive;
   const updatedShop = await shop.save();
   await updatedShop.populate(fabricShopOwnerPopulate);
+
+  // Sync owner User document isActive status
+  if (shop.ownerId) {
+    await User.findByIdAndUpdate(shop.ownerId, { isActive: shop.isActive });
+  }
 
   res.send({
     success: true,
