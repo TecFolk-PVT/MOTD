@@ -9,6 +9,7 @@ function isAllowedRedirectForRole(url: string, role: string): boolean {
 
     if (path.startsWith("/admin")) return role === "admin";
     if (path.startsWith("/tailor")) return role === "tailor";
+    if (path.startsWith("/fabric")) return role === "fabric_store";
     return true;
 }
 
@@ -22,5 +23,6 @@ export function getPostLoginPath(user: User, redirectUrl?: string | null): strin
 
     if (role === "admin") return "/admin";
     if (role === "tailor") return "/tailor";
+    if (role === "fabric_store") return "/fabric";
     return "/";
 }

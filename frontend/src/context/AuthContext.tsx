@@ -20,6 +20,7 @@ interface ApiUserResponse {
     role: string;
     isAdmin?: boolean;
     approvalStatus?: string;
+    isActive?: boolean;
     token?: string;
 }
 
@@ -31,6 +32,7 @@ export interface User {
     role: string;
     isAdmin?: boolean;
     approvalStatus?: string;
+    isActive?: boolean;
 }
 
 function mapApiUser(data: ApiUserResponse): User {
@@ -42,6 +44,7 @@ function mapApiUser(data: ApiUserResponse): User {
         role: data.role,
         isAdmin: data.isAdmin,
         approvalStatus: data.approvalStatus,
+        isActive: data.isActive,
     };
 }
 
@@ -51,6 +54,7 @@ interface AuthContextType {
     login: (email: string, password: string) => Promise<User>;
     register: (username: string, email: string, password: string, phone: string) => Promise<void>;
     registerTailor: (name: string, email: string, password: string) => Promise<User>;
+    registerFabricStore: (name: string, email: string, password: string) => Promise<User>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -131,6 +135,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return mappedUser;
     };
 
+    const registerFabricStore = async (name: string, email: string, password: string) => {
+        const response = await api.post<ApiUserResponse>('/api/users/signup/fabricStore', {
+            name,
+            email,
+            password,
+        });
+
+        saveToken(response.token!);
+        const mappedUser = mapApiUser(response);
+        setUser(mappedUser);
+        return mappedUser;
+    };
+
     const logout = () => {
         clearToken();
         setUser(null);
@@ -142,6 +159,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         login,
         register,
         registerTailor,
+        registerFabricStore,
         logout,
         isAuthenticated: !!user,
     };

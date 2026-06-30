@@ -10,7 +10,8 @@ import tailorRoutes from "./routes/tailorRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
 import tailorPortalRoutes from "./routes/tailorPortalRoutes.js";
-import { isAuth, isAdmin, isApprovedTailor } from "./middleware/auth.js";
+import fabricPortalRoutes from "./routes/fabricPortalRoutes.js";
+import { isAuth, isAdmin, isApprovedTailor, isApprovedFabricStore } from "./middleware/auth.js";
 import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import customerRouter from "./routes/customerRoutes.js";
 
@@ -45,6 +46,7 @@ app.use("/api/ready-made", readyMadeRoutes); // for getting all ready made produ
 app.use("/api/fabrics", fabricRoutes);
 app.use("/api/tailors", tailorRoutes);
 app.use("/api/tailor", isAuth, isApprovedTailor, tailorPortalRoutes);
+app.use("/api/fabric", isAuth, isApprovedFabricStore, fabricPortalRoutes);
 app.use("/api/orders", orderRoutes); // for orders
 app.use("/api/admin", isAuth, isAdmin, adminRouter); // admin protected routes
 app.use("/api/customer", customerRouter);

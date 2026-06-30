@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: APPROVAL_STATUSES,
       default: function defaultApprovalStatus() {
-        return this.role === "tailor" ? "pending" : "approved";
+        return (this.role === "tailor" || this.role === "fabric_store") ? "pending" : "approved";
       },
       required: true,
     },
@@ -37,7 +37,7 @@ userSchema.index({ role: 1, approvalStatus: 1 });
 
 userSchema.pre("save", function syncDerivedFields(next) {
   this.isAdmin = this.role === "admin";
-  if (this.role !== "tailor") {
+  if (this.role !== "tailor" && this.role !== "fabric_store") {
     this.approvalStatus = "approved";
     this.rejectionNote = "";
   }

@@ -112,6 +112,7 @@ export function Navbar() {
     if (!user) return "/auth/login";
     if (user.role.toLowerCase() === "admin") return "/admin";
     if (user.role.toLowerCase() === "tailor") return "/tailor";
+    if (user.role.toLowerCase() === "fabric_store") return "/fabric";
     return "/account";
   };
   const accountHref = getAccountHref();

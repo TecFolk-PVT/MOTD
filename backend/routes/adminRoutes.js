@@ -6,6 +6,7 @@ import ReadyMadeProduct from "../models/ReadyMadeProduct.js";
 import Fabric from "../models/Fabric.js";
 import User from "../models/User.js";
 import TailorShop from "../models/TailorShop.js";
+import FabricShop from "../models/FabricShop.js";
 import CustomOrder, { CUSTOM_STATUSES } from "../models/CustomOrder.js";
 import RetailOrder, { RETAIL_ORDER_STATUSES } from "../models/RetailOrder.js";
 import PlatformSettings from "../models/PlatformSettings.js";
@@ -672,6 +673,111 @@ adminRouter.get(
   }),
 );
 
+adminRouter.get(
+  "/fabric-stores/pending",
+  expressAsyncHandler(async (req, res) => {
+    const pendingStores = await User.find({
+      role: "fabric_store",
+      approvalStatus: "pending",
+    })
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    res.send(pendingStores);
+  }),
+);
+
+adminRouter.get(
+  "/fabric-stores/approved-users",
+  expressAsyncHandler(async (req, res) => {
+    const approvedUsers = await User.find({
+      role: "fabric_store",
+      approvalStatus: "approved",
+    })
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    res.send({
+      success: true,
+      items: approvedUsers,
+    });
+  }),
+);
+
+adminRouter.patch(
+  "/fabric-stores/:id/approve",
+  expressAsyncHandler(async (req, res) => {
+    const store = await User.findById(req.params.id);
+
+    if (store && store.role === "fabric_store") {
+      store.approvalStatus = "approved";
+      store.rejectionNote = "";
+      const updatedStore = await store.save();
+      res.send({
+        message: "Fabric store approved successfully",
+        user: {
+          _id: updatedStore._id,
+          name: updatedStore.name,
+          email: updatedStore.email,
+          approvalStatus: updatedStore.approvalStatus,
+          rejectionNote: updatedStore.rejectionNote,
+        },
+      });
+    } else {
+      res
+        .status(404)
+        .send({ message: "Pending fabric store not found or invalid role" });
+    }
+  }),
+);
+
+adminRouter.patch(
+  "/fabric-stores/:id/reject",
+  expressAsyncHandler(async (req, res) => {
+    const store = await User.findById(req.params.id);
+
+    if (store && store.role === "fabric_store") {
+      const rawNote = req.body?.note ?? req.body?.rejectionNote;
+      const rejectionNote = typeof rawNote === "string" ? rawNote.trim() : "";
+
+      store.approvalStatus = "rejected";
+      store.rejectionNote = rejectionNote;
+      const updatedStore = await store.save();
+      res.send({
+        message: "Fabric store rejected",
+        user: {
+          _id: updatedStore._id,
+          name: updatedStore.name,
+          email: updatedStore.email,
+          approvalStatus: updatedStore.approvalStatus,
+          rejectionNote: updatedStore.rejectionNote,
+        },
+      });
+    } else {
+      res
+        .status(404)
+        .send({ message: "Pending fabric store not found or invalid role" });
+    }
+  }),
+);
+
+adminRouter.get(
+  "/fabric-stores/rejected-stores",
+  expressAsyncHandler(async (req, res) => {
+    const rejectedStores = await User.find({
+      role: "fabric_store",
+      approvalStatus: "rejected",
+    })
+      .select("-password")
+      .sort({ createdAt: -1 });
+
+    res.send({
+      success: true,
+      items: rejectedStores,
+    });
+  }),
+);
+
 // ==========================================
 // C-05: Admin tailor oversight
 // ==========================================
@@ -732,6 +838,58 @@ adminRouter.patch(
 adminRouter.patch(
   "/tailors/:shopId/deactivate",
   expressAsyncHandler(toggleTailorShopActive),
+);
+
+const fabricShopOwnerPopulate = {
+  path: "ownerId",
+  select: "name email approvalStatus",
+  match: { approvalStatus: "approved" },
+};
+
+async function toggleFabricShopActive(req, res) {
+  const shop = await FabricShop.findById(req.params.shopId);
+
+  if (!shop) {
+    res.status(404).send({ success: false, message: "Fabric shop not found" });
+    return;
+  }
+
+  shop.isActive = !shop.isActive;
+  const updatedShop = await shop.save();
+  await updatedShop.populate(fabricShopOwnerPopulate);
+
+  res.send({
+    success: true,
+    message: `Fabric shop successfully ${updatedShop.isActive ? "activated" : "deactivated"}`,
+    shop: updatedShop,
+  });
+}
+
+adminRouter.get(
+  "/fabric-shops",
+  expressAsyncHandler(async (req, res) => {
+    const shops = await FabricShop.find({})
+      .populate(fabricShopOwnerPopulate)
+      .sort({ createdAt: -1 });
+
+    const items = shops.filter((shop) => shop.ownerId !== null);
+
+    res.send({
+      success: true,
+      total: items.length,
+      items,
+    });
+  }),
+);
+
+adminRouter.patch(
+  "/fabric-shops/:shopId/toggle-active",
+  expressAsyncHandler(toggleFabricShopActive),
+);
+
+adminRouter.patch(
+  "/fabric-shops/:shopId/deactivate",
+  expressAsyncHandler(toggleFabricShopActive),
 );
 
 // ==========================================
