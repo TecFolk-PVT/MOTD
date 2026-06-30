@@ -102,8 +102,8 @@ export interface FabricFormData {
   colors: string[];
   tag: string; // stores English value
   tagAr: string; // stores Arabic label
-  pricePerMeter: number;
-  stockInMeters: number;
+  pricePerMeter: number | string;
+  stockInMeters: number | string;
   listedByStore: string;
   pickupAddress: PickupAddress;
   isActive: boolean;
@@ -340,5 +340,35 @@ export function validateFabricForm(
   ) {
     errors.listedByStore = "Invalid store partner ID";
   }
+
+  const priceVal = Number(form.pricePerMeter);
+  const stockVal = Number(form.stockInMeters);
+
+  if (isNaN(priceVal) || priceVal <= 0) {
+    errors.pricePerMeter = "Please enter a valid price";
+  }
+  if (isNaN(stockVal) || stockVal < 0) {
+    errors.stockInMeters = "Please enter a valid stock amount";
+  }
+
+  // Pickup address validations
+  if (!form.pickupAddress.emirate?.trim()) {
+    errors["pickupAddress.emirate"] = "Emirate is required";
+  }
+  if (!form.pickupAddress.city?.trim()) {
+    errors["pickupAddress.city"] = "City is required";
+  }
+  if (!form.pickupAddress.street?.trim()) {
+    errors["pickupAddress.street"] = "Street is required";
+  }
+  if (!form.pickupAddress.building?.trim()) {
+    errors["pickupAddress.building"] = "Building is required";
+  }
+  if (!form.pickupAddress.phone?.trim()) {
+    errors["pickupAddress.phone"] = "Phone is required";
+  } else if (!/^\d{9}$/.test(form.pickupAddress.phone.trim())) {
+    errors["pickupAddress.phone"] = "Phone number must be exactly 9 digits";
+  }
+
   return errors;
 }

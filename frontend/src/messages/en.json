@@ -612,6 +612,23 @@
         "createFailed": "Failed to create fabric.",
         "updateFailed": "Failed to update fabric."
       }
+    },
+    "orders": {
+      "title": "Fabric Orders",
+      "subtitle": "Track, view, and fulfill custom garment fabric orders from your store.",
+      "loading": "Loading fabric orders...",
+      "loadError": "Failed to load fabric orders. Please try again.",
+      "empty": "No custom fabric orders placed from your store yet.",
+      "customer": "Customer",
+      "design": "Design & Fabric",
+      "date": "Ordered On",
+      "status": "Status",
+      "total": "Payout",
+      "fabricLabel": "Fabric: {name}",
+      "hideMeasurements": "Hide Details",
+      "showMeasurements": "Show Details",
+      "updateSuccess": "Order status updated successfully",
+      "updateFailed": "Failed to update order status"
     }
   },
   "TailorPortal": {

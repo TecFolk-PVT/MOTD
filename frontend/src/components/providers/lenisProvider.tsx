@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Lenis from "lenis";
 
-const LENIS_DISABLED_PATHS = ["/admin", "/tailor"];
+const LENIS_DISABLED_PATHS = ["/admin", "/tailor", "/fabric"];
 
 function shouldDisableLenis(pathname: string) {
     return LENIS_DISABLED_PATHS.some((segment) => pathname.includes(segment));

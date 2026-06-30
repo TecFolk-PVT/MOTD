@@ -74,6 +74,21 @@ const fabricSchema = new mongoose.Schema(
 fabricSchema.index({ isActive: 1, material: 1 });
 fabricSchema.index({ listedByStore: 1 });
 
+fabricSchema.pre("save", async function populateFabricShopId(next) {
+  if (this.listedByStore) {
+    try {
+      const FabricShop = mongoose.model("FabricShop");
+      const shop = await FabricShop.findOne({ ownerId: this.listedByStore });
+      if (shop) {
+        this.fabricShopId = shop._id;
+      }
+    } catch (err) {
+      console.error("Failed to auto-populate fabricShopId on pre-save hook:", err);
+    }
+  }
+  next();
+});
+
 const Fabric = mongoose.model("Fabric", fabricSchema);
 
 export default Fabric;

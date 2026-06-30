@@ -1,18 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import { Link } from "@/i18n/navigation";
 import { getApiErrorMessage } from "@/lib/api/client";
-import { resolveMediaUrl } from "@/lib/media";
 import {
-    deleteFabricItem,
-    fetchFabricItems,
-    isShopMissingError,
-    type FabricProfile,
+  deleteFabricItem,
+  fetchFabricItems,
+  isShopMissingError,
+  type FabricProfile,
 } from "@/lib/fabricCatalog";
 import { useParams } from "next/navigation";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Package,
+  Search,
+  RefreshCw,
+} from "lucide-react";
 
 // Reuse Toast configurations
 const TOAST_BASE = {
@@ -59,6 +66,7 @@ export default function FabricDesignsList() {
     const [loading, setLoading] = useState(true);
     const [shopMissing, setShopMissing] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
 
     const loadFabrics = useCallback(async () => {
         setLoading(true);
@@ -98,6 +106,19 @@ export default function FabricDesignsList() {
         }
     };
 
+    const filteredFabrics = useMemo(() => {
+        if (!searchTerm) return fabrics;
+        const term = searchTerm.toLowerCase();
+        return fabrics.filter((item) => {
+            const name = (locale === "ar" ? item.nameAr || item.name : item.name).toLowerCase();
+            const material = (locale === "ar" ? item.materialAr || item.material : item.material).toLowerCase();
+            return name.includes(term) || material.includes(term);
+        });
+    }, [fabrics, searchTerm, locale]);
+
+    const activeCount = fabrics.filter((i) => i.isActive).length;
+    const inactiveCount = fabrics.filter((i) => !i.isActive).length;
+
     if (loading) {
         return (
             <div className="max-w-5xl border border-(--color-border) bg-white p-8">
@@ -128,105 +149,165 @@ export default function FabricDesignsList() {
     }
 
     return (
-        <div className="max-w-5xl">
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+        <div className="max-w-5xl space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.28em] text-(--color-grey-muted) mb-3">
-                        {t("eyebrow")}
-                    </p>
-                    <h1 className="[font-family:var(--font-display)] text-[32px] sm:text-[36px] text-black mb-2">
+                    <h1 className="text-2xl md:text-3xl font-light text-black tracking-tight [font-family:var(--font-display)]">
                         {t("title")}
                     </h1>
-                    <p className="[font-family:var(--font-body)] text-[14px] text-(--color-grey-muted)">
+                    <p className="text-gray-500 text-sm mt-1 [font-family:var(--font-body)]">
                         {t("description")}
                     </p>
                 </div>
                 <Link
                     href="/fabric/fabrics/new"
-                    className="inline-block text-center px-8 py-3 bg-black text-white text-[10px] tracking-[0.22em] uppercase hover:bg-[#2A2A28] transition [font-family:var(--font-ui)] shrink-0"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition text-sm shadow-sm [font-family:var(--font-ui)]"
                 >
-                    {t("addFabric")}
+                    <Plus className="w-4 h-4" /> {t("addFabric")}
                 </Link>
             </div>
 
-            {fabrics.length === 0 ? (
-                <div className="border border-(--color-border) bg-white p-10 text-center">
-                    <p className="[font-family:var(--font-body)] text-[14px] text-(--color-grey-muted) mb-6">
-                        {t("empty")}
+            {/* Counters */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <p className="text-xs text-gray-400 uppercase tracking-wider [font-family:var(--font-ui)]">
+                        {locale === "ar" ? "إجمالي الأقمشة" : "TOTAL FABRICS"}
                     </p>
-                    <Link
-                        href="/fabric/fabrics/new"
-                        className="inline-block px-8 py-3 border border-black text-black text-[10px] tracking-[0.22em] uppercase hover:bg-black hover:text-white transition [font-family:var(--font-ui)]"
-                    >
-                        {t("addFirst")}
-                    </Link>
+                    <p className="text-2xl font-light text-black mt-1 [font-family:var(--font-display)]">{fabrics.length}</p>
+                </div>
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <p className="text-xs text-gray-400 uppercase tracking-wider [font-family:var(--font-ui)]">
+                        {locale === "ar" ? "نشط" : "ACTIVE"}
+                    </p>
+                    <p className="text-2xl font-light text-black mt-1 [font-family:var(--font-display)]">{activeCount}</p>
+                </div>
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                    <p className="text-xs text-gray-400 uppercase tracking-wider [font-family:var(--font-ui)]">
+                        {locale === "ar" ? "غير نشط" : "INACTIVE"}
+                    </p>
+                    <p className="text-2xl font-light text-black mt-1 [font-family:var(--font-display)]">{inactiveCount}</p>
+                </div>
+            </div>
+
+            {/* Search and Refresh */}
+            <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+                <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder={locale === "ar" ? "البحر بالاسم أو المادة..." : "Search by name or material..."}
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition [font-family:var(--font-body)]"
+                    />
+                </div>
+                <button
+                    onClick={loadFabrics}
+                    className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-black transition text-sm border border-gray-200 rounded-lg bg-white [font-family:var(--font-ui)]"
+                >
+                    <RefreshCw className="w-4 h-4" /> {locale === "ar" ? "تحديث" : "Refresh"}
+                </button>
+            </div>
+
+            {filteredFabrics.length === 0 ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                    <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                    <p className="text-gray-500 [font-family:var(--font-body)]">
+                        {searchTerm
+                            ? (locale === "ar" ? "لم يتم العثور على أقمشة تطابق بحثك." : "No fabrics matched your search.")
+                            : t("empty")}
+                    </p>
+                    {!searchTerm && (
+                        <Link
+                            href="/fabric/fabrics/new"
+                            className="inline-block mt-4 text-black underline underline-offset-4 hover:text-gray-600 [font-family:var(--font-ui)]"
+                        >
+                            {t("addFirst")}
+                        </Link>
+                    )}
                 </div>
             ) : (
-                <div className="space-y-4">
-                    {fabrics.map((fabric) => {
-                        const name = locale === "ar" ? fabric.nameAr || fabric.name : fabric.name;
-                        const imageSrc = resolveMediaUrl(fabric.images?.[0]) || "/images/sub-2.png";
-                        const materialDisplay = locale === "ar" ? fabric.materialAr || fabric.material : fabric.material;
-
-                        return (
-                            <div
-                                key={fabric._id}
-                                className="border border-(--color-border) bg-white p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:gap-6"
-                            >
-                                <div className="w-full sm:w-28 h-28 shrink-0 bg-[#F0EBE3] overflow-hidden">
-                                    <img
-                                        src={imageSrc}
-                                        alt={name}
-                                        loading="lazy"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex flex-wrap items-start gap-2 mb-2">
-                                        <h2 className="[font-family:var(--font-display)] text-[20px] text-black">
-                                            {name}
-                                        </h2>
-                                        <span
-                                            className={`[font-family:var(--font-ui)] text-[9px] uppercase tracking-[0.2em] px-2 py-0.5 ${
-                                                fabric.isActive
-                                                    ? "bg-black text-white"
-                                                    : "border border-(--color-border) text-(--color-grey-muted)"
-                                            }`}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                            <thead>
+                                <tr className="bg-gray-50 border-b border-gray-100">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">
+                                        {locale === "ar" ? "الاسم" : "NAME"}
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">
+                                        {locale === "ar" ? "المادة" : "MATERIAL"}
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">
+                                        {locale === "ar" ? "السعر / متر" : "PRICE / M"}
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">
+                                        {locale === "ar" ? "المخزون" : "STOCK"}
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">
+                                        {locale === "ar" ? "الحالة" : "STATUS"}
+                                    </th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">
+                                        {locale === "ar" ? "الإجراءات" : "ACTIONS"}
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-50 bg-white">
+                                {filteredFabrics.map((fabric) => {
+                                    const name = locale === "ar" ? fabric.nameAr || fabric.name : fabric.name;
+                                    const materialDisplay = locale === "ar" ? fabric.materialAr || fabric.material : fabric.material;
+                                    return (
+                                        <tr
+                                            key={fabric._id}
+                                            className="group hover:bg-gray-50 transition-all duration-200"
                                         >
-                                            {fabric.isActive ? t("statusActive") : t("statusInactive")}
-                                        </span>
-                                    </div>
-                                    <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.18em] text-(--color-grey-muted) mb-2">
-                                        {materialDisplay} · AED {fabric.pricePerMeter} / m ·{" "}
-                                        {fabric.stockInMeters} m {t("inStock")}
-                                    </p>
-                                    <p className="[font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) line-clamp-2">
-                                        {locale === "ar"
-                                            ? fabric.descriptionAr || fabric.description
-                                            : fabric.description}
-                                    </p>
-                                </div>
-
-                                <div className="flex sm:flex-col gap-3 shrink-0">
-                                    <Link
-                                        href={`/fabric/fabrics/${fabric._id}/edit`}
-                                        className="text-center px-5 py-2.5 border border-black text-black text-[10px] tracking-[0.2em] uppercase hover:bg-black hover:text-white transition [font-family:var(--font-ui)]"
-                                    >
-                                        {t("edit")}
-                                    </Link>
-                                    <button
-                                        type="button"
-                                        onClick={() => handleDelete(fabric)}
-                                        disabled={deletingId === fabric._id}
-                                        className="px-5 py-2.5 border border-red-300 text-red-700 text-[10px] tracking-[0.2em] uppercase hover:bg-red-50 transition disabled:opacity-50 [font-family:var(--font-ui)]"
-                                    >
-                                        {deletingId === fabric._id ? t("deleting") : t("delete")}
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black [font-family:var(--font-body)]">
+                                                {name}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 [font-family:var(--font-body)]">
+                                                {materialDisplay}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 [font-family:var(--font-body)]">
+                                                AED {fabric.pricePerMeter.toLocaleString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 [font-family:var(--font-body)]">
+                                                {fabric.stockInMeters.toLocaleString()} m
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <span
+                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium [font-family:var(--font-ui)] ${
+                                                        fabric.isActive
+                                                            ? "bg-white text-black border border-black/30"
+                                                            : "bg-gray-100 text-gray-500 border border-gray-200"
+                                                    }`}
+                                                >
+                                                    {fabric.isActive ? t("statusActive") : t("statusInactive")}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                <div className="flex items-center justify-end gap-3">
+                                                    <Link
+                                                        href={`/fabric/fabrics/${fabric._id}/edit`}
+                                                        className="text-gray-400 hover:text-black transition-colors"
+                                                    >
+                                                        <Edit className="w-4.5 h-4.5" />
+                                                    </Link>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDelete(fabric)}
+                                                        disabled={deletingId === fabric._id}
+                                                        className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
+                                                    >
+                                                        <Trash2 className="w-4.5 h-4.5" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
         </div>

@@ -60,6 +60,14 @@ export const isApprovedTailor = async (req, res, next) => {
       return;
     }
 
+    if (user.isActive === false) {
+      res.status(403).send({
+        message: "Tailor account is deactivated",
+        isActive: false,
+      });
+      return;
+    }
+
     if (user.approvalStatus !== "approved") {
       res.status(403).send({
         message:
@@ -100,6 +108,14 @@ export const isApprovedFabricStore = async (req, res, next) => {
 
     if (user.role !== "fabric_store") {
       res.status(403).send({ message: "Forbidden: Fabric Store access required" });
+      return;
+    }
+
+    if (user.isActive === false) {
+      res.status(403).send({
+        message: "Fabric Store account is deactivated",
+        isActive: false,
+      });
       return;
     }
 

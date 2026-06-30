@@ -17,7 +17,19 @@ const toListItem = (fabric) => ({
   tag: fabric.tag,
   tagColor: fabric.tagColor,
   pricePerMeter: fabric.pricePerMeter,
-  listedByStore: fabric.listedByStore,
+  listedByStore: fabric.fabricShopId
+    ? {
+        _id: fabric.fabricShopId._id,
+        name: fabric.fabricShopId.name,
+        role: 'fabric_store',
+      }
+    : (fabric.listedByStore
+        ? {
+            _id: fabric.listedByStore._id,
+            name: fabric.listedByStore.name,
+            role: fabric.listedByStore.role,
+          }
+        : null),
   stockInMeters: fabric.stockInMeters,
 });
 
@@ -46,6 +58,8 @@ fabricRoutes.get('/', async (req, res) => {
 
     const [fabrics, total] = await Promise.all([
       Fabric.find(filter)
+        .populate('listedByStore', '_id name role')
+        .populate('fabricShopId', '_id name')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limitNumber)
@@ -86,13 +100,19 @@ const toDetailItem = (fabric) => ({
   pricePerMeter: fabric.pricePerMeter,
   stockInMeters: fabric.stockInMeters,
   storePickupAddress: fabric.storePickupAddress,
-  listedByStore: fabric.listedByStore
+  listedByStore: fabric.fabricShopId
     ? {
-        _id: fabric.listedByStore._id,
-        name: fabric.listedByStore.name,
-        role: fabric.listedByStore.role,
+        _id: fabric.fabricShopId._id,
+        name: fabric.fabricShopId.name,
+        role: 'fabric_store',
       }
-    : null,
+    : (fabric.listedByStore
+        ? {
+            _id: fabric.listedByStore._id,
+            name: fabric.listedByStore.name,
+            role: fabric.listedByStore.role,
+          }
+        : null),
   createdAt: fabric.createdAt,
   updatedAt: fabric.updatedAt,
 });
@@ -107,6 +127,7 @@ fabricRoutes.get('/:slug', async (req, res) => {
       isActive: true,
     })
       .populate('listedByStore', '_id name role')
+      .populate('fabricShopId', '_id name')
       .select('-__v');
 
     if (!fabric) {
