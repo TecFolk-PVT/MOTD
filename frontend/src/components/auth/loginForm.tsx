@@ -10,6 +10,10 @@ import * as images from "../../../public/images/ImageIndex";
 import { motion } from "framer-motion";
 import { getTranslation } from "@/lib/getTranslation";
 import { useAuth } from "@/context/AuthContext";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import { useRouter } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
+import { getPostLoginPath } from "@/lib/auth/postLoginRedirect";
 
 export default function LoginPage() {
     const params = useParams();
@@ -23,7 +27,10 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const { login } = useAuth();
+    const { login, loginWithGoogle } = useAuth();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get("redirect");
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -32,8 +39,10 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            await login(email, password);
+            const loggedInUser = await login(email, password);
             setSuccess(t.login.successMessage || "Login successful! Redirecting...");
+            router.replace(getPostLoginPath(loggedInUser, redirectUrl));
+            router.refresh();
         } catch (err: any) {
             setError(err.message || "An error occurred during login.");
         } finally {
@@ -41,12 +50,20 @@ export default function LoginPage() {
         }
     };
 
-    const handleGoogleLogin = () => {
-        console.log("Google login clicked");
-    };
-
-    const handleAppleLogin = () => {
-        console.log("Apple login clicked");
+    const handleGoogleLogin = async (credential: string) => {
+        setError("");
+        setSuccess("");
+        setIsLoading(true);
+        try {
+            const loggedInUser = await loginWithGoogle(credential);
+            setSuccess(t.login.successMessage || "Login successful! Redirecting...");
+            router.replace(getPostLoginPath(loggedInUser, redirectUrl));
+            router.refresh();
+        } catch (err: any) {
+            setError(err.message || "Google sign-in failed.");
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -207,45 +224,11 @@ export default function LoginPage() {
                                 <div className="grow border-t border-black/10"></div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 md:gap-4">
-                                <button
-                                    type="button"
-                                    onClick={handleGoogleLogin}
-                                    className="h-11 md:h-12 w-full border border-black/15 bg-transparent hover:border-black hover:bg-black transition-all duration-300 group hover:cursor-pointer"
-                                >
-                                    <span className="flex items-center justify-center gap-2 h-full leading-none">
-                                        <Image
-                                            src={images.google_icon.src}
-                                            alt="Google icon"
-                                            width={16}
-                                            height={16}
-                                            className="block shrink-0 group-hover:invert transition-all duration-300"
-                                        />
-                                        <span className="text-[10px] md:text-[11px] uppercase tracking-[0.12em] text-black/70 group-hover:text-white leading-none flex items-center">
-                                            Google
-                                        </span>
-                                    </span>
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={handleAppleLogin}
-                                    className="h-11 md:h-12 w-full border border-black/15 bg-transparent hover:border-black hover:bg-black transition-all duration-300 group hover:cursor-pointer"
-                                >
-                                    <span className="flex items-center justify-center gap-2 h-full leading-none">
-                                        <Image
-                                            src={images.apple_icon.src}
-                                            alt="Apple icon"
-                                            width={16}
-                                            height={16}
-                                            className="block shrink-0 group-hover:invert transition-all duration-300"
-                                        />
-                                        <span className="text-[10px] md:text-[11px] uppercase tracking-[0.12em] text-black/70 group-hover:text-white leading-none flex items-center">
-                                            Apple
-                                        </span>
-                                    </span>
-                                </button>
-                            </div>
+                            <GoogleSignInButton
+                                onSuccess={handleGoogleLogin}
+                                disabled={isLoading}
+                                onError={(message) => setError(message)}
+                            />
                         </form>
 
                         <footer className="mt-8 pt-5 border-t border-black/10 text-center fade-in">
