@@ -6,6 +6,7 @@ import { useLocale } from "next-intl";
 import Image from "next/image";
 import logoBlack from "../../../public/PNG/Black/MOTD_Wordmark_Black.png";
 import { motion } from "framer-motion";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ForgotPassword() {
     const locale = useLocale();
@@ -14,14 +15,26 @@ export default function ForgotPassword() {
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
+    const [error, setError] = useState("");
+    const { forgotPassword } = useAuth();
+
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setIsLoading(true);
+        setError("");
 
-        setTimeout(() => {
-            setIsLoading(false);
+        try {
+            await forgotPassword(email);
             setIsSubmitted(true);
-        }, 1800);
+        } catch (err: unknown) {
+            const message =
+                err && typeof err === "object" && "message" in err
+                    ? String((err as { message: string }).message)
+                    : "Failed to send reset email.";
+            setError(message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -103,6 +116,12 @@ export default function ForgotPassword() {
                                             className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
                                         />
                                     </div>
+
+                                    {error && (
+                                        <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-md border border-red-200">
+                                            {error}
+                                        </div>
+                                    )}
 
                                     {/* Button */}
                                     <button

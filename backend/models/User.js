@@ -4,11 +4,22 @@ const ROLES = ["customer", "admin", "fabric_store", "tailor", "delivery"];
 
 const APPROVAL_STATUSES = ["pending", "approved", "rejected"];
 
+const AUTH_PROVIDERS = ["local", "google"];
+
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String },
+    googleId: { type: String, sparse: true, unique: true },
+    authProvider: {
+      type: String,
+      enum: AUTH_PROVIDERS,
+      default: "local",
+      required: true,
+    },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
     phone: { type: String, trim: true },
     role: {
       type: String,
@@ -47,4 +58,4 @@ userSchema.pre("save", function syncDerivedFields(next) {
 const User = mongoose.model("User", userSchema);
 
 export default User;
-export { ROLES, APPROVAL_STATUSES };
+export { ROLES, APPROVAL_STATUSES, AUTH_PROVIDERS };
