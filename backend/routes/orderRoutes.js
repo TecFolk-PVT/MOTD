@@ -297,15 +297,21 @@ async function deductFabricStock(fabricId, meters) {
   return fabric;
 }
 
-async function buildMultiItemOrderData(orderInput) {
-  const { pricing, itemPricings } = await getMultiItemCustomOrderPricing(orderInput);
+async function buildMultiItemOrderData(orderInput, deliveryType = "delivery") {
+  const { pricing, itemPricings } = await getMultiItemCustomOrderPricing({
+    ...orderInput,
+    deliveryType,
+  });
   const fabricDeductions = new Map();
 
   for (const item of orderInput.items) {
     if (orderInput.fabricSource !== "storefront" || !item.fabricId) continue;
 
     const key = item.fabricId.toString();
-    fabricDeductions.set(key, (fabricDeductions.get(key) || 0) + item.fabricMeters);
+    fabricDeductions.set(
+      key,
+      (fabricDeductions.get(key) || 0) + item.fabricMeters,
+    );
   }
 
   const fabricDocs = new Map();
@@ -319,7 +325,9 @@ async function buildMultiItemOrderData(orderInput) {
 
   for (let index = 0; index < orderInput.items.length; index += 1) {
     const itemInput = orderInput.items[index];
-    const { design, shop } = await loadDesignWithApprovedShop(itemInput.designId);
+    const { design, shop } = await loadDesignWithApprovedShop(
+      itemInput.designId,
+    );
 
     let fabric = null;
     if (orderInput.fabricSource === "storefront" && itemInput.fabricId) {
@@ -344,8 +352,8 @@ async function buildMultiItemOrderData(orderInput) {
   const firstItem = orderItems[0];
   const firstFabric =
     orderInput.fabricSource === "storefront" && firstItem.fabricId
-      ? fabricDocs.get(firstItem.fabricId.toString()) ??
-        (await Fabric.findById(firstItem.fabricId))
+      ? (fabricDocs.get(firstItem.fabricId.toString()) ??
+        (await Fabric.findById(firstItem.fabricId)))
       : null;
 
   return {
@@ -355,7 +363,10 @@ async function buildMultiItemOrderData(orderInput) {
       fabricId: firstFabric?._id ?? null,
       fabricStoreId: firstFabric?.listedByStore ?? null,
       fabricSnapshot: firstFabric ? buildFabricSnapshot(firstFabric) : null,
-      fabricMeters: orderItems.reduce((sum, item) => sum + item.fabricMeters, 0),
+      fabricMeters: orderItems.reduce(
+        (sum, item) => sum + item.fabricMeters,
+        0,
+      ),
       tailorShopId: firstItem.tailorShopId,
       designId: firstItem.designId,
       designSnapshot: firstItem.designSnapshot,
@@ -366,9 +377,14 @@ async function buildMultiItemOrderData(orderInput) {
 
 orderRoutes.post("/custom/preview", async (req, res) => {
   try {
+    const { deliveryType = "delivery" } = req.body;
+
     if (isMultiItemPayload(req.body)) {
       const orderInput = validateMultiItemOrderInput(req.body);
-      const { pricing } = await getMultiItemCustomOrderPricing(orderInput);
+      const { pricing } = await getMultiItemCustomOrderPricing({
+        ...orderInput,
+        deliveryType,
+      });
 
       return res.json({
         success: true,
@@ -377,7 +393,10 @@ orderRoutes.post("/custom/preview", async (req, res) => {
     }
 
     const orderInput = validateFabricOrderInput(req.body);
-    const pricing = await getCustomOrderPricing(orderInput);
+    const pricing = await getCustomOrderPricing({
+      ...orderInput,
+      deliveryType,
+    });
 
     res.json({
       success: true,
@@ -411,6 +430,7 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       customerDeliveryAddress,
       pickupAddress,
       paymentMethod = "cod",
+      deliveryType = "delivery",
       addPocket = false,
       addBottomWideFold = false,
     } = req.body;
@@ -422,20 +442,29 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       });
     }
 
-    const deliveryAddr = normalizeDeliveryAddress(customerDeliveryAddress);
+    // Build conditional address based on deliveryType
+    const deliveryAddr =
+      deliveryType === "delivery"
+        ? normalizeDeliveryAddress(customerDeliveryAddress)
+        : null;
+
+    // Normalize pickup address if provided
+    const normalizedPickupAddress = pickupAddress
+      ? normalizePickupAddress(pickupAddress)
+      : null;
 
     if (isMultiItemPayload(req.body)) {
       const orderInput = validateMultiItemOrderInput({ fabricSource, items });
       const { pricing, orderItems, legacyFields, firstFabric } =
-        await buildMultiItemOrderData(orderInput);
+        await buildMultiItemOrderData(orderInput, deliveryType);
 
-      let resolvedPickupAddress;
-      if (orderInput.fabricSource === "storefront" && firstFabric) {
-        resolvedPickupAddress = pickupAddress
-          ? normalizePickupAddress(pickupAddress)
-          : buildPickupAddressFromFabric(firstFabric);
-      } else {
-        resolvedPickupAddress = normalizePickupAddress(pickupAddress);
+      let resolvedPickupAddress = normalizedPickupAddress;
+      if (
+        orderInput.fabricSource === "storefront" &&
+        firstFabric &&
+        !resolvedPickupAddress
+      ) {
+        resolvedPickupAddress = buildPickupAddressFromFabric(firstFabric);
       }
 
       const order = await CustomOrder.create({
@@ -444,8 +473,10 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
         ...legacyFields,
         items: orderItems,
         measurements: measurements || {},
-        customerDeliveryAddress: deliveryAddr,
-        pickupAddress: resolvedPickupAddress,
+        deliveryType,
+        customerDeliveryAddress:
+          deliveryType === "delivery" ? deliveryAddr : null,
+        pickupAddress: deliveryType === "pickup" ? resolvedPickupAddress : null,
         status: "pending",
         statusHistory: [
           {
@@ -475,6 +506,7 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       fabricId,
       fabricMeters,
       paymentMethod,
+      deliveryType,
       customerDeliveryAddressKeys: customerDeliveryAddress
         ? Object.keys(customerDeliveryAddress)
         : null,
@@ -493,19 +525,23 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
     );
 
     let fabric = null;
-    let resolvedPickupAddress;
+    let resolvedPickupAddress = normalizedPickupAddress;
 
     if (orderInput.fabricSource === "storefront") {
-      fabric = await deductFabricStock(orderInput.fabricId, orderInput.fabricMeters);
+      fabric = await deductFabricStock(
+        orderInput.fabricId,
+        orderInput.fabricMeters,
+      );
 
-      resolvedPickupAddress = pickupAddress
-        ? normalizePickupAddress(pickupAddress)
-        : buildPickupAddressFromFabric(fabric);
-    } else {
-      resolvedPickupAddress = normalizePickupAddress(pickupAddress);
+      if (!resolvedPickupAddress) {
+        resolvedPickupAddress = buildPickupAddressFromFabric(fabric);
+      }
     }
 
-    const pricing = await getCustomOrderPricing(orderInput);
+    const pricing = await getCustomOrderPricing({
+      ...orderInput,
+      deliveryType,
+    });
 
     const order = await CustomOrder.create({
       userId: req.user._id,
@@ -518,8 +554,10 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       designId: design._id,
       designSnapshot: buildDesignSnapshot(design),
       measurements: measurements || {},
-      customerDeliveryAddress: deliveryAddr,
-      pickupAddress: resolvedPickupAddress,
+      deliveryType,
+      customerDeliveryAddress:
+        deliveryType === "delivery" ? deliveryAddr : null,
+      pickupAddress: deliveryType === "pickup" ? resolvedPickupAddress : null,
       status: "pending",
       statusHistory: [
         {
@@ -584,7 +622,9 @@ orderRoutes.get("/custom/mine", isAuth, async (req, res) => {
         itemCount: items.length,
         items,
         design: primaryItem?.design ?? null,
-        tailorShop: primaryItem?.tailorShop ?? formatTailorShopSummary(order.tailorShopId),
+        tailorShop:
+          primaryItem?.tailorShop ??
+          formatTailorShopSummary(order.tailorShopId),
       };
     });
 

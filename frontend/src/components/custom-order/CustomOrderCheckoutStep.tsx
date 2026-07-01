@@ -52,6 +52,24 @@ type CustomerProfile = {
   defaultAddressId?: string;
 };
 
+type TailorShop = {
+  _id: string;
+  name: string;
+  nameAr: string;
+  slug: string;
+  description?: string;
+  descriptionAr?: string;
+  logo?: string;
+  coverImage?: string;
+  location?: string;
+  city?: string;
+  phone?: string;
+  rating?: number;
+  reviewCount?: number;
+  ownerId?: string;
+  isActive?: boolean;
+};
+
 type FormField = keyof CustomOrderDeliveryAddress;
 
 const REQUIRED_FIELDS: FormField[] = [
@@ -69,7 +87,7 @@ export default function CustomOrderCheckoutStep() {
   const locale = params.locale === "ar" ? "ar" : "en";
 
   const { user, isLoading, isAuthenticated } = useAuth();
-  const { draft, isHydrated, updateDeliveryAddress, resetOrder } =
+  const { draft, isHydrated, updateDeliveryAddress, resetOrder, deliveryType } =
     useCustomOrder();
   const usingOwnFabric = useOwnFabric(draft);
 
@@ -91,6 +109,8 @@ export default function CustomOrderCheckoutStep() {
   const [addBottomWideFold, setAddBottomWideFold] = useState(false);
 
   const [profileLoading, setProfileLoading] = useState(true);
+  const [tailorShop, setTailorShop] = useState<TailorShop | null>(null);
+  const [shopLoading, setShopLoading] = useState(true);
 
   const previewPayload = useMemo(
     () => (isHydrated ? buildCustomOrderPreviewPayload(draft) : null),
@@ -122,6 +142,39 @@ export default function CustomOrderCheckoutStep() {
     showSuccess,
   ]);
 
+  // Fetch tailor shop by tailor slug from draft
+  useEffect(() => {
+    async function fetchTailorShop() {
+      const firstItem = draft.lineItems[0];
+      if (!firstItem?.tailor?.slug) {
+        setShopLoading(false);
+        return;
+      }
+
+      try {
+        setShopLoading(true);
+        const data = await api.get<{
+          success: boolean;
+          item: TailorShop;
+        }>(`/api/tailors/${firstItem.tailor.slug}`);
+
+        if (data.success && data.item) {
+          setTailorShop(data.item);
+        }
+      } catch (err: any) {
+        if (err.status !== 404) {
+          console.error("Failed to fetch tailor shop:", err);
+        }
+      } finally {
+        setShopLoading(false);
+      }
+    }
+
+    if (isHydrated && draft.lineItems.length > 0) {
+      fetchTailorShop();
+    }
+  }, [isHydrated, draft.lineItems]);
+
   useEffect(() => {
     async function fetchCustomerProfile() {
       if (!isAuthenticated) return;
@@ -140,7 +193,6 @@ export default function CustomOrderCheckoutStep() {
             line2: defaultAddr.building || "",
           });
         } else {
-          // No address: fill name and phone from top-level
           updateDeliveryAddress({
             fullName: data.name || "",
             phone: data.phone || "",
@@ -165,10 +217,15 @@ export default function CustomOrderCheckoutStep() {
         setLoadingPricing(true);
         setPricingError(null);
 
+        const payload = {
+          ...previewPayload,
+          deliveryType,
+        };
+
         const data = await api.post<{
           success: boolean;
           pricing: CustomOrderPricingBreakdown;
-        }>("/api/orders/custom/preview", previewPayload);
+        }>("/api/orders/custom/preview", payload);
 
         if (!data?.success || !data.pricing) {
           throw new Error("Failed to load pricing");
@@ -187,10 +244,27 @@ export default function CustomOrderCheckoutStep() {
     };
 
     fetchPreview();
-  }, [isHydrated, previewPayload, t]);
+  }, [isHydrated, previewPayload, deliveryType, t]);
 
   const getDisplayName = (name?: string, nameAr?: string) =>
     locale === "ar" ? nameAr || name : name;
+
+  const getShopDisplayName = () => {
+    if (!tailorShop) return "Store";
+    return locale === "ar"
+      ? tailorShop.nameAr || tailorShop.name
+      : tailorShop.name;
+  };
+
+  const getShopLocation = () => {
+    if (!tailorShop) return "";
+    return tailorShop.location || "";
+  };
+
+  const getShopCity = () => {
+    if (!tailorShop) return "";
+    return tailorShop.city || "";
+  };
 
   const address = draft.deliveryAddress;
 
@@ -203,6 +277,10 @@ export default function CustomOrderCheckoutStep() {
   };
 
   const validateForm = (): CustomOrderDeliveryAddress | null => {
+    if (deliveryType === "pickup") {
+      return null;
+    }
+
     const nextErrors: Partial<Record<FormField, string>> = {};
 
     for (const field of REQUIRED_FIELDS) {
@@ -226,16 +304,29 @@ export default function CustomOrderCheckoutStep() {
   };
 
   const handlePlaceOrder = async () => {
-    const deliveryAddress = validateForm();
-    if (!deliveryAddress || !previewPayload || isSubmitting) return;
+    if (!previewPayload || isSubmitting) return;
 
-    const payload = buildCustomOrderCreatePayload(draft, deliveryAddress);
+    let deliveryAddress: CustomOrderDeliveryAddress | undefined = undefined;
+
+    if (deliveryType === "delivery") {
+      const validated = validateForm();
+      if (!validated) return;
+      deliveryAddress = validated;
+    }
+
+    const payload = buildCustomOrderCreatePayload(draft, deliveryAddress || undefined as any);
     if (!payload) {
       setSubmitError(t("incompleteDraft"));
       return;
     }
-    payload.addPocket = addPocket;
-    payload.addBottomWideFold = addBottomWideFold;
+
+    const orderPayload = {
+      ...payload,
+      addPocket,
+      addBottomWideFold,
+      deliveryType,
+      deliveryAddress: deliveryType === "delivery" ? deliveryAddress : null,
+    };
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -245,7 +336,7 @@ export default function CustomOrderCheckoutStep() {
         success: boolean;
         orderId: string;
         message?: string;
-      }>("/api/orders/custom", payload);
+      }>("/api/orders/custom", orderPayload);
 
       if (!response?.success || !response.orderId) {
         throw new Error(response.message || t("submitError"));
@@ -270,7 +361,13 @@ export default function CustomOrderCheckoutStep() {
     }
   };
 
-  if (!isHydrated || isLoading || !isAuthenticated || profileLoading) {
+  if (
+    !isHydrated ||
+    isLoading ||
+    !isAuthenticated ||
+    profileLoading ||
+    shopLoading
+  ) {
     return (
       <div className="min-h-[40vh] flex items-center justify-center">
         <p className="[font-family:var(--font-ui)] text-sm uppercase tracking-[0.2em] text-(--color-grey-muted)">
@@ -298,232 +395,242 @@ export default function CustomOrderCheckoutStep() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-8">
-            <div className="space-y-6 h-fit">
-              <aside className="border border-(--color-border) bg-[#FDFAF5] p-6 sm:p-8">
-                <h2 className="[font-family:var(--font-display)] text-[22px] mb-6">
-                  {t("summaryTitle")}
-                </h2>
+            <aside className="border border-(--color-border) bg-[#FDFAF5] p-6 sm:p-8 h-fit">
+              <h2 className="[font-family:var(--font-display)] text-[22px] mb-6">
+                {t("summaryTitle")}
+              </h2>
 
-                <dl className="space-y-4 mb-6">
-                  {draft.lineItems.map((item) => (
-                    <div key={item.id} className="border-b border-(--color-border) pb-4 last:border-b-0 last:pb-0">
-                      <div>
-                        <dt className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-1">
-                          {t("design")}
-                        </dt>
-                        <dd className="[font-family:var(--font-body)] text-[15px] text-black">
-                          {getDisplayName(item.design.name, item.design.nameAr) || "—"}
-                        </dd>
-                      </div>
-                      <div className="mt-3">
-                        <dt className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-1">
-                          {t("tailor")}
-                        </dt>
-                        <dd className="[font-family:var(--font-body)] text-[15px] text-black">
-                          {getDisplayName(item.tailor.name, item.tailor.nameAr) || "—"}
-                        </dd>
-                      </div>
+              <dl className="space-y-4 mb-6">
+                {draft.lineItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="border-b border-(--color-border) pb-4 last:border-b-0 last:pb-0"
+                  >
+                    <div>
+                      <dt className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-1">
+                        {t("design")}
+                      </dt>
+                      <dd className="[font-family:var(--font-body)] text-[15px] text-black">
+                        {getDisplayName(item.design.name, item.design.nameAr) ||
+                          "—"}
+                      </dd>
                     </div>
-                  ))}
-                </dl>
+                    <div className="mt-3">
+                      <dt className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-1">
+                        {t("tailor")}
+                      </dt>
+                      <dd className="[font-family:var(--font-body)] text-[15px] text-black">
+                        {getDisplayName(item.tailor.name, item.tailor.nameAr) ||
+                          "—"}
+                      </dd>
+                    </div>
+                  </div>
+                ))}
+              </dl>
 
-                <div className="pt-4 border-t border-(--color-border) flex justify-between items-center gap-4">
-                  <span className="[font-family:var(--font-ui)] text-[11px] uppercase tracking-[0.2em] text-black">
-                    {t("total")}
-                  </span>
-                  <span className="[font-family:var(--font-display)] text-[24px] text-black">
-                    {pricing ? formatCurrency(pricing.total, locale) : "—"}
-                  </span>
-                </div>
-              </aside>
-
-              <div className="border border-(--color-border) bg-[#FDFBF7] p-6 sm:p-8">
-                <h2 className="[font-family:var(--font-display)] text-[20px] mb-4">
-                  {locale === "ar" ? "خيارات الطلب (اختياري)" : "Order Options (Optional)"}
-                </h2>
-                <div className="space-y-4">
-                  <label className="flex items-start gap-3 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      id="add-pocket-checkbox"
-                      checked={addPocket}
-                      onChange={(e) => setAddPocket(e.target.checked)}
-                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
-                    />
-                    <span className="[font-family:var(--font-body)] text-[13px] text-black leading-tight">
-                      {locale === "ar" ? "إضافة جيب" : "Add a Pocket"}
-                    </span>
-                  </label>
-                  <label className="flex items-start gap-3 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      id="add-bottom-wide-fold-checkbox"
-                      checked={addBottomWideFold}
-                      onChange={(e) => setAddBottomWideFold(e.target.checked)}
-                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
-                    />
-                    <span className="[font-family:var(--font-body)] text-[13px] text-black leading-tight">
-                      {locale === "ar" ? "إضافة طية سفلية عريضة" : "Add a bottom wide fold"}
-                    </span>
-                  </label>
-                </div>
+              <div className="pt-4 border-t border-(--color-border) flex justify-between items-center gap-4">
+                <span className="[font-family:var(--font-ui)] text-[11px] uppercase tracking-[0.2em] text-black">
+                  {t("total")}
+                </span>
+                <span className="[font-family:var(--font-display)] text-[24px] text-black">
+                  {pricing ? formatCurrency(pricing.total, locale) : "—"}
+                </span>
               </div>
-            </div>
+            </aside>
 
             <section>
-              <div className="border border-(--color-border) bg-white p-6 sm:p-8 mb-6">
-                <h2 className="[font-family:var(--font-display)] text-[22px] mb-6">
-                  {t("deliveryTitle")}
-                </h2>
+              {/* Delivery Address or Pickup Info */}
+              {deliveryType === "delivery" ? (
+                <div className="border border-(--color-border) bg-white p-6 sm:p-8 mb-6">
+                  <h2 className="[font-family:var(--font-display)] text-[22px] mb-6">
+                    {t("deliveryTitle")}
+                  </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div>
-                    <label
-                      htmlFor="checkout-fullName"
-                      className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
-                    >
-                      {t("fullName")}*
-                    </label>
-                    <input
-                      id="checkout-fullName"
-                      type="text"
-                      value={address.fullName || ""}
-                      onChange={(e) =>
-                        handleFieldChange("fullName", e.target.value)
-                      }
-                      className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
-                    />
-                    {errors.fullName && (
-                      <p className="text-red-600 text-[12px] mt-1">
-                        {errors.fullName}
-                      </p>
-                    )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <label
+                        htmlFor="checkout-fullName"
+                        className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
+                      >
+                        {t("fullName")}*
+                      </label>
+                      <input
+                        id="checkout-fullName"
+                        type="text"
+                        value={address.fullName || ""}
+                        onChange={(e) =>
+                          handleFieldChange("fullName", e.target.value)
+                        }
+                        className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
+                      />
+                      {errors.fullName && (
+                        <p className="text-red-600 text-[12px] mt-1">
+                          {errors.fullName}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="checkout-phone"
+                        className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
+                      >
+                        {t("phone")}*
+                      </label>
+                      <input
+                        id="checkout-phone"
+                        type="tel"
+                        value={address.phone || ""}
+                        onChange={(e) =>
+                          handleFieldChange("phone", e.target.value)
+                        }
+                        className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
+                      />
+                      {errors.phone && (
+                        <p className="text-red-600 text-[12px] mt-1">
+                          {errors.phone}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="checkout-emirate"
+                        className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
+                      >
+                        {t("emirate")}*
+                      </label>
+                      <select
+                        id="checkout-emirate"
+                        value={address.emirate || ""}
+                        onChange={(e) =>
+                          handleFieldChange("emirate", e.target.value)
+                        }
+                        className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
+                      >
+                        <option value="">{t("selectEmirate")}</option>
+                        {EMIRATES.map((emirate) => (
+                          <option key={emirate} value={emirate}>
+                            {emirate}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.emirate && (
+                        <p className="text-red-600 text-[12px] mt-1">
+                          {errors.emirate}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="checkout-city"
+                        className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
+                      >
+                        {t("city")}*
+                      </label>
+                      <input
+                        id="checkout-city"
+                        type="text"
+                        value={address.city || ""}
+                        onChange={(e) =>
+                          handleFieldChange("city", e.target.value)
+                        }
+                        className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
+                      />
+                      {errors.city && (
+                        <p className="text-red-600 text-[12px] mt-1">
+                          {errors.city}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor="checkout-line1"
+                        className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
+                      >
+                        {t("line1")}*
+                      </label>
+                      <input
+                        id="checkout-line1"
+                        type="text"
+                        value={address.line1 || ""}
+                        onChange={(e) =>
+                          handleFieldChange("line1", e.target.value)
+                        }
+                        className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
+                      />
+                      {errors.line1 && (
+                        <p className="text-red-600 text-[12px] mt-1">
+                          {errors.line1}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label
+                        htmlFor="checkout-line2"
+                        className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
+                      >
+                        {t("line2")}
+                      </label>
+                      <input
+                        id="checkout-line2"
+                        type="text"
+                        value={address.line2 || ""}
+                        onChange={(e) =>
+                          handleFieldChange("line2", e.target.value)
+                        }
+                        className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label
-                      htmlFor="checkout-phone"
-                      className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
-                    >
-                      {t("phone")}*
-                    </label>
-                    <input
-                      id="checkout-phone"
-                      type="tel"
-                      value={address.phone || ""}
-                      onChange={(e) =>
-                        handleFieldChange("phone", e.target.value)
-                      }
-                      className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
-                    />
-                    {errors.phone && (
-                      <p className="text-red-600 text-[12px] mt-1">
-                        {errors.phone}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="checkout-emirate"
-                      className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
-                    >
-                      {t("emirate")}*
-                    </label>
-                    <select
-                      id="checkout-emirate"
-                      value={address.emirate || ""}
-                      onChange={(e) =>
-                        handleFieldChange("emirate", e.target.value)
-                      }
-                      className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
-                    >
-                      <option value="">{t("selectEmirate")}</option>
-                      {EMIRATES.map((emirate) => (
-                        <option key={emirate} value={emirate}>
-                          {emirate}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.emirate && (
-                      <p className="text-red-600 text-[12px] mt-1">
-                        {errors.emirate}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="checkout-city"
-                      className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
-                    >
-                      {t("city")}*
-                    </label>
-                    <input
-                      id="checkout-city"
-                      type="text"
-                      value={address.city || ""}
-                      onChange={(e) =>
-                        handleFieldChange("city", e.target.value)
-                      }
-                      className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
-                    />
-                    {errors.city && (
-                      <p className="text-red-600 text-[12px] mt-1">
-                        {errors.city}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label
-                      htmlFor="checkout-line1"
-                      className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
-                    >
-                      {t("line1")}*
-                    </label>
-                    <input
-                      id="checkout-line1"
-                      type="text"
-                      value={address.line1 || ""}
-                      onChange={(e) =>
-                        handleFieldChange("line1", e.target.value)
-                      }
-                      className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
-                    />
-                    {errors.line1 && (
-                      <p className="text-red-600 text-[12px] mt-1">
-                        {errors.line1}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label
-                      htmlFor="checkout-line2"
-                      className="block [font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-2"
-                    >
-                      {t("line2")}
-                    </label>
-                    <input
-                      id="checkout-line2"
-                      type="text"
-                      value={address.line2 || ""}
-                      onChange={(e) =>
-                        handleFieldChange("line2", e.target.value)
-                      }
-                      className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
-                    />
-                  </div>
+                  {usingOwnFabric && (
+                    <p className="[font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) mt-6">
+                      {t("ownFabricPickupNote")}
+                    </p>
+                  )}
                 </div>
-
-                {usingOwnFabric && (
-                  <p className="[font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) mt-6">
-                    {t("ownFabricPickupNote")}
+              ) : (
+                <div className="border border-(--color-border) bg-white p-6 sm:p-8 mb-6">
+                  <h2 className="[font-family:var(--font-display)] text-[22px] mb-4">
+                    {locale === "ar"
+                      ? "معلومات الاستلام"
+                      : "Pickup Information"}
+                  </h2>
+                  <div className="[font-family:var(--font-body)] text-[14px] text-(--color-grey-muted) space-y-2">
+                    <p>
+                      {locale === "ar"
+                        ? "يمكنك استلام طلبك من المتجر في:"
+                        : "You selected pickup. Collect your order from our store at:"}
+                    </p>
+                    <div className="mt-3 space-y-1">
+                      <p className="font-semibold text-black">
+                        {getShopDisplayName()}
+                      </p>
+                      {getShopLocation() && <p>{getShopLocation()}</p>}
+                      {getShopCity() && <p>{getShopCity()}</p>}
+                      {tailorShop?.phone && (
+                        <p className="mt-2 text-sm">
+                          <span className="text-(--color-grey-muted)">
+                            {locale === "ar" ? "هاتف: " : "Phone: "}
+                          </span>
+                          {tailorShop.phone}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="mt-4 text-[12px] text-gray-400">
+                    {locale === "ar"
+                      ? "لا توجد رسوم توصيل."
+                      : "No delivery fee applies."}
                   </p>
-                )}
-              </div>
+                </div>
+              )}
 
+              {/* Payment - Always Show */}
               <div className="border border-(--color-border) bg-white p-6 sm:p-8 mb-6">
                 <h2 className="[font-family:var(--font-display)] text-[22px] mb-4">
                   {t("paymentTitle")}
@@ -548,8 +655,44 @@ export default function CustomOrderCheckoutStep() {
                 </p>
               </div>
 
+              {/* Order Options - Always Show */}
+              <div className="border border-(--color-border) bg-[#FDFBF7] p-6 sm:p-8 mb-6">
+                <h2 className="[font-family:var(--font-display)] text-[20px] mb-4">
+                  {locale === "ar"
+                    ? "خيارات الطلب (اختياري)"
+                    : "Order Options (Optional)"}
+                </h2>
+                <div className="space-y-4">
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      id="add-pocket-checkbox"
+                      checked={addPocket}
+                      onChange={(e) => setAddPocket(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                    />
+                    <span className="[font-family:var(--font-body)] text-[13px] text-black leading-tight">
+                      {locale === "ar" ? "إضافة جيب" : "Add a Pocket"}
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      id="add-bottom-wide-fold-checkbox"
+                      checked={addBottomWideFold}
+                      onChange={(e) => setAddBottomWideFold(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                    />
+                    <span className="[font-family:var(--font-body)] text-[13px] text-black leading-tight">
+                      {locale === "ar"
+                        ? "إضافة طية سفلية عريضة"
+                        : "Add a bottom wide fold"}
+                    </span>
+                  </label>
+                </div>
+              </div>
 
-
+              {/* Confirm & Submit - Always Show */}
               <label className="flex items-start gap-3 mt-6 mb-6 cursor-pointer select-none">
                 <input
                   type="checkbox"

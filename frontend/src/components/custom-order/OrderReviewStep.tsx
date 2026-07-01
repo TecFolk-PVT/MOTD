@@ -21,6 +21,8 @@ import { formatCurrency } from "@/lib/format";
 import { formatDesignCategory } from "@/lib/tailors";
 import ConfiguratorStepHeader from "@/components/custom-order/ConfiguratorStepHeader";
 
+type DeliveryType = "pickup" | "delivery";
+
 function hasAnyMeasurements(measurements: CustomOrderMeasurements): boolean {
   return CUSTOM_ORDER_MEASUREMENT_FIELD_KEYS.some(
     (field) => measurements[field] !== null,
@@ -34,7 +36,7 @@ export default function OrderReviewStep() {
   const params = useParams();
   const locale = params.locale === "ar" ? "ar" : "en";
 
-  const { draft, isHydrated } = useCustomOrder();
+  const { draft, isHydrated, deliveryType, setDeliveryType } = useCustomOrder();
   const usingOwnFabric = useOwnFabric(draft);
 
   const [pricing, setPricing] = useState<CustomOrderPricingBreakdown | null>(
@@ -48,12 +50,10 @@ export default function OrderReviewStep() {
     [draft, isHydrated],
   );
 
+  // Recalculate pricing when delivery type changes
   useEffect(() => {
-    if (!isHydrated) return;
-
-    if (!previewPayload) {
+    if (!isHydrated || !previewPayload) {
       setPricing(null);
-      setPricingError(t("incompleteDraft"));
       return;
     }
 
@@ -62,10 +62,15 @@ export default function OrderReviewStep() {
         setLoadingPricing(true);
         setPricingError(null);
 
+        const payload = {
+          ...previewPayload,
+          deliveryType, // Pass delivery type to backend
+        };
+
         const data = await api.post<{
           success: boolean;
           pricing: CustomOrderPricingBreakdown;
-        }>("/api/orders/custom/preview", previewPayload);
+        }>("/api/orders/custom/preview", payload);
 
         if (!data?.success || !data.pricing) {
           throw new Error("Failed to load price preview");
@@ -84,7 +89,7 @@ export default function OrderReviewStep() {
     };
 
     fetchPreview();
-  }, [isHydrated, previewPayload, t]);
+  }, [isHydrated, previewPayload, deliveryType, t]);
 
   const canContinue = isReviewStepComplete(draft, pricing !== null);
 
@@ -97,6 +102,7 @@ export default function OrderReviewStep() {
 
   const handleContinue = () => {
     if (!canContinue) return;
+    // Store delivery type in context/session before checkout
     router.push("/custom-order/checkout");
   };
 
@@ -122,6 +128,7 @@ export default function OrderReviewStep() {
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+        {/* Left column - Order summary (unchanged) */}
         <section className="border border-(--color-border) bg-[#FDFAF5] p-6 sm:p-8">
           <h2 className="[font-family:var(--font-display)] text-[22px] mb-6">
             {t("summaryTitle")}
@@ -240,6 +247,7 @@ export default function OrderReviewStep() {
           </dl>
         </section>
 
+        {/* Right column - Pricing with toggle */}
         <section className="border border-(--color-border) bg-white p-6 sm:p-8">
           <h2 className="[font-family:var(--font-display)] text-[22px] mb-6">
             {t("pricingTitle")}
@@ -291,13 +299,56 @@ export default function OrderReviewStep() {
                 </span>
               </div>
 
-              <div className="flex justify-between gap-4">
-                <span className="text-(--color-grey-muted)">
-                  {t("lines.deliveryFee")}
-                </span>
-                <span className="text-black shrink-0">
-                  {formatCurrency(pricing.deliveryFee, locale)}
-                </span>
+              {/* Delivery/Pickup Toggle - iOS style switch */}
+              <div className="py-3 border-t border-(--color-border) first:border-t-0">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                  <span className="text-(--color-grey-muted) [font-family:var(--font-body)] text-[14px]">
+                    Delivery Method
+                  </span>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-2">
+                    <label className="inline-flex items-center cursor-pointer select-none">
+                      <span
+                        className={`text-[10px] uppercase tracking-[0.2em] font-ui transition-colors mr-2 ${
+                          deliveryType === "pickup"
+                            ? "text-black"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        Pickup
+                      </span>
+
+                      <input
+                        type="checkbox"
+                        checked={deliveryType === "delivery"}
+                        onChange={(e) =>
+                          setDeliveryType(
+                            e.target.checked ? "delivery" : "pickup",
+                          )
+                        }
+                        className="sr-only peer"
+                      />
+
+                      <div className="relative w-11 h-6 bg-[#D1CDC5] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black shadow-inner"></div>
+
+                      <span
+                        className={`text-[10px] uppercase tracking-[0.2em] font-ui transition-colors ml-2 ${
+                          deliveryType === "delivery"
+                            ? "text-black"
+                            : "text-gray-400"
+                        }`}
+                      >
+                        Delivery
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <p className="mt-1.5 text-[10px] text-gray-400 font-ui tracking-[0.12em] text-right">
+                  {deliveryType === "delivery"
+                    ? "AED 35 delivery fee applies"
+                    : "Free pickup from store"}
+                </p>
               </div>
 
               <div className="flex justify-between gap-4 pt-3 border-t border-(--color-border)">
@@ -305,7 +356,12 @@ export default function OrderReviewStep() {
                   {t("lines.subtotal")}
                 </span>
                 <span className="text-black shrink-0">
-                  {formatCurrency(pricing.subtotal, locale)}
+                  {formatCurrency(
+                    deliveryType === "delivery"
+                      ? pricing.subtotal
+                      : pricing.subtotal - pricing.deliveryFee,
+                    locale,
+                  )}
                 </span>
               </div>
 
@@ -314,7 +370,13 @@ export default function OrderReviewStep() {
                   {t("lines.vat", { rate: vatPercent })}
                 </span>
                 <span className="text-black shrink-0">
-                  {formatCurrency(pricing.vatAmount, locale)}
+                  {formatCurrency(
+                    deliveryType === "delivery"
+                      ? pricing.vatAmount
+                      : pricing.vatAmount -
+                          pricing.deliveryFee * pricing.vatRate,
+                    locale,
+                  )}
                 </span>
               </div>
 
@@ -323,7 +385,13 @@ export default function OrderReviewStep() {
                   {t("lines.total")}
                 </span>
                 <span className="[font-family:var(--font-display)] text-[22px] text-black shrink-0">
-                  {formatCurrency(pricing.total, locale)}
+                  {formatCurrency(
+                    deliveryType === "delivery"
+                      ? pricing.total
+                      : pricing.total -
+                          pricing.deliveryFee * (1 + pricing.vatRate),
+                    locale,
+                  )}
                 </span>
               </div>
             </div>

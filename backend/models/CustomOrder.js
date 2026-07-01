@@ -223,11 +223,11 @@ const customOrderSchema = new mongoose.Schema(
     },
     customerDeliveryAddress: {
       type: deliveryAddressSchema,
-      required: true,
+      required: false,
     },
     pickupAddress: {
       type: pickupAddressSchema,
-      required: true,
+      required: false,
     },
     status: {
       type: String,
