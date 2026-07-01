@@ -16,6 +16,7 @@ import {
   Mail,
   User,
   Ruler,
+  Sliders,
 } from "lucide-react";
 import StatusBadge from "@/components/admin/StatusBadge";
 import {
@@ -122,6 +123,7 @@ export default function TailorOrdersPage() {
   const [error, setError] = useState<string | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
+  const [expandedOptions, setExpandedOptions] = useState<Record<string, boolean>>({});
   const [note, setNote] = useState<Record<string, string>>({});
 
   // Filters State
@@ -181,6 +183,13 @@ export default function TailorOrdersPage() {
 
   const toggleExpand = (orderId: string) => {
     setExpandedOrders((prev) => ({
+      ...prev,
+      [orderId]: !prev[orderId],
+    }));
+  };
+
+  const toggleExpandOptions = (orderId: string) => {
+    setExpandedOptions((prev) => ({
       ...prev,
       [orderId]: !prev[orderId],
     }));
@@ -335,6 +344,7 @@ export default function TailorOrdersPage() {
               typeof order.userId === "object" ? order.userId.phone : "";
             const fabricName = order.fabricSnapshot?.name || (locale === "ar" ? "قماش خاص" : "Self Fabric");
             const isExpanded = !!expandedOrders[order._id];
+            const isOptionsExpanded = !!expandedOptions[order._id];
 
             return (
               <div
@@ -399,15 +409,29 @@ export default function TailorOrdersPage() {
 
                 {/* Sizing measurements details block */}
                 <div className="px-5 pb-5">
-                  <button
-                    type="button"
-                    onClick={() => toggleExpand(order._id)}
-                    className="inline-flex items-center gap-1.5 text-xs text-black/60 hover:text-black font-medium transition py-1 hover:cursor-pointer"
-                  >
-                    <Ruler className="w-3.5 h-3.5" />
-                    {isExpanded ? t("hideMeasurements") : t("showMeasurements")}
-                    {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  </button>
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(order._id)}
+                      className="inline-flex items-center gap-1.5 text-xs text-black/60 hover:text-black font-medium transition py-1 hover:cursor-pointer"
+                    >
+                      <Ruler className="w-3.5 h-3.5" />
+                      {isExpanded ? t("hideMeasurements") : t("showMeasurements")}
+                      {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => toggleExpandOptions(order._id)}
+                      className="inline-flex items-center gap-1.5 text-xs text-black/60 hover:text-black font-medium transition py-1 hover:cursor-pointer"
+                    >
+                      <Sliders className="w-3.5 h-3.5" />
+                      {locale === "ar"
+                        ? (isOptionsExpanded ? "إخفاء خيارات الطلب" : "عرض خيارات الطلب")
+                        : (isOptionsExpanded ? "Hide Order Options" : "Show Order Options")}
+                      {isOptionsExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    </button>
+                  </div>
 
                   {isExpanded && order.measurements && (
                     <div className="mt-4 p-4 border border-dashed border-gray-200 rounded-xl bg-gray-50/50 grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
@@ -441,20 +465,34 @@ export default function TailorOrdersPage() {
                           <p className="text-xs text-gray-700 mt-1">{order.measurements.notes}</p>
                         </div>
                       )}
-                      {(order.addPocket || order.addBottomWideFold) && (
-                        <div className="col-span-full flex flex-wrap gap-2 mt-2">
-                          {order.addPocket && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg">
-                              <span>✓ Add a Pocket</span>
-                            </span>
-                          )}
-                          {order.addBottomWideFold && (
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-800 bg-blue-50 border border-blue-200 rounded-lg">
-                              <span>✓ Add a bottom wide fold</span>
-                            </span>
-                          )}
-                        </div>
-                      )}
+                    </div>
+                  )}
+
+                  {isOptionsExpanded && (
+                    <div className="mt-4 p-4 border border-dashed border-gray-200 rounded-xl bg-gray-50/50">
+                      <p className="text-3xs text-gray-400 uppercase font-medium mb-3">
+                        {locale === "ar" ? "خيارات الطلب" : "Order Options"}
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {order.addPocket ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-800 bg-green-50 border border-green-200 rounded-lg animate-fade-in">
+                            <span>✓ {locale === "ar" ? "إضافة جيب" : "Add a Pocket"}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg">
+                            <span>{locale === "ar" ? "بدون جيب" : "No Pocket"}</span>
+                          </span>
+                        )}
+                        {order.addBottomWideFold ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-800 bg-green-50 border border-green-200 rounded-lg animate-fade-in">
+                            <span>✓ {locale === "ar" ? "إضافة طية سفلية عريضة" : "Add a bottom wide fold"}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-lg">
+                            <span>{locale === "ar" ? "بدون طية سفلية عريضة" : "No bottom wide fold"}</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
