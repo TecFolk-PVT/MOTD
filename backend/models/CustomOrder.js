@@ -257,6 +257,8 @@ const customOrderSchema = new mongoose.Schema(
       default: null,
     },
     estimatedReadyDate: { type: Date, default: null },
+    addPocket: { type: Boolean, default: false },
+    addBottomWideFold: { type: Boolean, default: false },
   },
   {
     timestamps: true,

@@ -87,6 +87,8 @@ export default function CustomOrderCheckoutStep() {
     Array<{ name: string }>
   >([]);
   const [measurementsConfirmed, setMeasurementsConfirmed] = useState(false);
+  const [addPocket, setAddPocket] = useState(false);
+  const [addBottomWideFold, setAddBottomWideFold] = useState(false);
 
   const [profileLoading, setProfileLoading] = useState(true);
 
@@ -232,6 +234,8 @@ export default function CustomOrderCheckoutStep() {
       setSubmitError(t("incompleteDraft"));
       return;
     }
+    payload.addPocket = addPocket;
+    payload.addBottomWideFold = addBottomWideFold;
 
     setIsSubmitting(true);
     setSubmitError(null);
@@ -508,6 +512,38 @@ export default function CustomOrderCheckoutStep() {
                 <p className="[font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) mt-2">
                   {t("codDescription")}
                 </p>
+              </div>
+
+              <div className="border border-(--color-border) bg-[#FDFBF7] p-6 sm:p-8 mb-6">
+                <h2 className="[font-family:var(--font-display)] text-[20px] mb-4">
+                  {locale === "ar" ? "خيارات الطلب (اختياري)" : "Order Options (Optional)"}
+                </h2>
+                <div className="space-y-4">
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      id="add-pocket-checkbox"
+                      checked={addPocket}
+                      onChange={(e) => setAddPocket(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                    />
+                    <span className="[font-family:var(--font-body)] text-[13px] text-black leading-tight">
+                      {locale === "ar" ? "إضافة جيب" : "Add a Pocket"}
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      id="add-bottom-wide-fold-checkbox"
+                      checked={addBottomWideFold}
+                      onChange={(e) => setAddBottomWideFold(e.target.checked)}
+                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                    />
+                    <span className="[font-family:var(--font-body)] text-[13px] text-black leading-tight">
+                      {locale === "ar" ? "إضافة طية سفلية عريضة" : "Add a bottom wide fold"}
+                    </span>
+                  </label>
+                </div>
               </div>
 
               <label className="flex items-start gap-3 mt-6 mb-6 cursor-pointer select-none">
