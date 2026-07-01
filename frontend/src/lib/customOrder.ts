@@ -654,6 +654,8 @@ export interface CustomOrderCreatePayload extends CustomOrderPreviewPayload {
     customerDeliveryAddress: CustomOrderDeliveryAddress;
     pickupAddress?: CustomOrderDeliveryAddress;
     paymentMethod: "cod";
+    addPocket?: boolean;
+    addBottomWideFold?: boolean;
 }
 
 export function buildCustomOrderCreatePayload(

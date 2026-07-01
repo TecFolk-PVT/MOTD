@@ -411,6 +411,8 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       customerDeliveryAddress,
       pickupAddress,
       paymentMethod = "cod",
+      addPocket = false,
+      addBottomWideFold = false,
     } = req.body;
 
     if (!PAYMENT_METHODS.includes(paymentMethod)) {
@@ -455,6 +457,8 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
         ],
         pricing,
         paymentMethod,
+        addPocket,
+        addBottomWideFold,
       });
 
       return res.status(201).json({
@@ -527,6 +531,8 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       ],
       pricing,
       paymentMethod,
+      addPocket,
+      addBottomWideFold,
     });
 
     res.status(201).json({

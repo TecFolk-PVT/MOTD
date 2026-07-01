@@ -63,6 +63,8 @@ interface Order {
     currency: string;
     tailoringFee: number;
   };
+  addPocket?: boolean;
+  addBottomWideFold?: boolean;
 }
 
 const TOAST_BASE = {
@@ -437,6 +439,20 @@ export default function TailorOrdersPage() {
                             {locale === "ar" ? "ملاحظات المقاس" : "Sizing Notes"}
                           </p>
                           <p className="text-xs text-gray-700 mt-1">{order.measurements.notes}</p>
+                        </div>
+                      )}
+                      {(order.addPocket || order.addBottomWideFold) && (
+                        <div className="col-span-full flex flex-wrap gap-2 mt-2">
+                          {order.addPocket && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg">
+                              <span>✓ Add a Pocket</span>
+                            </span>
+                          )}
+                          {order.addBottomWideFold && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-800 bg-blue-50 border border-blue-200 rounded-lg">
+                              <span>✓ Add a bottom wide fold</span>
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
