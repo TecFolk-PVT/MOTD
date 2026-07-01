@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { api, type ApiError } from "@/lib/api/client";
@@ -14,31 +14,118 @@ import MainLayout from "../main/layout";
 import FadeInSection from "@/components/shared/fadeInSection";
 
 const colorOptions = [
-  { name: "Pearl Ivory", value: "ivory", bg: "#F5F0E8" },
-  { name: "Desert Sand", value: "sand", bg: "#E8E4DC" },
-  { name: "Midnight Oil", value: "black", bg: "#1A1A18" },
-  { name: "Royal Gold", value: "gold", bg: "#C9A96E" },
-  { name: "Crimson", value: "red", bg: "#DC143C" },
-  { name: "Sapphire", value: "blue", bg: "#0F52BA" },
-  { name: "Emerald", value: "green", bg: "#50C878" },
-  { name: "Platinum", value: "silver", bg: "#E5E4E2" },
-  { name: "Rose Gold", value: "pink", bg: "#B76E79" },
-  { name: "Copper", value: "copper", bg: "#B87333" },
-  { name: "Slate", value: "gray", bg: "#708090" },
+  { name: "Aqua", value: "aqua", bg: "#00FFFF" },
+  { name: "Aquamarine", value: "aquamarine", bg: "#7FFFD4" },
+  { name: "Beige", value: "beige", bg: "#F5F5DC" },
+  { name: "Bisque", value: "bisque", bg: "#FFE4C4" },
+  { name: "Black", value: "black", bg: "#000000" },
+  { name: "Blue", value: "blue", bg: "#0000FF" },
+  { name: "Blue Violet", value: "blueviolet", bg: "#8A2BE2" },
+  { name: "Brown", value: "brown", bg: "#A52A2A" },
+  { name: "Burlywood", value: "burlywood", bg: "#DEB887" },
+  { name: "Cadet Blue", value: "cadetblue", bg: "#5F9EA0" },
+  { name: "Chocolate", value: "chocolate", bg: "#D2691E" },
+  { name: "Coral", value: "coral", bg: "#FF7F50" },
+  { name: "Cornflower Blue", value: "cornflowerblue", bg: "#6495ED" },
+  { name: "Cornsilk", value: "cornsilk", bg: "#FFF8DC" },
+  { name: "Crimson", value: "crimson", bg: "#DC143C" },
+  { name: "Cyan", value: "cyan", bg: "#00FFFF" },
+  { name: "Dark Blue", value: "darkblue", bg: "#00008B" },
+  { name: "Dark Cyan", value: "darkcyan", bg: "#008B8B" },
+  { name: "Dark Goldenrod", value: "darkgoldenrod", bg: "#B8860B" },
+  { name: "Dark Gray", value: "darkgray", bg: "#A9A9A9" },
+  { name: "Dark Green", value: "darkgreen", bg: "#006400" },
+  { name: "Dark Khaki", value: "darkkhaki", bg: "#BDB76B" },
+  { name: "Dark Magenta", value: "darkmagenta", bg: "#8B008B" },
+  { name: "Dark Orchid", value: "darkorchid", bg: "#9932CC" },
+  { name: "Dark Red", value: "darkred", bg: "#8B0000" },
+  { name: "Dark Salmon", value: "darksalmon", bg: "#E9967A" },
+  { name: "Dark Sea Green", value: "darkseagreen", bg: "#8FBC8F" },
+  { name: "Dark Slate Blue", value: "darkslateblue", bg: "#483D8B" },
+  { name: "Dark Slate Gray", value: "darkslategray", bg: "#2F4F4F" },
+  { name: "Dark Turquoise", value: "darkturquoise", bg: "#00CED1" },
+  { name: "Dark Violet", value: "darkviolet", bg: "#9400D3" },
+  { name: "Deep Pink", value: "deeppink", bg: "#FF1493" },
+  { name: "Deep Sky Blue", value: "deepskyblue", bg: "#00BFFF" },
+  { name: "Dim Gray", value: "dimgray", bg: "#696969" },
+  { name: "Dodger Blue", value: "dodgerblue", bg: "#1E90FF" },
+  { name: "Firebrick", value: "firebrick", bg: "#B22222" },
+  { name: "Fuchsia", value: "fuchsia", bg: "#FF00FF" },
+  { name: "Gainsboro", value: "gainsboro", bg: "#DCDCDC" },
+  { name: "Gold", value: "gold", bg: "#FFD700" },
+  { name: "Goldenrod", value: "goldenrod", bg: "#DAA520" },
+  { name: "Gray", value: "gray", bg: "#808080" },
+  { name: "Green", value: "green", bg: "#008000" },
+  { name: "Green Yellow", value: "greenyellow", bg: "#ADFF2F" },
+  { name: "Grey", value: "grey", bg: "#808080" },
+  { name: "Hot Pink", value: "hotpink", bg: "#FF69B4" },
+  { name: "Indian Red", value: "indianred", bg: "#CD5C5C" },
+  { name: "Indigo", value: "indigo", bg: "#4B0082" },
+  { name: "Ivory", value: "ivory", bg: "#FFFFF0" },
+  { name: "Khaki", value: "khaki", bg: "#F0E68C" },
+  { name: "Lavender", value: "lavender", bg: "#E6E6FA" },
+  { name: "Light Blue", value: "lightblue", bg: "#ADD8E6" },
+  { name: "Light Gray", value: "lightgray", bg: "#D3D3D3" },
+  { name: "Light Green", value: "lightgreen", bg: "#90EE90" },
+  { name: "Light Pink", value: "lightpink", bg: "#FFB6C1" },
+  { name: "Light Salmon", value: "lightsalmon", bg: "#FFA07A" },
+  { name: "Light Sea Green", value: "lightseagreen", bg: "#20B2AA" },
+  { name: "Light Sky Blue", value: "lightskyblue", bg: "#87CEFA" },
+  { name: "Light Slate Gray", value: "lightslategray", bg: "#778899" },
+  { name: "Light Steel Blue", value: "lightsteelblue", bg: "#B0C4DE" },
+  { name: "Maroon", value: "maroon", bg: "#800000" },
+  { name: "Medium Blue", value: "mediumblue", bg: "#0000CD" },
+  { name: "Medium Purple", value: "mediumpurple", bg: "#9370DB" },
+  { name: "Medium Sea Green", value: "mediumseagreen", bg: "#3CB371" },
+  { name: "Medium Slate Blue", value: "mediumslateblue", bg: "#7B68EE" },
+  { name: "Medium Turquoise", value: "mediumturquoise", bg: "#48D1CC" },
+  { name: "Medium Violet Red", value: "mediumvioletred", bg: "#C71585" },
+  { name: "Midnight Blue", value: "midnightblue", bg: "#191970" },
+  { name: "Moccasin", value: "moccasin", bg: "#FFE4B5" },
+  { name: "Navy", value: "navy", bg: "#000080" },
+  { name: "Olive", value: "olive", bg: "#808000" },
+  { name: "Olive Drab", value: "olivedrab", bg: "#6B8E23" },
+  { name: "Orange", value: "orange", bg: "#FFA500" },
+  { name: "Orchid", value: "orchid", bg: "#DA70D6" },
+  { name: "Pale Goldenrod", value: "palegoldenrod", bg: "#EEE8AA" },
+  { name: "Pale Green", value: "palegreen", bg: "#98FB98" },
+  { name: "Pale Turquoise", value: "paleturquoise", bg: "#AFEEEE" },
+  { name: "Pale Violet Red", value: "palevioletred", bg: "#DB7093" },
+  { name: "Peach Puff", value: "peachpuff", bg: "#FFDAB9" },
+  { name: "Pink", value: "pink", bg: "#FFC0CB" },
+  { name: "Plum", value: "plum", bg: "#DDA0DD" },
+  { name: "Powder Blue", value: "powderblue", bg: "#B0E0E6" },
+  { name: "Purple", value: "purple", bg: "#800080" },
+  { name: "Rebecca Purple", value: "rebeccapurple", bg: "#663399" },
+  { name: "Red", value: "red", bg: "#FF0000" },
+  { name: "Rosy Brown", value: "rosybrown", bg: "#BC8F8F" },
+  { name: "Royal Blue", value: "royalblue", bg: "#4169E1" },
+  { name: "Saddle Brown", value: "saddlebrown", bg: "#8B4513" },
+  { name: "Salmon", value: "salmon", bg: "#FA8072" },
+  { name: "Sandy Brown", value: "sandybrown", bg: "#F4A460" },
+  { name: "Sea Green", value: "seagreen", bg: "#2E8B57" },
+  { name: "Silver", value: "silver", bg: "#C0C0C0" },
+  { name: "Sky Blue", value: "skyblue", bg: "#87CEEB" },
+  { name: "Slate Blue", value: "slateblue", bg: "#6A5ACD" },
+  { name: "Slate Gray", value: "slategray", bg: "#708090" },
+  { name: "Steel Blue", value: "steelblue", bg: "#4682B4" },
+  { name: "Tan", value: "tan", bg: "#D2B48C" },
+  { name: "Teal", value: "teal", bg: "#008080" },
+  { name: "Thistle", value: "thistle", bg: "#D8BFD8" },
+  { name: "Tomato", value: "tomato", bg: "#FF6347" },
+  { name: "Turquoise", value: "turquoise", bg: "#40E0D0" },
+  { name: "Violet", value: "violet", bg: "#EE82EE" },
+  { name: "Wheat", value: "wheat", bg: "#F5DEB3" },
   { name: "White", value: "white", bg: "#FFFFFF" },
-];
-
-const priceRanges = [
-  { id: "under-500", label: "UNDER AED 500", min: 0, max: 500 },
-  { id: "500-1000", label: "AED 500 – 1,000", min: 500, max: 1000 },
-  { id: "1000-1500", label: "AED 1,000 – 1,500", min: 1000, max: 1500 },
-  { id: "above-1500", label: "ABOVE AED 1,500", min: 1500, max: Infinity },
+  { name: "Yellow", value: "yellow", bg: "#FFFF00" },
+  { name: "Yellow Green", value: "yellowgreen", bg: "#9ACD32" },
 ];
 
 interface FilterState {
   categories: string[];
   colors: string[];
-  priceRange: string | null;
+  minPrice: number;
+  maxPrice: number;
   inStockOnly: boolean;
 }
 
@@ -91,34 +178,224 @@ const CustomCheckbox = ({
   </button>
 );
 
-// ─── Radio component ─────────────────────────────────────────────────────────
-const CustomRadio = ({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: () => void;
-}) => (
-  <button
-    type="button"
-    role="radio"
-    aria-checked={checked}
-    onClick={onChange}
-    className={`
-      w-4 h-4 shrink-0 rounded-full border transition-all duration-150 flex items-center justify-center
-      ${checked ? "border-black" : "border-[#C8C4BC] hover:border-black"}
-    `}
-  >
-    {checked && <span className="w-2 h-2 rounded-full bg-black block" />}
-  </button>
-);
-
 // ─── Section label ────────────────────────────────────────────────────────────
 const FilterLabel = ({ children }: { children: React.ReactNode }) => (
   <p className="text-[10px] tracking-[0.22em] font-normal text-black uppercase mb-3 pb-2.5 border-b border-[#E4E0D8] w-full">
     {children}
   </p>
 );
+
+// ─── Color Dropdown with Checkboxes ──────────────────────────────────────────
+const ColorDropdown = ({
+  selected,
+  onChange,
+  isAr,
+}: {
+  selected: string[];
+  onChange: (value: string[]) => void;
+  isAr: boolean;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggleColor = (value: string) => {
+    const newSelected = selected.includes(value)
+      ? selected.filter((c) => c !== value)
+      : [...selected, value];
+    onChange(newSelected);
+  };
+
+  const filtered = colorOptions.filter((c) =>
+    c.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const selectedCount = selected.length;
+
+  return (
+    <div ref={dropdownRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full border border-[#E4E0D8] bg-transparent px-4 py-3 text-[11px] tracking-[0.14em] uppercase font-mono flex items-center justify-between hover:border-black transition"
+      >
+        <span>
+          {selectedCount > 0
+            ? `${selectedCount} ${isAr ? "لون" : "color"}${selectedCount > 1 ? (isAr ? "" : "s") : ""}`
+            : isAr
+              ? "اختر الألوان"
+              : "Select Colors"}
+        </span>
+        <svg
+          className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 border border-[#E4E0D8] shadow-lg max-h-64 overflow-y-auto bg-[#FDFAF5]">
+          <input
+            type="text"
+            placeholder={isAr ? "ابحث عن لون..." : "Search color..."}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full px-4 py-2.5 text-[11px] tracking-[0.14em] font-mono border-b border-[#E4E0D8] focus:outline-none sticky top-0 bg-[#FDFAF5]"
+          />
+          <button
+            onClick={() => {
+              onChange([]);
+              setSearch("");
+            }}
+            className="w-full px-4 py-2.5 text-left text-[11px] tracking-[0.14em] uppercase hover:bg-[#EDE8E0] transition"
+          >
+            {isAr ? "إلغاء الكل" : "Clear All"}
+          </button>
+          {filtered.map((c) => (
+            <button
+              key={c.value}
+              onClick={() => toggleColor(c.value)}
+              className={`w-full px-4 py-2.5 text-left text-[11px] tracking-[0.14em] flex items-center gap-3 hover:bg-[#EDE8E0] transition ${
+                selected.includes(c.value) ? "bg-[#EDE8E0]" : ""
+              }`}
+            >
+              <span
+                className="w-4 h-4 rounded-full shrink-0 border border-[#C8C4BC]"
+                style={{ backgroundColor: c.bg }}
+              />
+              <span className="flex-1">{c.name}</span>
+              {selected.includes(c.value) && (
+                <svg
+                  className="w-4 h-4 text-black"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+            </button>
+          ))}
+          {filtered.length === 0 && (
+            <p className="px-4 py-3 text-[11px] text-[#8A8A80]">
+              {isAr ? "لم يتم العثور على ألوان" : "No colors found"}
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ─── Price Range Slider ──────────────────────────────────────────────────────
+const PriceRangeSlider = ({
+  minPrice,
+  maxPrice,
+  onMinChange,
+  onMaxChange,
+  isAr,
+}: {
+  minPrice: number;
+  maxPrice: number;
+  onMinChange: (value: number) => void;
+  onMaxChange: (value: number) => void;
+  isAr: boolean;
+}) => {
+  const [localMin, setLocalMin] = useState(minPrice);
+  const [localMax, setLocalMax] = useState(maxPrice);
+
+  useEffect(() => {
+    setLocalMin(minPrice);
+  }, [minPrice]);
+
+  useEffect(() => {
+    setLocalMax(maxPrice);
+  }, [maxPrice]);
+
+  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    if (value <= localMax) {
+      setLocalMin(value);
+      onMinChange(value);
+    }
+  };
+
+  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    if (value >= localMin) {
+      setLocalMax(value);
+      onMaxChange(value);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between text-[13px] font-mono text-[#7A7A72]">
+        <span>AED 0</span>
+        <span>AED 100000</span>
+      </div>
+
+      <div className="flex gap-2 pt-1">
+        <input
+          type="number"
+          min={0}
+          max={100000}
+          step={1}
+          value={localMin}
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            if (val >= 0 && val <= localMax && val <= 100000) {
+              setLocalMin(val);
+              onMinChange(val);
+            }
+          }}
+          className="w-1/2 border border-[#E4E0D8] bg-transparent px-3 py-2 text-[13px] font-mono text-black focus:outline-none focus:border-black transition"
+        />
+        <input
+          type="number"
+          min={0}
+          max={100000}
+          step={1}
+          value={localMax}
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            if (val >= localMin && val <= 100000) {
+              setLocalMax(val);
+              onMaxChange(val);
+            }
+          }}
+          className="w-1/2 border border-[#E4E0D8] bg-transparent px-3 py-2 text-[13px] font-mono text-black focus:outline-none focus:border-black transition"
+        />
+      </div>
+    </div>
+  );
+};
 
 // ─── Pagination Component ─────────────────────────────────────────────────────
 const Pagination = ({
@@ -160,11 +437,10 @@ const Pagination = ({
 
   return (
     <div className="flex items-center justify-center gap-2 mt-12 pt-8 border-t border-[#E4E0D8]">
-      {/* Previous Button */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="group relative w-10 h-10 flex items-center justify-center rounded-lg border border-[#E4E0D8] bg-white text-black disabled:opacity-40 disabled:cursor-not-allowed hover:border-black hover:bg-black hover:text-white transition-all duration-200"
+        className="group relative w-10 h-10 flex items-center justify-center rounded-lg border border-[#E4E0D8] bg-transparent text-black disabled:opacity-40 disabled:cursor-not-allowed hover:border-black hover:bg-black hover:text-white transition-all duration-200"
         aria-label="Previous page"
       >
         <svg
@@ -182,33 +458,31 @@ const Pagination = ({
         </svg>
       </button>
 
-      {/* Page Numbers */}
       {getPageNumbers().map((page, index) => (
         <button
           key={index}
           onClick={() => typeof page === "number" && onPageChange(page)}
           disabled={page === "..."}
           className={`
-                        min-w-10 h-10 px-2 flex items-center justify-center rounded-lg font-mono text-[13px] tracking-wide
-                        transition-all duration-200
-                        ${
-                          page === currentPage
-                            ? "bg-black text-white border-black"
-                            : page === "..."
-                              ? "border-transparent cursor-default text-[#8A8A80]"
-                              : "border border-[#E4E0D8] bg-white text-black hover:border-black hover:bg-black hover:text-white"
-                        }
-                    `}
+            min-w-10 h-10 px-2 flex items-center justify-center rounded-lg font-mono text-[13px] tracking-wide
+            transition-all duration-200
+            ${
+              page === currentPage
+                ? "bg-black text-white border-black"
+                : page === "..."
+                  ? "border-transparent cursor-default text-[#8A8A80]"
+                  : "border border-[#E4E0D8] bg-transparent text-black hover:border-black hover:bg-black hover:text-white"
+            }
+          `}
         >
           {page}
         </button>
       ))}
 
-      {/* Next Button */}
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="group relative w-10 h-10 flex items-center justify-center rounded-lg border border-[#E4E0D8] bg-white text-black disabled:opacity-40 disabled:cursor-not-allowed hover:border-black hover:bg-black hover:text-white transition-all duration-200"
+        className="group relative w-10 h-10 flex items-center justify-center rounded-lg border border-[#E4E0D8] bg-transparent text-black disabled:opacity-40 disabled:cursor-not-allowed hover:border-black hover:bg-black hover:text-white transition-all duration-200"
         aria-label="Next page"
       >
         <svg
@@ -255,7 +529,8 @@ export default function ReadyMadeCatalogPage() {
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     colors: [],
-    priceRange: null,
+    minPrice: 0,
+    maxPrice: 100000,
     inStockOnly: false,
   });
 
@@ -323,7 +598,6 @@ export default function ReadyMadeCatalogPage() {
     });
   };
 
-  // ── Filtering and Sorting ─────────────────────────────────────────────────────────────
   let filteredProducts = products.filter((item) => {
     const activeTag = isAr ? item.tagAr || item.tag : item.tag;
     if (filters.categories.length > 0) {
@@ -332,13 +606,12 @@ export default function ReadyMadeCatalogPage() {
       }
     }
     if (!matchesColorFilter(item.colors, filters.colors)) return false;
-    if (filters.priceRange) {
-      const range = priceRanges.find((r) => r.id === filters.priceRange);
-      const price = item.finalSellingPriceAED ?? 0;
-      if (range && (price < range.min || price > range.max)) {
-        return false;
-      }
+
+    const price = item.finalSellingPriceAED ?? 0;
+    if (price < filters.minPrice || price > filters.maxPrice) {
+      return false;
     }
+
     if (filters.inStockOnly) {
       if (item.availableFabricStock === 0) {
         return false;
@@ -347,7 +620,6 @@ export default function ReadyMadeCatalogPage() {
     return true;
   });
 
-  // Sorting
   switch (sortBy) {
     case "price-low":
       filteredProducts.sort(
@@ -361,7 +633,6 @@ export default function ReadyMadeCatalogPage() {
       break;
     case "newest":
     default:
-      // Assuming order is newest from api
       filteredProducts = [...filteredProducts];
       break;
   }
@@ -375,7 +646,8 @@ export default function ReadyMadeCatalogPage() {
   const hasActiveFilters =
     filters.categories.length > 0 ||
     filters.colors.length > 0 ||
-    filters.priceRange !== null ||
+    filters.minPrice > 0 ||
+    filters.maxPrice < 100000 ||
     filters.inStockOnly;
 
   const toggleCategory = (id: string) => {
@@ -387,19 +659,24 @@ export default function ReadyMadeCatalogPage() {
     }));
     setCurrentPage(1);
   };
-  const toggleColor = (val: string) => {
+  const setColorFilter = (values: string[]) => {
     setFilters((prev) => ({
       ...prev,
-      colors: prev.colors.includes(val)
-        ? prev.colors.filter((c) => c !== val)
-        : [...prev.colors, val],
+      colors: values,
     }));
     setCurrentPage(1);
   };
-  const setPriceRange = (id: string) => {
+  const setMinPrice = (value: number) => {
     setFilters((prev) => ({
       ...prev,
-      priceRange: prev.priceRange === id ? null : id,
+      minPrice: value,
+    }));
+    setCurrentPage(1);
+  };
+  const setMaxPrice = (value: number) => {
+    setFilters((prev) => ({
+      ...prev,
+      maxPrice: value,
     }));
     setCurrentPage(1);
   };
@@ -411,7 +688,8 @@ export default function ReadyMadeCatalogPage() {
     setFilters({
       categories: [],
       colors: [],
-      priceRange: null,
+      minPrice: 0,
+      maxPrice: 100000,
       inStockOnly: false,
     });
     setCurrentPage(1);
@@ -423,7 +701,6 @@ export default function ReadyMadeCatalogPage() {
 
   if (!mounted) return null;
 
-  // ── Sidebar content ───────────────────────────────────────────────────────
   const SidebarContent = () => (
     <div className="flex flex-col gap-8">
       {/* Category */}
@@ -450,67 +727,26 @@ export default function ReadyMadeCatalogPage() {
         </div>
       </div>
 
-      {/* Color */}
+      {/* Color - Dropdown with Checkboxes */}
       <div>
-        <FilterLabel>{isAr ? "لوحة الألوان" : "Color Palette"}</FilterLabel>
-        <div className="flex flex-wrap gap-3">
-          {colorOptions.map((c) => (
-            <button
-              key={c.value}
-              type="button"
-              title={c.name}
-              onClick={() => toggleColor(c.value)}
-              className="group relative w-8 h-8 rounded-full transition-transform duration-200 hover:scale-110"
-              style={{
-                backgroundColor: c.bg,
-                boxShadow: filters.colors.includes(c.value)
-                  ? "0 0 0 2px #000, 0 0 0 4px rgba(0,0,0,0.12)"
-                  : "0 0 0 1px #D4D0C8",
-              }}
-            >
-              {filters.colors.includes(c.value) && (
-                <span className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-3 h-3" viewBox="0 0 10 8" fill="none">
-                    <path
-                      d="M1 4l3 3 5-6"
-                      stroke={
-                        c.value === "ivory" ||
-                        c.value === "sand" ||
-                        c.value === "white"
-                          ? "#000"
-                          : "#fff"
-                      }
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        <FilterLabel>{isAr ? "اللون" : "Color"}</FilterLabel>
+        <ColorDropdown
+          selected={filters.colors}
+          onChange={setColorFilter}
+          isAr={isAr}
+        />
       </div>
 
-      {/* Price Range */}
+      {/* Price Range - Slider */}
       <div>
         <FilterLabel>{isAr ? "نطاق السعر" : "Price Range"}</FilterLabel>
-        <div className="flex flex-col gap-3">
-          {priceRanges.map((r) => (
-            <label
-              key={r.id}
-              className="flex items-center gap-3 cursor-pointer group"
-            >
-              <CustomRadio
-                checked={filters.priceRange === r.id}
-                onChange={() => setPriceRange(r.id)}
-              />
-              <span className="text-[11px] tracking-[0.14em] uppercase font-mono text-black group-hover:opacity-60 transition-opacity">
-                {r.label}
-              </span>
-            </label>
-          ))}
-        </div>
+        <PriceRangeSlider
+          minPrice={filters.minPrice}
+          maxPrice={filters.maxPrice}
+          onMinChange={setMinPrice}
+          onMaxChange={setMaxPrice}
+          isAr={isAr}
+        />
       </div>
 
       {/* Availability */}
@@ -544,7 +780,7 @@ export default function ReadyMadeCatalogPage() {
     <MainLayout>
       <FadeInSection>
         <div className="min-h-screen bg-[#FDFAF5]">
-          {/* ── Hero Section - Full Width, Text Left ────────────────────────────────────── */}
+          {/* Hero Section */}
           <div className="py-12 sm:py-16 lg:py-24 border-b border-[#E4E0D8] px-4 sm:px-8 lg:px-12">
             <div className="w-full text-left">
               <div className="mb-4 xs:mb-6">
@@ -567,14 +803,14 @@ export default function ReadyMadeCatalogPage() {
             </div>
           </div>
 
-          {/* ── Modern Filter Bar - Full Width ────────────────────────────────── */}
-          <div className="sticky top-0 z-30 bg-[#FDFAF5] border-b border-[#E4E0D8] px-4 sm:px-8 lg:px-12">
+          {/* Filter Bar */}
+          <div className="sticky top-16 z-30 bg-[#FDFAF5] border-b border-[#E4E0D8] px-4 sm:px-8 lg:px-12">
             <div className="py-4">
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
-                    className="hidden lg:flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase hover:text-black/60 transition-colors"
+                    className="lg:hidden flex items-center gap-2 text-[11px] tracking-[0.18em] uppercase hover:text-black/60 transition-colors"
                   >
                     <svg
                       className="w-4 h-4"
@@ -605,7 +841,7 @@ export default function ReadyMadeCatalogPage() {
                           {cat}
                           <button
                             onClick={() => toggleCategory(cat)}
-                            className="hover:opacity-70 flex items-center justify-center hover:cursor-pointer"
+                            className="hover:opacity-70 flex items-center justify-center"
                           >
                             <svg
                               className="w-3 h-3"
@@ -623,43 +859,52 @@ export default function ReadyMadeCatalogPage() {
                           </button>
                         </span>
                       ))}
-                      {filters.colors.map((color) => (
-                        <span
-                          key={color}
-                          className="text-[10px] tracking-[0.14em] uppercase bg-black text-white px-3 py-1.5 flex items-center gap-2 rounded-full"
-                        >
-                          {color}
-                          <button
-                            onClick={() => toggleColor(color)}
-                            className="hover:opacity-70 flex items-center justify-center hover:cursor-pointer"
+                      {filters.colors.map((color) => {
+                        const colorObj = colorOptions.find(
+                          (c) => c.value === color,
+                        );
+                        return (
+                          <span
+                            key={color}
+                            className="text-[10px] tracking-[0.14em] uppercase bg-black text-white px-3 py-1.5 flex items-center gap-2 rounded-full"
                           >
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={2}
+                            <span
+                              className="w-3 h-3 rounded-full border border-white/30"
+                              style={{
+                                backgroundColor: colorObj?.bg || "#000",
+                              }}
+                            />
+                            {color}
+                            <button
+                              onClick={() => setColorFilter([])}
+                              className="hover:opacity-70 flex items-center justify-center"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M6 18L18 6M6 6l12 12"
-                              />
-                            </svg>
-                          </button>
-                        </span>
-                      ))}
-                      {filters.priceRange && (
+                              <svg
+                                className="w-3 h-3"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M6 18L18 6M6 6l12 12"
+                                />
+                              </svg>
+                            </button>
+                          </span>
+                        );
+                      })}
+                      {(filters.minPrice > 0 || filters.maxPrice < 100000) && (
                         <span className="text-[10px] tracking-[0.14em] uppercase bg-black text-white px-3 py-1.5 flex items-center gap-2 rounded-full">
-                          {
-                            priceRanges.find((r) => r.id === filters.priceRange)
-                              ?.label
-                          }
+                          AED {filters.minPrice.toLocaleString()} - AED{" "}
+                          {filters.maxPrice.toLocaleString()}
                           <button
-                            onClick={() =>
-                              filters.priceRange &&
-                              setPriceRange(filters.priceRange)
-                            }
+                            onClick={() => {
+                              setMinPrice(0);
+                              setMaxPrice(100000);
+                            }}
                             className="hover:opacity-70 flex items-center justify-center"
                           >
                             <svg
@@ -729,18 +974,18 @@ export default function ReadyMadeCatalogPage() {
             </div>
           </div>
 
-          {/* ── Mobile Filters Drawer ─────────────────────────────────────────── */}
+          {/* Mobile Filters Drawer */}
           {mobileFiltersOpen && (
             <div className="lg:hidden border-b border-[#E4E0D8] bg-[#FDFAF5] px-4 sm:px-8 lg:px-12 py-8 overflow-hidden">
               <SidebarContent />
             </div>
           )}
 
-          {/* ── Main Content Area - Full Width ──────────────────────────────────── */}
+          {/* Main Content */}
           <div className="flex flex-col lg:flex-row min-h-screen relative">
             <aside
               data-lenis-prevent
-              className={`hidden lg:block w-80 shrink-0 border-r border-[#E4E0D8] p-8 h-screen sticky top-18.25 overflow-y-auto ${mobileFiltersOpen ? "block" : "hidden"}`}
+              className="hidden lg:block w-80 shrink-0 border-r border-[#E4E0D8] p-8 h-screen sticky top-34 overflow-y-auto"
             >
               <SidebarContent />
             </aside>
@@ -774,7 +1019,7 @@ export default function ReadyMadeCatalogPage() {
                   </p>
                   <button
                     onClick={clearAllFilters}
-                    className="px-8 py-3 bg-black text-white text-[10px] tracking-[0.22em] uppercase hover:bg-[#2A2A28] transition-colors duration-200 rounded-full hover:cursor-pointer"
+                    className="px-8 py-3 bg-black text-white text-[10px] tracking-[0.22em] uppercase hover:bg-[#2A2A28] transition-colors duration-200 rounded-full"
                   >
                     {isAr ? "مسح جميع الفلاتر" : "Clear All Filters"}
                   </button>
@@ -863,9 +1108,47 @@ export default function ReadyMadeCatalogPage() {
                               </h3>
                             </Link>
 
-                            <span className="[font-family:var(--font-ui)] text-[13px] sm:text-[14px] tracking-[0.08em] text-black font-semibold mb-1">
+                            <span className="[font-family:var(--font-ui)] text-[14px] sm:text-[15px] tracking-[0.08em] text-black font-normal mb-1">
                               AED {price.toFixed(2)}
                             </span>
+
+                            {/* Replace the plain text span with color swatches */}
+                            <div className="flex items-center gap-1.5 my-1 flex-wrap">
+                              {product.colors &&
+                              Array.isArray(product.colors) ? (
+                                product.colors
+                                  .slice(0, 4)
+                                  .map((color, index) => {
+                                    const colorObj = colorOptions.find(
+                                      (c) =>
+                                        c.value.toLowerCase() ===
+                                        color.toLowerCase(),
+                                    );
+                                    return (
+                                      <span
+                                        key={index}
+                                        className="w-5 h-5 rounded-full border border-[#E4E0D8]"
+                                        style={{
+                                          backgroundColor:
+                                            colorObj?.bg || "#CCCCCC",
+                                        }}
+                                        title={color}
+                                      />
+                                    );
+                                  })
+                              ) : (
+                                <span className="text-[10px] text-[#8A8A80] font-mono">
+                                  {isAr ? "بدون لون" : "No color"}
+                                </span>
+                              )}
+                              {product.colors &&
+                                Array.isArray(product.colors) &&
+                                product.colors.length > 4 && (
+                                  <span className="text-[9px] text-[#8A8A80] font-mono">
+                                    +{product.colors.length - 4}
+                                  </span>
+                                )}
+                            </div>
 
                             {tailorName && (
                               <p className="[font-family:var(--font-ui)] text-[9px] uppercase tracking-[0.24em] text-[#8A8A80] mb-2 font-normal">
@@ -883,7 +1166,6 @@ export default function ReadyMadeCatalogPage() {
                     })}
                   </div>
 
-                  {/* Pagination */}
                   <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
