@@ -11,9 +11,6 @@ import { motion } from "framer-motion";
 import { getTranslation } from "@/lib/getTranslation";
 import { useAuth } from "@/context/AuthContext";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
-import { useRouter } from "@/i18n/navigation";
-import { useSearchParams } from "next/navigation";
-import { getPostLoginPath } from "@/lib/auth/postLoginRedirect";
 
 export default function LoginPage() {
     const params = useParams();
@@ -28,9 +25,6 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const { login, loginWithGoogle } = useAuth();
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const redirectUrl = searchParams.get("redirect");
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -39,10 +33,8 @@ export default function LoginPage() {
         setIsLoading(true);
 
         try {
-            const loggedInUser = await login(email, password);
+            await login(email, password);
             setSuccess(t.login.successMessage || "Login successful! Redirecting...");
-            router.replace(getPostLoginPath(loggedInUser, redirectUrl));
-            router.refresh();
         } catch (err: any) {
             setError(err.message || "An error occurred during login.");
         } finally {
@@ -55,10 +47,8 @@ export default function LoginPage() {
         setSuccess("");
         setIsLoading(true);
         try {
-            const loggedInUser = await loginWithGoogle(credential);
+            await loginWithGoogle(credential);
             setSuccess(t.login.successMessage || "Login successful! Redirecting...");
-            router.replace(getPostLoginPath(loggedInUser, redirectUrl));
-            router.refresh();
         } catch (err: any) {
             setError(err.message || "Google sign-in failed.");
         } finally {
