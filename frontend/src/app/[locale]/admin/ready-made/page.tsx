@@ -398,7 +398,6 @@ export default function AdminReadyMadePage() {
                             className="inline-flex items-center gap-1 text-gray-400 group-hover:text-black transition-colors"
                           >
                             <Edit className="w-4 h-4" />
-                            <span className="text-sm">Edit</span>
                           </Link>
                           <button
                             onClick={() => openDeleteModal(item)}

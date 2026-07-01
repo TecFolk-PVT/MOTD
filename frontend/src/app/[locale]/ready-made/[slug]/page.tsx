@@ -449,7 +449,7 @@ export default function ReadyMadeDetailPage() {
                         {product.fabricId && product.fabricId.slug && (
                           <Link
                             href={`/${locale}/fabrics/${product.fabricId.slug}`}
-                            className="w-full py-3 px-4 border border-black text-center text-[10px] md:text-[11px] tracking-[0.12em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:bg-black hover:text-white hover:cursor-pointer flex items-center justify-center min-h-[46px]"
+                            className="w-full py-3 px-4 border border-black text-center text-[10px] md:text-[11px] tracking-[0.12em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:bg-black hover:text-white hover:cursor-pointer flex items-center justify-center min-h-11.5"
                           >
                             <span>Fabric: {locale === "ar" ? product.fabricId.nameAr || product.fabricId.name : product.fabricId.name}</span>
                           </Link>
@@ -457,7 +457,7 @@ export default function ReadyMadeDetailPage() {
                         {product.designId && product.designId.slug && (
                           <Link
                             href={`/${locale}/designs/${product.designId.slug}`}
-                            className="w-full py-3 px-4 border border-black text-center text-[10px] md:text-[11px] tracking-[0.12em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:bg-black hover:text-white hover:cursor-pointer flex items-center justify-center min-h-[46px]"
+                            className="w-full py-3 px-4 border border-black text-center text-[10px] md:text-[11px] tracking-[0.12em] uppercase [font-family:var(--font-ui)] transition-all duration-300 hover:bg-black hover:text-white hover:cursor-pointer flex items-center justify-center min-h-11.5"
                           >
                             <span>Design: {locale === "ar" ? product.designId.nameAr || product.designId.name : product.designId.name}</span>
                           </Link>

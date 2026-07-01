@@ -26,51 +26,119 @@ const TAG_OPTIONS = [
 ];
 
 const COLOR_OPTIONS = [
-  { value: "black", en: "Black", ar: "أسود" },
-  { value: "white", en: "White", ar: "أبيض" },
-  { value: "red", en: "Red", ar: "أحمر" },
-  { value: "maroon", en: "Maroon", ar: "خمري" },
-  { value: "burgundy", en: "Burgundy", ar: "عنابي" },
-  { value: "pink", en: "Pink", ar: "وردي" },
-  { value: "hot-pink", en: "Hot Pink", ar: "وردي فاقع" },
-  { value: "rose", en: "Rose", ar: "وردي فاتح" },
-  { value: "purple", en: "Purple", ar: "بنفسجي" },
-  { value: "lavender", en: "Lavender", ar: "لافندر" },
-  { value: "blue", en: "Blue", ar: "أزرق" },
-  { value: "navy", en: "Navy Blue", ar: "كحلي" },
-  { value: "royal-blue", en: "Royal Blue", ar: "أزرق ملكي" },
-  { value: "sky-blue", en: "Sky Blue", ar: "أزرق سماوي" },
-  { value: "turquoise", en: "Turquoise", ar: "فيروزي" },
-  { value: "green", en: "Green", ar: "أخضر" },
-  { value: "emerald", en: "Emerald Green", ar: "أخضر زمردي" },
-  { value: "olive", en: "Olive Green", ar: "أخضر زيتوني" },
-  { value: "mint", en: "Mint Green", ar: "أخضر نعناعي" },
-  { value: "yellow", en: "Yellow", ar: "أصفر" },
-  { value: "mustard", en: "Mustard", ar: "أصفر خردلي" },
-  { value: "orange", en: "Orange", ar: "برتقالي" },
-  { value: "peach", en: "Peach", ar: "خوخي" },
-  { value: "brown", en: "Brown", ar: "بني" },
-  { value: "chocolate", en: "Chocolate Brown", ar: "بني شوكولاتة" },
+  { value: "aqua", en: "Aqua", ar: "أزرق مائي" },
+  { value: "aquamarine", en: "Aquamarine", ar: "أزرق بحري" },
   { value: "beige", en: "Beige", ar: "بيج" },
-  { value: "camel", en: "Camel", ar: "جملي" },
-  { value: "grey", en: "Grey", ar: "رمادي" },
-  { value: "silver", en: "Silver", ar: "فضي" },
+  { value: "bisque", en: "Bisque", ar: "بسكويتي" },
+  { value: "black", en: "Black", ar: "أسود" },
+  { value: "blue", en: "Blue", ar: "أزرق" },
+  { value: "blueviolet", en: "Blue Violet", ar: "بنفسجي مزرق" },
+  { value: "brown", en: "Brown", ar: "بني" },
+  { value: "burlywood", en: "Burlywood", ar: "بني فاتح" },
+  { value: "cadetblue", en: "Cadet Blue", ar: "أزرق كاديت" },
+  { value: "chocolate", en: "Chocolate", ar: "شوكولاتة" },
+  { value: "coral", en: "Coral", ar: "مرجاني" },
+  { value: "cornflowerblue", en: "Cornflower Blue", ar: "أزرق ردة الذرة" },
+  { value: "cornsilk", en: "Cornsilk", ar: "حرير الذرة" },
+  { value: "crimson", en: "Crimson", ar: "قرمزي" },
+  { value: "cyan", en: "Cyan", ar: "سيان" },
+  { value: "darkblue", en: "Dark Blue", ar: "أزرق غامق" },
+  { value: "darkcyan", en: "Dark Cyan", ar: "سيان غامق" },
+  { value: "darkgoldenrod", en: "Dark Goldenrod", ar: "ذهبي غامق" },
+  { value: "darkgray", en: "Dark Gray", ar: "رمادي غامق" },
+  { value: "darkgreen", en: "Dark Green", ar: "أخضر غامق" },
+  { value: "darkkhaki", en: "Dark Khaki", ar: "كاكي غامق" },
+  { value: "darkmagenta", en: "Dark Magenta", ar: "أرجواني غامق" },
+  { value: "darkorchid", en: "Dark Orchid", ar: "أوركيد غامق" },
+  { value: "darkred", en: "Dark Red", ar: "أحمر غامق" },
+  { value: "darksalmon", en: "Dark Salmon", ar: "سلمون غامق" },
+  { value: "darkseagreen", en: "Dark Sea Green", ar: "أخضر بحري غامق" },
+  { value: "darkslateblue", en: "Dark Slate Blue", ar: "أزرق أردوازي غامق" },
+  { value: "darkslategray", en: "Dark Slate Gray", ar: "رمادي أردوازي غامق" },
+  { value: "darkturquoise", en: "Dark Turquoise", ar: "فيروزي غامق" },
+  { value: "darkviolet", en: "Dark Violet", ar: "بنفسجي غامق" },
+  { value: "deeppink", en: "Deep Pink", ar: "وردي غامق" },
+  { value: "deepskyblue", en: "Deep Sky Blue", ar: "أزرق سماوي غامق" },
+  { value: "dimgray", en: "Dim Gray", ar: "رمادي خافت" },
+  { value: "dodgerblue", en: "Dodger Blue", ar: "أزرق دودجر" },
+  { value: "firebrick", en: "Firebrick", ar: "أحمر طوب" },
+  { value: "fuchsia", en: "Fuchsia", ar: "فوشيا" },
+  { value: "gainsboro", en: "Gainsboro", ar: "رمادي فاتح" },
   { value: "gold", en: "Gold", ar: "ذهبي" },
-  { value: "champagne", en: "Champagne", ar: "شامبين" },
-  { value: "bronze", en: "Bronze", ar: "برونزي" },
-  { value: "cream", en: "Cream", ar: "كريمي" },
+  { value: "goldenrod", en: "Goldenrod", ar: "ذهبي محمر" },
+  { value: "gray", en: "Gray", ar: "رمادي" },
+  { value: "green", en: "Green", ar: "أخضر" },
+  { value: "greenyellow", en: "Green Yellow", ar: "أصفر مخضر" },
+  { value: "grey", en: "Grey", ar: "رمادي" },
+  { value: "hotpink", en: "Hot Pink", ar: "وردي ساخن" },
+  { value: "indianred", en: "Indian Red", ar: "أحمر هندي" },
+  { value: "indigo", en: "Indigo", ar: "نيلي" },
   { value: "ivory", en: "Ivory", ar: "عاجي" },
-  { value: "multi", en: "Multi Color", ar: "متعدد الألوان" },
-];
-
-const FABRIC_TYPES = [
-  { value: "chiffon", en: "Chiffon", ar: "شيفون" },
-  { value: "silk velvet", en: "Silk Velvet", ar: "مخمل حرير" },
+  { value: "khaki", en: "Khaki", ar: "كاكي" },
+  { value: "lavender", en: "Lavender", ar: "لافندر" },
+  { value: "lightblue", en: "Light Blue", ar: "أزرق فاتح" },
+  { value: "lightgray", en: "Light Gray", ar: "رمادي فاتح" },
+  { value: "lightgreen", en: "Light Green", ar: "أخضر فاتح" },
+  { value: "lightpink", en: "Light Pink", ar: "وردي فاتح" },
+  { value: "lightsalmon", en: "Light Salmon", ar: "سلمون فاتح" },
+  { value: "lightseagreen", en: "Light Sea Green", ar: "أخضر بحري فاتح" },
+  { value: "lightskyblue", en: "Light Sky Blue", ar: "أزرق سماوي فاتح" },
+  { value: "lightslategray", en: "Light Slate Gray", ar: "رمادي أردوازي فاتح" },
+  { value: "lightsteelblue", en: "Light Steel Blue", ar: "أزرق فولاذي فاتح" },
+  { value: "maroon", en: "Maroon", ar: "كستنائي" },
+  { value: "mediumblue", en: "Medium Blue", ar: "أزرق متوسط" },
+  { value: "mediumpurple", en: "Medium Purple", ar: "بنفسجي متوسط" },
+  { value: "mediumseagreen", en: "Medium Sea Green", ar: "أخضر بحري متوسط" },
   {
-    value: "tana linen cotton",
-    en: "Tana Linen Cotton",
-    ar: "تانة قطن الكتان",
+    value: "mediumslateblue",
+    en: "Medium Slate Blue",
+    ar: "أزرق أردوازي متوسط",
   },
+  { value: "mediumturquoise", en: "Medium Turquoise", ar: "فيروزي متوسط" },
+  {
+    value: "mediumvioletred",
+    en: "Medium Violet Red",
+    ar: "أحمر بنفسجي متوسط",
+  },
+  { value: "midnightblue", en: "Midnight Blue", ar: "أزرق منتصف الليل" },
+  { value: "moccasin", en: "Moccasin", ar: "موكاسين" },
+  { value: "navy", en: "Navy Blue", ar: "كحلي" },
+  { value: "olive", en: "Olive", ar: "زيتوني" },
+  { value: "olivedrab", en: "Olive Drab", ar: "زيتوني باهت" },
+  { value: "orange", en: "Orange", ar: "برتقالي" },
+  { value: "orchid", en: "Orchid", ar: "أوركيد" },
+  { value: "palegoldenrod", en: "Pale Goldenrod", ar: "ذهبي باهت" },
+  { value: "palegreen", en: "Pale Green", ar: "أخضر باهت" },
+  { value: "paleturquoise", en: "Pale Turquoise", ar: "فيروزي باهت" },
+  { value: "palevioletred", en: "Pale Violet Red", ar: "أحمر بنفسجي باهت" },
+  { value: "peachpuff", en: "Peach Puff", ar: "خوخي" },
+  { value: "pink", en: "Pink", ar: "وردي" },
+  { value: "plum", en: "Plum", ar: "برقوقي" },
+  { value: "powderblue", en: "Powder Blue", ar: "أزرق بودرة" },
+  { value: "purple", en: "Purple", ar: "بنفسجي" },
+  { value: "rebeccapurple", en: "Rebecca Purple", ar: "بنفسجي ريبيكا" },
+  { value: "red", en: "Red", ar: "أحمر" },
+  { value: "rosybrown", en: "Rosy Brown", ar: "بني وردي" },
+  { value: "royalblue", en: "Royal Blue", ar: "أزرق ملكي" },
+  { value: "saddlebrown", en: "Saddle Brown", ar: "بني السرج" },
+  { value: "salmon", en: "Salmon", ar: "سلمون" },
+  { value: "sandybrown", en: "Sandy Brown", ar: "بني رملي" },
+  { value: "seagreen", en: "Sea Green", ar: "أخضر بحري" },
+  { value: "silver", en: "Silver", ar: "فضي" },
+  { value: "skyblue", en: "Sky Blue", ar: "أزرق سماوي" },
+  { value: "slateblue", en: "Slate Blue", ar: "أزرق أردوازي" },
+  { value: "slategray", en: "Slate Gray", ar: "رمادي أردوازي" },
+  { value: "steelblue", en: "Steel Blue", ar: "أزرق فولاذي" },
+  { value: "tan", en: "Tan", ar: "سمراء" },
+  { value: "teal", en: "Teal", ar: "بطي" },
+  { value: "thistle", en: "Thistle", ar: "شوكي" },
+  { value: "tomato", en: "Tomato", ar: "طماطمي" },
+  { value: "turquoise", en: "Turquoise", ar: "فيروزي" },
+  { value: "violet", en: "Violet", ar: "بنفسجي" },
+  { value: "wheat", en: "Wheat", ar: "قمحي" },
+  { value: "white", en: "White", ar: "أبيض" },
+  { value: "yellow", en: "Yellow", ar: "أصفر" },
+  { value: "yellowgreen", en: "Yellow Green", ar: "أصفر مخضر" },
 ];
 
 const sanitizeName = (value: string) =>
@@ -102,12 +170,13 @@ export default function EditReadyMadePage() {
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const [shopsRes, fabricsRes, tailorsRes, designsRes] = await Promise.all([
-          api.get<any>("/api/admin/fabric-shops"),
-          api.get<any[]>("/api/admin/fabrics"),
-          api.get<any>("/api/admin/tailors"),
-          api.get<any[]>("/api/admin/designs"),
-        ]);
+        const [shopsRes, fabricsRes, tailorsRes, designsRes] =
+          await Promise.all([
+            api.get<any>("/api/admin/fabric-shops"),
+            api.get<any[]>("/api/admin/fabrics"),
+            api.get<any>("/api/admin/tailors"),
+            api.get<any[]>("/api/admin/designs"),
+          ]);
         setFabricShops(shopsRes.items || []);
         setAllFabrics(fabricsRes || []);
         setTailorShops(tailorsRes.items || []);
@@ -123,7 +192,12 @@ export default function EditReadyMadePage() {
   const filteredFabrics = useMemo(() => {
     if (!formData?.fabricShopId) return [];
     return allFabrics.filter((f) => {
-      const shopId = typeof f.fabricShopId === "object" && f.fabricShopId !== null && "_id" in f.fabricShopId ? (f.fabricShopId as any)._id : f.fabricShopId;
+      const shopId =
+        typeof f.fabricShopId === "object" &&
+        f.fabricShopId !== null &&
+        "_id" in f.fabricShopId
+          ? (f.fabricShopId as any)._id
+          : f.fabricShopId;
       return shopId === formData.fabricShopId;
     });
   }, [allFabrics, formData?.fabricShopId]);
@@ -132,7 +206,10 @@ export default function EditReadyMadePage() {
   const filteredDesigns = useMemo(() => {
     if (!formData?.tailorShopId) return [];
     return allDesigns.filter((d) => {
-      const shopId = typeof d.tailorShopId === "object" ? d.tailorShopId?._id : d.tailorShopId;
+      const shopId =
+        typeof d.tailorShopId === "object"
+          ? d.tailorShopId?._id
+          : d.tailorShopId;
       return shopId === formData.tailorShopId;
     });
   }, [allDesigns, formData?.tailorShopId]);
@@ -450,7 +527,12 @@ export default function EditReadyMadePage() {
           </FormField>
 
           {/* FABRIC STORE */}
-          <FormField label="Fabric Store" name="fabricShopId" error={fieldErrors.fabricShopId} required>
+          <FormField
+            label="Fabric Store"
+            name="fabricShopId"
+            error={fieldErrors.fabricShopId}
+            required
+          >
             <select
               value={formData.fabricShopId}
               onChange={(e) => {
@@ -470,7 +552,12 @@ export default function EditReadyMadePage() {
           </FormField>
 
           {/* FABRIC */}
-          <FormField label="Fabric" name="fabricId" error={fieldErrors.fabricId} required>
+          <FormField
+            label="Fabric"
+            name="fabricId"
+            error={fieldErrors.fabricId}
+            required
+          >
             <select
               value={formData.fabricId}
               onChange={(e) => handleChange("fabricId", e.target.value)}
@@ -487,7 +574,11 @@ export default function EditReadyMadePage() {
           </FormField>
 
           {/* TAILOR SHOP */}
-          <FormField label="Tailor Shop" name="tailorShopId" error={fieldErrors.tailorShopId}>
+          <FormField
+            label="Tailor Shop"
+            name="tailorShopId"
+            error={fieldErrors.tailorShopId}
+          >
             <select
               value={formData.tailorShopId}
               onChange={(e) => {
@@ -507,7 +598,11 @@ export default function EditReadyMadePage() {
           </FormField>
 
           {/* DESIGN */}
-          <FormField label="Design" name="designId" error={fieldErrors.designId}>
+          <FormField
+            label="Design"
+            name="designId"
+            error={fieldErrors.designId}
+          >
             <select
               value={formData.designId}
               onChange={(e) => handleChange("designId", e.target.value)}
