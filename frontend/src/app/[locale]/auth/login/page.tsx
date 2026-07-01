@@ -1,25 +1,25 @@
 // app/[locale]/auth/login/page.tsx
 "use client";
 
-import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { useRouter } from "@/i18n/navigation";
+import { useEffect, useRef } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { getPostLoginPath } from "@/lib/auth/postLoginRedirect";
+import { navigateAfterLogin } from "@/lib/auth/postLoginRedirect";
 import LoginForm from "../../../../components/auth/loginForm";
 
 export default function LoginPage() {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
+  const params = useParams();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect");
+  const locale = (params.locale as string) || "en";
+  const hasRedirected = useRef(false);
 
   useEffect(() => {
-    if (!isLoading && user) {
-      router.replace(getPostLoginPath(user, redirectUrl));
-      router.refresh();
-    }
-  }, [user, isLoading, redirectUrl, router]);
+    if (isLoading || !user || hasRedirected.current) return;
+    hasRedirected.current = true;
+    navigateAfterLogin(user, redirectUrl, locale);
+  }, [user, isLoading, redirectUrl, locale]);
 
   if (isLoading) {
     return (

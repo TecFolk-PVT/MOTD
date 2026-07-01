@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
@@ -14,7 +14,6 @@ import {
     getPasswordValidationMessage,
     isPasswordValid,
 } from "@/lib/auth/passwordValidation";
-import { getPostLoginPath } from "@/lib/auth/postLoginRedirect";
 import logoBlack from "../../../public/PNG/Black/MOTD_Wordmark_Black.png";
 import * as images from "../../../public/images/ImageIndex";
 
@@ -23,7 +22,6 @@ export default function RegisterForm() {
     const localeParam = params.locale as string;
     const t = getTranslation(localeParam);
 
-    const router = useRouter();
     const locale = useLocale();
     const { register, loginWithGoogle } = useAuth();
 
@@ -63,12 +61,6 @@ export default function RegisterForm() {
         try {
             await register(name, email, password, phone);
             setSuccess(t.signup.successMessage || "Account created! Redirecting...");
-
-            // Keep loading true, wait 2.5 seconds before redirect
-            setTimeout(() => {
-                router.replace(`/${locale}`);
-                router.refresh();
-            }, 2500);
         } catch (err: any) {
             setError(err.message || "An error occurred during registration.");
             setIsLoading(false); // only stop loading on error
@@ -80,12 +72,8 @@ export default function RegisterForm() {
         setSuccess("");
         setIsLoading(true);
         try {
-            const loggedInUser = await loginWithGoogle(credential);
+            await loginWithGoogle(credential);
             setSuccess(t.signup.successMessage || "Account created! Redirecting...");
-            setTimeout(() => {
-                router.replace(getPostLoginPath(loggedInUser));
-                router.refresh();
-            }, 1500);
         } catch (err: any) {
             setError(err.message || "Google sign-up failed.");
             setIsLoading(false);

@@ -36,3 +36,16 @@ export function getPostLoginPath(
   if (role === "fabric_store") return "/fabric";
   return "/";
 }
+
+/** Full-page navigation after login — avoids Next.js client router getting stuck on auth pages. */
+export function navigateAfterLogin(
+  user: User,
+  redirectUrl?: string | null,
+  locale = "en",
+): void {
+  if (typeof window === "undefined") return;
+
+  const path = getPostLoginPath(user, redirectUrl);
+  const target = path === "/" ? `/${locale}` : `/${locale}${path}`;
+  window.location.replace(target);
+}
