@@ -229,10 +229,10 @@ export default function LoginPage() {
                                 </Link>
                             </p>
                             <div className="flex justify-center gap-5 md:gap-6 mt-4">
-                                <Link href={`/${locale}/privacy`} className="font-label-sm text-[9px] md:text-[10px] text-black/30 uppercase tracking-[0.15em] hover:text-black/60 transition-colors">
+                                <Link href="/privacy" className="font-label-sm text-[9px] md:text-[10px] text-black/30 uppercase tracking-[0.15em] hover:text-black/60 transition-colors">
                                     {t.login.privacyLabel}
                                 </Link>
-                                <Link href={`/${locale}/terms`} className="font-label-sm text-[9px] md:text-[10px] text-black/30 uppercase tracking-[0.15em] hover:text-black/60 transition-colors">
+                                <Link href="/terms" className="font-label-sm text-[9px] md:text-[10px] text-black/30 uppercase tracking-[0.15em] hover:text-black/60 transition-colors">
                                     {t.login.termsLabel}
                                 </Link>
                             </div>
