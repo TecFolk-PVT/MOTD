@@ -22,12 +22,21 @@ class ApiClient {
 
     private resolveBaseUrl(): string {
         if (typeof window === 'undefined') {
+            // Server-side dev: talk to local backend directly (not ngrok)
+            if (process.env.NODE_ENV === 'development') {
+                return process.env.API_PROXY_TARGET || 'http://localhost:5000';
+            }
             return this.baseUrl;
         }
 
         try {
             const configured = new URL(this.baseUrl);
             if (configured.origin === window.location.origin) {
+                return '';
+            }
+            // Browser dev: use Next.js /api rewrite proxy when origins differ
+            // (e.g. localhost page + ngrok API URL, or ngrok page + localhost API URL)
+            if (process.env.NODE_ENV === 'development') {
                 return '';
             }
         } catch {
