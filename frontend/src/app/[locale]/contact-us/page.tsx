@@ -86,8 +86,8 @@ export default function ContactUsPage() {
                                             <span className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-wider text-[#8A8A80] block">
                                                 {isAr ? "البريد الإلكتروني" : "EMAIL ADDRESS"}
                                             </span>
-                                            <a href="mailto:motd.uae@gmail.com" className="text-sm sm:text-base font-medium text-black hover:opacity-70 transition-opacity underline decoration-1">
-                                                motd.uae@gmail.com
+                                            <a href="mailto:uaemotd@gmail.com" className="text-sm sm:text-base font-medium text-black hover:opacity-70 transition-opacity underline decoration-1">
+                                                uaemotd@gmail.com
                                             </a>
                                         </div>
                                     </div>
