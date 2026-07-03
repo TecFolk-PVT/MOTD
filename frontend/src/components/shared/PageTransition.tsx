@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import BrandLoader from "./BrandLoader";
 
-const MIN_DURATION = 1200;
+const MIN_DURATION = 800;
 
 export default function PageTransition({
   children,
