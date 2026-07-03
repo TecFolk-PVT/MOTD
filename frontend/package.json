@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\"",
-    "dev": "npm run clean && next dev",
-    "build": "npm run clean && next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "npm run clean && npx next dev",
+    "build": "npm run clean && npx next build",
+    "start": "npx next start",
+    "lint": "npx next lint"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",
