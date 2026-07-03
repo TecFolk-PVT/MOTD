@@ -292,11 +292,11 @@ export default function FabricMetersStep() {
                       {getSuggestedMetersForDesign(item.design)} {t("meters")}
                     </p>
                   </div>
-                  {draft.lineItems.length > 1 && (
+                  {draft.lineItems.length > 0 && (
                     <button
                       type="button"
                       onClick={() => removeLineItem(item.id)}
-                      className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.2em] text-(--color-grey-muted) border-b border-(--color-grey-muted) pb-0.5 hover:opacity-50 self-start"
+                      className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.2em] text-(--color-grey-muted) border-b border-(--color-grey-muted) pb-0.5 hover:opacity-50 self-start hover:cursor-pointer"
                     >
                       {t("removeItem")}
                     </button>
@@ -427,7 +427,7 @@ export default function FabricMetersStep() {
           type="button"
           onClick={() => router.push("/custom-order/measurements")}
           disabled={!canContinue}
-          className="px-8 py-3 bg-black text-white text-[10px] tracking-[0.22em] uppercase hover:bg-[#2A2A28] transition disabled:opacity-40 disabled:cursor-not-allowed [font-family:var(--font-ui)]"
+          className="px-8 py-3 bg-black text-white text-[10px] tracking-[0.22em] uppercase hover:bg-[#2A2A28] transition disabled:opacity-40 disabled:cursor-not-allowed [font-family:var(--font-ui)] hover:cursor-pointer"
         >
           {t("continue")}
         </button>
