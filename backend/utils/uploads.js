@@ -1,10 +1,16 @@
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import os from "os";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-export const UPLOADS_ROOT = path.join(__dirname, "..", "uploads");
+/** Local dev uses backend/uploads; Vercel serverless uses /tmp (ephemeral). */
+const UPLOADS_BASE = process.env.VERCEL
+  ? path.join(os.tmpdir(), "motd-uploads")
+  : path.join(__dirname, "..", "uploads");
+
+export const UPLOADS_ROOT = UPLOADS_BASE;
 export const READY_MADE_UPLOAD_DIR = path.join(UPLOADS_ROOT, "ready-made");
 export const TAILOR_DESIGN_UPLOAD_DIR = path.join(
   UPLOADS_ROOT,

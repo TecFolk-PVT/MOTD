@@ -1,15 +1,27 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+function getApiBase(): string {
+    if (process.env.NEXT_PUBLIC_API_URL) {
+        return process.env.NEXT_PUBLIC_API_URL;
+    }
+    if (process.env.NODE_ENV === "production") {
+        return "";
+    }
+    return "http://localhost:5000";
+}
 
 function resolveMediaBase(): string {
+    const apiBase = getApiBase();
+
     if (typeof window === "undefined") {
         if (process.env.NODE_ENV === "development") {
             return process.env.API_PROXY_TARGET || "http://localhost:5000";
         }
-        return API_BASE;
+        return apiBase;
     }
 
+    if (!apiBase) return "";
+
     try {
-        const configured = new URL(API_BASE);
+        const configured = new URL(apiBase);
         if (configured.origin === window.location.origin) {
             return "";
         }
@@ -17,7 +29,7 @@ function resolveMediaBase(): string {
         // fall through
     }
 
-    return API_BASE;
+    return apiBase;
 }
 
 /** Turn stored upload paths into full URLs served by the API. */
