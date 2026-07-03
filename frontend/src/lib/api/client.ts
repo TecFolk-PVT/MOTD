@@ -17,7 +17,14 @@ class ApiClient {
     private baseUrl: string;
 
     constructor() {
-        this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        if (process.env.NEXT_PUBLIC_API_URL) {
+            this.baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        } else if (process.env.NODE_ENV === 'production') {
+            // Same Vercel deployment — API is at /api on the same origin
+            this.baseUrl = '';
+        } else {
+            this.baseUrl = 'http://localhost:5000';
+        }
     }
 
     private async request<T>(

@@ -28,7 +28,8 @@ motd-project/
 1. Copy environment variables:
 
    ```bash
-   cp .env.example backend/.env
+   cp backend/.env.example backend/.env
+   cp frontend/.env.local.example frontend/.env.local
    ```
 
 2. Install dependencies:
@@ -47,7 +48,7 @@ motd-project/
 
 ## Environment variables
 
-Copy `.env.example` to `backend/.env` and set at least:
+Copy `backend/.env.example` to `backend/.env` and set at least:
 
 | Variable | Purpose |
 |---|---|
@@ -75,6 +76,13 @@ The backend validates required variables on startup. Auth is JWT + MongoDB only.
 | `GET` | `/api/users/profile` | Current user (Bearer token) |
 | `PUT` | `/api/users/profile` | Update profile |
 | `GET` | `/api/users` | List users (admin only) |
+
+## Deployment (Vercel + MongoDB Atlas)
+
+- **Local:** MongoDB at `mongodb://127.0.0.1:27017/motd` via `backend/.env`
+- **Live:** Frontend + Express API on **Vercel**, database on **MongoDB Atlas**
+
+Deploy from the **repository root** (not the `frontend` folder). Full guide: [`docs/deployment.md`](docs/deployment.md)
 
 ## Archived reference
 

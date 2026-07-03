@@ -14,12 +14,18 @@ function requireEnv(name) {
   return value;
 }
 
+function parseCorsOrigin(value) {
+  if (!value) return 'http://localhost:3000';
+  const origins = value.split(',').map((origin) => origin.trim()).filter(Boolean);
+  return origins.length === 1 ? origins[0] : origins;
+}
+
 export const env = {
   port: Number(process.env.PORT) || 5000,
   nodeEnv: process.env.NODE_ENV || 'development',
   mongodbUri: requireEnv('MONGODB_URI'),
   jwtSecret: requireEnv('JWT_SECRET'),
-  corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  corsOrigin: parseCorsOrigin(process.env.CORS_ORIGIN),
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   smtp: {
