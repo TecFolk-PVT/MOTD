@@ -20,61 +20,25 @@ class ApiClient {
         this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     }
 
-    private resolveBaseUrl(): string {
-        if (typeof window === 'undefined') {
-            // Server-side dev: talk to local backend directly (not ngrok)
-            if (process.env.NODE_ENV === 'development') {
-                return process.env.API_PROXY_TARGET || 'http://localhost:5000';
-            }
-            return this.baseUrl;
-        }
-
-        try {
-            const configured = new URL(this.baseUrl);
-            if (configured.origin === window.location.origin) {
-                return '';
-            }
-            // Browser dev: use Next.js /api rewrite proxy when origins differ
-            // (e.g. localhost page + ngrok API URL, or ngrok page + localhost API URL)
-            if (process.env.NODE_ENV === 'development') {
-                return '';
-            }
-        } catch {
-            // fall through to configured base URL
-        }
-
-        return this.baseUrl;
-    }
-
-    private buildHeaders(extra?: Record<string, string>): Record<string, string> {
-        const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-            ...extra,
-        };
-
-        const token = getToken();
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const base = this.resolveBaseUrl() || this.baseUrl;
-        if (base.includes('ngrok')) {
-            headers['ngrok-skip-browser-warning'] = 'true';
-        }
-
-        return headers;
-    }
-
     private async request<T>(
         endpoint: string,
         options: RequestOptions = {}
     ): Promise<T> {
-        const url = `${this.resolveBaseUrl()}${endpoint}`;
+        const url = `${this.baseUrl}${endpoint}`;
+
+        const defaultHeaders: Record<string, string> = {
+            'Content-Type': 'application/json',
+        };
+
+        const token = getToken();
+        if (token) {
+            defaultHeaders['Authorization'] = `Bearer ${token}`;
+        }
 
         const config: RequestInit = {
             ...options,
             headers: {
-                ...this.buildHeaders(),
+                ...defaultHeaders,
                 ...options.headers,
             },
         };
@@ -82,7 +46,6 @@ class ApiClient {
         try {
             const response = await fetch(url, config);
 
-            // Try to parse response as JSON
             let data: any;
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('application/json')) {
@@ -91,7 +54,6 @@ class ApiClient {
                 data = await response.text();
             }
 
-            // If response is not OK, throw an error with the message from the server
             if (!response.ok) {
                 const errorMessage =
                     (typeof data === 'string' && data.trim()) ||
@@ -108,12 +70,10 @@ class ApiClient {
 
             return data as T;
         } catch (error) {
-            // Re-throw ApiErrors as-is
             if ((error as ApiError).status) {
                 throw error;
             }
 
-            // Handle network errors
             throw {
                 status: 0,
                 message: error instanceof Error ? error.message : 'Network error or server is unreachable',
@@ -149,9 +109,12 @@ class ApiClient {
     }
 
     async postFormData<T = any>(endpoint: string, formData: FormData): Promise<T> {
-        const url = `${this.resolveBaseUrl()}${endpoint}`;
-        const headers = this.buildHeaders();
-        delete headers['Content-Type'];
+        const url = `${this.baseUrl}${endpoint}`;
+        const headers: Record<string, string> = {};
+        const token = getToken();
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
 
         try {
             const response = await fetch(url, {

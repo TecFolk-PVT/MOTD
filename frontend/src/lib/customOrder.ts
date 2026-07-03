@@ -714,7 +714,7 @@ export interface CustomOrderCreatePayload extends CustomOrderPreviewPayload {
   measurements: CustomOrderMeasurements;
   customerDeliveryAddress: CustomOrderDeliveryAddress;
   pickupAddress?: CustomOrderDeliveryAddress;
-  paymentMethod: "apple_pay";
+  paymentMethod: "cod" | "apple_pay";
   addPocket?: boolean;
   addBottomWideFold?: boolean;
 }
@@ -722,6 +722,7 @@ export interface CustomOrderCreatePayload extends CustomOrderPreviewPayload {
 export function buildCustomOrderCreatePayload(
   draft: CustomOrderDraft,
   deliveryAddress: CustomOrderDeliveryAddress,
+  paymentMethod: "cod" | "apple_pay" = "cod",
 ): CustomOrderCreatePayload | null {
   const preview = buildCustomOrderPreviewPayload(draft);
   if (!preview) return null;
@@ -730,7 +731,7 @@ export function buildCustomOrderCreatePayload(
     ...preview,
     measurements: draft.measurements,
     customerDeliveryAddress: deliveryAddress,
-    paymentMethod: "apple_pay",
+    paymentMethod,
   };
 
   if (draft.fabricSource === "self") {

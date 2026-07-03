@@ -13,9 +13,6 @@ function resolveMediaBase(): string {
         if (configured.origin === window.location.origin) {
             return "";
         }
-        if (process.env.NODE_ENV === "development") {
-            return "";
-        }
     } catch {
         // fall through
     }

@@ -1,7 +1,7 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import mongoose from "mongoose";
-import RetailOrder from "../models/RetailOrder.js";
+import RetailOrder, { PAYMENT_METHODS as RETAIL_PAYMENT_METHODS } from "../models/RetailOrder.js";
 import ReadyMadeProduct from "../models/ReadyMadeProduct.js";
 import CustomOrder, {
   FABRIC_SOURCES,
@@ -459,7 +459,7 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       measurements,
       customerDeliveryAddress,
       pickupAddress,
-      paymentMethod = "apple_pay",
+      paymentMethod = "cod",
       deliveryType = "delivery",
       addPocket = false,
       addBottomWideFold = false,
@@ -473,34 +473,41 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       });
     }
 
-    if (paymentMethod !== "apple_pay") {
-      return res.status(400).json({
-        success: false,
-        message: "Only Apple Pay is accepted",
-      });
-    }
+    let paymentDetails = {
+      isPaid: false,
+      paidAt: null,
+      stripePaymentIntentId: null,
+    };
 
-    if (!isStripeConfigured()) {
-      return res.status(503).json({
-        success: false,
-        message: "Apple Pay is not configured",
-      });
-    }
+    if (paymentMethod === "apple_pay") {
+      if (!isStripeConfigured()) {
+        return res.status(503).json({
+          success: false,
+          message: "Apple Pay is not configured",
+        });
+      }
 
-    if (!paymentIntentId) {
-      return res.status(400).json({
-        success: false,
-        message: "paymentIntentId is required",
-      });
-    }
+      if (!paymentIntentId) {
+        return res.status(400).json({
+          success: false,
+          message: "paymentIntentId is required for Apple Pay",
+        });
+      }
 
-    const orderTotal = await getCustomOrderTotalFromBody(req.body);
-    await verifyApplePayPaymentIntent({
-      paymentIntentId,
-      userId: req.user._id,
-      orderType: "custom",
-      expectedAmountAed: orderTotal,
-    });
+      const orderTotal = await getCustomOrderTotalFromBody(req.body);
+      await verifyApplePayPaymentIntent({
+        paymentIntentId,
+        userId: req.user._id,
+        orderType: "custom",
+        expectedAmountAed: orderTotal,
+      });
+
+      paymentDetails = {
+        isPaid: true,
+        paidAt: new Date(),
+        stripePaymentIntentId: paymentIntentId,
+      };
+    }
 
     // Build conditional address based on deliveryType
     const deliveryAddr =
@@ -550,9 +557,7 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
         paymentMethod,
         addPocket,
         addBottomWideFold,
-        isPaid: true,
-        paidAt: new Date(),
-        stripePaymentIntentId: paymentIntentId,
+        ...paymentDetails,
       });
 
       return res.status(201).json({
@@ -634,9 +639,7 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       paymentMethod,
       addPocket,
       addBottomWideFold,
-      isPaid: true,
-      paidAt: new Date(),
-      stripePaymentIntentId: paymentIntentId,
+      ...paymentDetails,
     });
 
     res.status(201).json({
@@ -752,7 +755,12 @@ orderRoutes.get("/custom/:id", isAuth, async (req, res) => {
 
 orderRoutes.post("/retail", isAuth, async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentIntentId } = req.body;
+    const {
+      orderItems,
+      shippingAddress,
+      paymentMethod = "cod",
+      paymentIntentId,
+    } = req.body;
 
     if (!orderItems || orderItems.length === 0) {
       return res.status(400).json({
@@ -768,43 +776,64 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
       });
     }
 
-    if (!isStripeConfigured()) {
-      return res.status(503).json({
-        success: false,
-        message: "Apple Pay is not configured",
-      });
-    }
-
-    if (!paymentIntentId) {
+    if (!RETAIL_PAYMENT_METHODS.includes(paymentMethod)) {
       return res.status(400).json({
         success: false,
-        message: "paymentIntentId is required",
+        message: `paymentMethod must be one of: ${RETAIL_PAYMENT_METHODS.join(", ")}`,
       });
     }
 
     const prepared = await prepareRetailOrder(orderItems);
 
-    await verifyApplePayPaymentIntent({
-      paymentIntentId,
-      userId: req.user._id,
-      orderType: "retail",
-      expectedAmountAed: prepared.totalPrice,
-    });
+    let paymentDetails = {
+      isPaid: false,
+      paidAt: null,
+      stripePaymentIntentId: null,
+    };
+    let orderStatus = "pending";
+
+    if (paymentMethod === "apple_pay") {
+      if (!isStripeConfigured()) {
+        return res.status(503).json({
+          success: false,
+          message: "Apple Pay is not configured",
+        });
+      }
+
+      if (!paymentIntentId) {
+        return res.status(400).json({
+          success: false,
+          message: "paymentIntentId is required for Apple Pay",
+        });
+      }
+
+      await verifyApplePayPaymentIntent({
+        paymentIntentId,
+        userId: req.user._id,
+        orderType: "retail",
+        expectedAmountAed: prepared.totalPrice,
+      });
+
+      paymentDetails = {
+        isPaid: true,
+        paidAt: new Date(),
+        stripePaymentIntentId: paymentIntentId,
+      };
+      orderStatus = "confirmed";
+    }
 
     const order = await RetailOrder.create({
       userId: req.user._id,
       orderItems: prepared.finalOrderItems,
       shippingAddress,
-      paymentMethod: "apple_pay",
+      paymentMethod,
       itemsPrice: prepared.itemsPrice,
       shippingPrice: prepared.shippingPrice,
       vatRate: prepared.vatRate,
       vatAmount: prepared.vatAmount,
       totalPrice: prepared.totalPrice,
-      status: "confirmed",
-      isPaid: true,
-      paidAt: new Date(),
-      stripePaymentIntentId: paymentIntentId,
+      status: orderStatus,
+      ...paymentDetails,
     });
 
     await deductRetailProductStock(orderItems);

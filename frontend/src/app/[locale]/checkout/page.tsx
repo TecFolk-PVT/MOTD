@@ -85,7 +85,7 @@ export default function CheckoutPage() {
       };
     }
     setBuyNowState({ isBuyNow, item });
-  }, []);
+  }, [searchParams]);
 
   const isBuyNow = buyNowState?.isBuyNow ?? false;
   const buyNowItem = buyNowState?.item ?? null;
@@ -116,14 +116,19 @@ export default function CheckoutPage() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "apple_pay">("cod");
 
-  // Redirect if not logged in
+  // Redirect if not logged in — preserve query params (e.g. buyNow) so checkout state survives login
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      const redirect = encodeURIComponent(`/${locale}/checkout`);
+      const query = searchParams.toString();
+      const checkoutPath = query
+        ? `/${locale}/checkout?${query}`
+        : `/${locale}/checkout`;
+      const redirect = encodeURIComponent(checkoutPath);
       router.push(`/${locale}/auth/login?redirect=${redirect}`);
     }
-  }, [isLoading, isAuthenticated, router, locale]);
+  }, [isLoading, isAuthenticated, router, locale, searchParams]);
 
   // --- Fetch customer profile and auto-fill form ---
   useEffect(() => {
@@ -301,6 +306,7 @@ export default function CheckoutPage() {
         message?: string;
       }>("/api/orders/retail", {
         ...payload,
+        paymentMethod: "apple_pay",
         paymentIntentId,
       });
 
@@ -331,6 +337,45 @@ export default function CheckoutPage() {
     setErrorMessage(message);
   };
 
+  const placeCodOrder = async () => {
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const payload = buildOrderPayload();
+      const response = await api.post<{
+        success: boolean;
+        orderId: string;
+        message?: string;
+      }>("/api/orders/retail", {
+        ...payload,
+        paymentMethod: "cod",
+      });
+
+      if (response.success) {
+        setLastOrderId(response.orderId);
+        setLastOrderItems(displayItems.map((item) => ({ name: item.name })));
+        setShowSuccessModal(true);
+        if (!isBuyNow) {
+          clearCart();
+        }
+      } else {
+        throw new Error(response.message || "Order failed");
+      }
+    } catch (err: unknown) {
+      console.error("Order error:", err);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Something went wrong. Please try again.";
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <MainLayout>
       <FadeInSection>
@@ -349,7 +394,7 @@ export default function CheckoutPage() {
                           <div className="w-20 h-20 shrink-0 bg-[#F5F5F0] rounded-md overflow-hidden">
                             <img
                               src={resolveMediaUrl(item.image)}
-                              className="w-full object-cover"
+                              className="w-full h-full object-cover"
                               alt={item.name}
                             />
                           </div>
@@ -524,9 +569,44 @@ export default function CheckoutPage() {
                   <h2 className="[font-family:var(--font-display)] text-xl mb-4">
                     {t.checkout.paymentMethod}
                   </h2>
-                  <p className="text-[13px] text-(--color-grey-muted) mb-4">
-                    {t.checkout.applePayDescription}
-                  </p>
+                  <div className="space-y-3">
+                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="cod"
+                        checked={paymentMethod === "cod"}
+                        onChange={() => setPaymentMethod("cod")}
+                        className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                      />
+                      <span>
+                        <span className="block [font-family:var(--font-body)] text-[15px] text-black">
+                          {t.checkout.codLabel}
+                        </span>
+                        <span className="block [font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) mt-0.5">
+                          {t.checkout.codDescription}
+                        </span>
+                      </span>
+                    </label>
+                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        value="apple_pay"
+                        checked={paymentMethod === "apple_pay"}
+                        onChange={() => setPaymentMethod("apple_pay")}
+                        className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                      />
+                      <span>
+                        <span className="block [font-family:var(--font-body)] text-[15px] text-black">
+                          Apple Pay
+                        </span>
+                        <span className="block [font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) mt-0.5">
+                          {t.checkout.applePayDescription}
+                        </span>
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
                 {errorMessage && (
@@ -536,18 +616,29 @@ export default function CheckoutPage() {
                 )}
 
                 <div className="mt-6 md:mt-7">
-                  <ApplePayCheckout
-                    amountAed={total}
-                    orderLabel={t.checkout.applePayOrderLabel}
-                    disabled={isSubmitting || displayItems.length === 0}
-                    processingLabel={t.checkout.processing}
-                    loadingLabel={t.checkout.loadingApplePay}
-                    unavailableLabel={t.checkout.applePayUnavailable}
-                    notConfiguredLabel={t.checkout.applePayNotConfigured}
-                    createIntent={createRetailPaymentIntent}
-                    onPaid={completeRetailOrder}
-                    onError={handlePaymentError}
-                  />
+                  {paymentMethod === "cod" ? (
+                    <button
+                      type="button"
+                      onClick={placeCodOrder}
+                      disabled={isSubmitting || displayItems.length === 0}
+                      className="w-full h-12 bg-black text-white [font-family:var(--font-ui)] text-[11px] uppercase tracking-[0.24em] hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isSubmitting ? t.checkout.processing : t.checkout.placeOrder}
+                    </button>
+                  ) : (
+                    <ApplePayCheckout
+                      amountAed={total}
+                      orderLabel={t.checkout.applePayOrderLabel}
+                      disabled={isSubmitting || displayItems.length === 0}
+                      processingLabel={t.checkout.processing}
+                      loadingLabel={t.checkout.loadingApplePay}
+                      unavailableLabel={t.checkout.applePayUnavailable}
+                      notConfiguredLabel={t.checkout.applePayNotConfigured}
+                      createIntent={createRetailPaymentIntent}
+                      onPaid={completeRetailOrder}
+                      onError={handlePaymentError}
+                    />
+                  )}
                 </div>
                 <p className="text-center text-[12px] text-(--color-grey-muted) mt-4">
                   {t.checkout.agreeToTerms}

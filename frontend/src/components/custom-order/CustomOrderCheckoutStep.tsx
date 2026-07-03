@@ -109,6 +109,7 @@ export default function CustomOrderCheckoutStep() {
   const [measurementsConfirmed, setMeasurementsConfirmed] = useState(false);
   const [addPocket, setAddPocket] = useState(false);
   const [addBottomWideFold, setAddBottomWideFold] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "apple_pay">("cod");
 
   const [profileLoading, setProfileLoading] = useState(true);
   const [tailorShop, setTailorShop] = useState<TailorShop | null>(null);
@@ -319,6 +320,7 @@ export default function CustomOrderCheckoutStep() {
     const payload = buildCustomOrderCreatePayload(
       draft,
       deliveryAddress || (undefined as any),
+      paymentMethod,
     );
     if (!payload) {
       throw new Error(t("incompleteDraft"));
@@ -372,6 +374,7 @@ export default function CustomOrderCheckoutStep() {
         message?: string;
       }>("/api/orders/custom", {
         ...orderPayload,
+        paymentMethod: "apple_pay",
         paymentIntentId,
       });
 
@@ -401,6 +404,49 @@ export default function CustomOrderCheckoutStep() {
 
   const handlePaymentError = (message: string) => {
     setSubmitError(message);
+  };
+
+  const placeCodOrder = async () => {
+    if (!measurementsConfirmed) {
+      setSubmitError(t("confirmMeasurementsLabel"));
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const orderPayload = buildOrderPayload();
+      const response = await api.post<{
+        success: boolean;
+        orderId: string;
+        message?: string;
+      }>("/api/orders/custom", {
+        ...orderPayload,
+        paymentMethod: "cod",
+      });
+
+      if (!response?.success || !response.orderId) {
+        throw new Error(response.message || t("submitError"));
+      }
+
+      const orderItemNames = draft.lineItems.map((item) => ({
+        name:
+          getDisplayName(item.design.name, item.design.nameAr) ||
+          t("unknownDesign"),
+      }));
+
+      setOrderId(response.orderId);
+      setSuccessOrderItems(orderItemNames);
+      setShowSuccess(true);
+    } catch (err: unknown) {
+      const message =
+        (err as ApiError)?.message ||
+        (err instanceof Error ? err.message : t("submitError"));
+      setSubmitError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (
@@ -717,9 +763,44 @@ export default function CustomOrderCheckoutStep() {
                 <h2 className="[font-family:var(--font-display)] text-[22px] mb-4">
                   {t("paymentTitle")}
                 </h2>
-                <p className="[font-family:var(--font-body)] text-[13px] text-(--color-grey-muted)">
-                  {t("applePayDescription")}
-                </p>
+                <div className="space-y-3">
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="cod"
+                      checked={paymentMethod === "cod"}
+                      onChange={() => setPaymentMethod("cod")}
+                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                    />
+                    <span>
+                      <span className="block [font-family:var(--font-body)] text-[15px] text-black">
+                        {t("codLabel")}
+                      </span>
+                      <span className="block [font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) mt-0.5">
+                        {t("codDescription")}
+                      </span>
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="apple_pay"
+                      checked={paymentMethod === "apple_pay"}
+                      onChange={() => setPaymentMethod("apple_pay")}
+                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                    />
+                    <span>
+                      <span className="block [font-family:var(--font-body)] text-[15px] text-black">
+                        Apple Pay
+                      </span>
+                      <span className="block [font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) mt-0.5">
+                        {t("applePayDescription")}
+                      </span>
+                    </span>
+                  </label>
+                </div>
               </div>
 
               {/* Confirm measurements */}
@@ -740,23 +821,39 @@ export default function CustomOrderCheckoutStep() {
                 <p className="text-red-600 text-sm mb-4">{submitError}</p>
               )}
 
-              <ApplePayCheckout
-                amountAed={pricing?.total ?? 0}
-                orderLabel={t("applePayOrderLabel")}
-                disabled={
-                  isSubmitting ||
-                  loadingPricing ||
-                  !pricing ||
-                  !measurementsConfirmed
-                }
-                processingLabel={t("processing")}
-                loadingLabel={t("loadingApplePay")}
-                unavailableLabel={t("applePayUnavailable")}
-                notConfiguredLabel={t("applePayNotConfigured")}
-                createIntent={createCustomPaymentIntent}
-                onPaid={completeCustomOrder}
-                onError={handlePaymentError}
-              />
+              {paymentMethod === "cod" ? (
+                <button
+                  type="button"
+                  onClick={placeCodOrder}
+                  disabled={
+                    isSubmitting ||
+                    loadingPricing ||
+                    !pricing ||
+                    !measurementsConfirmed
+                  }
+                  className="w-full h-12 bg-black text-white [font-family:var(--font-ui)] text-[11px] uppercase tracking-[0.24em] hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? t("processing") : t("placeOrder")}
+                </button>
+              ) : (
+                <ApplePayCheckout
+                  amountAed={pricing?.total ?? 0}
+                  orderLabel={t("applePayOrderLabel")}
+                  disabled={
+                    isSubmitting ||
+                    loadingPricing ||
+                    !pricing ||
+                    !measurementsConfirmed
+                  }
+                  processingLabel={t("processing")}
+                  loadingLabel={t("loadingApplePay")}
+                  unavailableLabel={t("applePayUnavailable")}
+                  notConfiguredLabel={t("applePayNotConfigured")}
+                  createIntent={createCustomPaymentIntent}
+                  onPaid={completeCustomOrder}
+                  onError={handlePaymentError}
+                />
+              )}
 
               <p className="[font-family:var(--font-body)] text-[12px] text-(--color-grey-muted) text-center mt-4">
                 {t("agreeToTerms")}
