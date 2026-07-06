@@ -1,8 +1,5 @@
 import multer from "multer";
-import sharp from "sharp";
-import path from "path";
-import { randomBytes } from "crypto";
-import { FABRIC_UPLOAD_DIR, toPublicUploadPath } from "../utils/uploads.js";
+import { processAndStoreImage } from "../utils/imageStorage.js";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -34,20 +31,15 @@ export function uploadFabricImageMiddleware(req, res, next) {
   });
 }
 
-export async function processFabricImage(file) {
-  const filename = `fabric-${Date.now()}-${randomBytes(4).toString("hex")}.webp`;
-  const outputPath = path.join(FABRIC_UPLOAD_DIR, filename);
-
-  await sharp(file.buffer)
-    .rotate()
-    .resize({
+export function processFabricImage(file) {
+  return processAndStoreImage(file, {
+    folder: "fabrics",
+    filenamePrefix: "fabric",
+    resize: {
       width: 1200,
       height: 1200,
       fit: "inside",
       withoutEnlargement: true,
-    })
-    .webp({ quality: 82 })
-    .toFile(outputPath);
-
-  return toPublicUploadPath("fabrics", filename);
+    },
+  });
 }

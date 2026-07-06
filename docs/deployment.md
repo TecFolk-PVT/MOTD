@@ -112,6 +112,7 @@ In **Project → Settings → Environment Variables**, add these for **Productio
 | `STRIPE_SECRET_KEY` | Stripe backend |
 | `STRIPE_PUBLISHABLE_KEY` | Stripe frontend (if needed) |
 | `STRIPE_WEBHOOK_SECRET` | Stripe webhooks |
+| `BLOB_READ_WRITE_TOKEN` | Auto-set when Blob store is linked to the Vercel project |
 
 You do **not** need `NEXT_PUBLIC_API_URL` on Vercel — frontend and API share the same domain, so requests go to `/api/...` automatically.
 
@@ -166,7 +167,15 @@ npm run dev
 
 ## Uploads on Vercel
 
-Image uploads are stored in `/tmp` on Vercel serverless functions. That storage is **ephemeral** — files may not survive cold starts or redeploys. Seeded images under `/images/...` in the repo still work. For durable uploads in production, migrate to [Vercel Blob](https://vercel.com/docs/storage/vercel-blob) or S3 later.
+Uploaded images are stored in **Vercel Blob** when `BLOB_READ_WRITE_TOKEN` is set (automatically added when you link a Blob store to the project). The API saves paths like `/uploads/fabrics/xyz.webp` in MongoDB and serves them through the Express `/uploads/*` route, which reads from Blob in production.
+
+| Environment | Storage |
+|---|---|
+| Production (Vercel + Blob linked) | Vercel Blob (`motduae-blob`, private) |
+| Local dev (no token) | `backend/uploads/` on disk |
+| Seed/static images | `frontend/public/images/` (unchanged) |
+
+Link Blob: Vercel project → **Storage** → connect `motduae-blob` → redeploy.
 
 ---
 
@@ -180,4 +189,4 @@ Image uploads are stored in `/tmp` on Vercel serverless functions. That storage 
 | CORS errors | Set `CORS_ORIGIN` to your exact Vercel URL |
 | Atlas timeout | Allow `0.0.0.0/0` in Atlas Network Access; check URI password |
 | Calls go to `localhost:5000` | You're in local dev, or `NEXT_PUBLIC_API_URL` is set incorrectly on Vercel |
-| Uploaded images vanish | Expected on serverless `/tmp` — use cloud storage for production uploads |
+| Uploaded images vanish | Link Vercel Blob store to the project and redeploy (sets `BLOB_READ_WRITE_TOKEN`) |

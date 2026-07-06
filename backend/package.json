@@ -21,7 +21,8 @@
     "multer": "^2.1.1",
     "nodemailer": "^9.0.2",
     "sharp": "^0.35.0",
-    "stripe": "^17.7.0"
+    "stripe": "^17.7.0",
+    "@vercel/blob": "^0.27.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.20"

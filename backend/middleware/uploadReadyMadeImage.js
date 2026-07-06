@@ -1,13 +1,5 @@
 import multer from 'multer';
-import sharp from 'sharp';
-import path from 'path';
-import { randomBytes } from 'crypto';
-import {
-  READY_MADE_UPLOAD_DIR,
-  TAILOR_DESIGN_UPLOAD_DIR,
-  TAILOR_SHOP_UPLOAD_DIR,
-  toPublicUploadPath,
-} from '../utils/uploads.js';
+import { processAndStoreImage } from '../utils/imageStorage.js';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -42,57 +34,43 @@ export function uploadSingleImageMiddleware(req, res, next) {
 
 export const uploadReadyMadeImageMiddleware = uploadSingleImageMiddleware;
 
-export async function processReadyMadeImage(file) {
-  const filename = `ready-made-${Date.now()}-${randomBytes(4).toString('hex')}.webp`;
-  const outputPath = path.join(READY_MADE_UPLOAD_DIR, filename);
-
-  await sharp(file.buffer)
-    .rotate()
-    .resize({
+export function processReadyMadeImage(file) {
+  return processAndStoreImage(file, {
+    folder: 'ready-made',
+    filenamePrefix: 'ready-made',
+    resize: {
       width: 1200,
       height: 1200,
       fit: 'inside',
       withoutEnlargement: true,
-    })
-    .webp({ quality: 82 })
-    .toFile(outputPath);
-
-  return toPublicUploadPath('ready-made', filename);
+    },
+  });
 }
 
-export async function processTailorDesignImage(file) {
-  const filename = `tailor-design-${Date.now()}-${randomBytes(4).toString('hex')}.webp`;
-  const outputPath = path.join(TAILOR_DESIGN_UPLOAD_DIR, filename);
-
-  await sharp(file.buffer)
-    .rotate()
-    .resize({
+export function processTailorDesignImage(file) {
+  return processAndStoreImage(file, {
+    folder: 'tailor-design',
+    filenamePrefix: 'tailor-design',
+    resize: {
       width: 1200,
       height: 1200,
       fit: 'inside',
       withoutEnlargement: true,
-    })
-    .webp({ quality: 82 })
-    .toFile(outputPath);
-
-  return toPublicUploadPath('tailor-design', filename);
+    },
+  });
 }
 
-export async function processTailorShopImage(file, { variant = 'cover' } = {}) {
+export function processTailorShopImage(file, { variant = 'cover' } = {}) {
   const isLogo = variant === 'logo';
-  const filename = `tailor-shop-${variant}-${Date.now()}-${randomBytes(4).toString('hex')}.webp`;
-  const outputPath = path.join(TAILOR_SHOP_UPLOAD_DIR, filename);
 
-  await sharp(file.buffer)
-    .rotate()
-    .resize({
+  return processAndStoreImage(file, {
+    folder: 'tailor-shop',
+    filenamePrefix: `tailor-shop-${variant}`,
+    resize: {
       width: isLogo ? 1200 : 1920,
       height: isLogo ? 1200 : 1080,
       fit: 'inside',
       withoutEnlargement: true,
-    })
-    .webp({ quality: 82 })
-    .toFile(outputPath);
-
-  return toPublicUploadPath('tailor-shop', filename);
+    },
+  });
 }
