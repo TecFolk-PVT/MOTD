@@ -73,7 +73,7 @@ Do not commit `.env` or `.env.local`.
 ## Step 3 — Create Vercel project
 
 1. Go to [vercel.com](https://vercel.com) → **Add New Project** → import your GitHub repo.
-2. **Root Directory:** leave as **`.`** (repository root). Do **not** set it to `frontend`.
+2. **Root Directory:** leave as **`.`** (repository root).
 3. Vercel reads `vercel.json` at the repo root, which builds both Next.js and the API.
 
 ---
@@ -175,6 +175,7 @@ Image uploads are stored in `/tmp` on Vercel serverless functions. That storage 
 | Issue | Fix |
 |---|---|
 | `Missing required environment variable: MONGODB_URI` | Add `MONGODB_URI` in Vercel env vars → redeploy |
+| `ENOENT ... routes-manifest-deterministic.json` | Redeploy latest `main` — the frontend build now creates this file automatically after `next build` |
 | API 404 | Ensure **Root Directory** is repo root (`.`), not `frontend` |
 | CORS errors | Set `CORS_ORIGIN` to your exact Vercel URL |
 | Atlas timeout | Allow `0.0.0.0/0` in Atlas Network Access; check URI password |

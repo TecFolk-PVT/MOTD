@@ -5,7 +5,7 @@
   "scripts": {
     "clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\"",
     "dev": "npm run clean && npx next dev",
-    "build": "npx next build",
+    "build": "npx next build && node scripts/vercel-postbuild.mjs",
     "start": "npx next start",
     "lint": "npx next lint"
   },
