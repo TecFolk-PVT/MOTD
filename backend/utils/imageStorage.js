@@ -2,7 +2,6 @@ import fs from 'fs/promises';
 import path from 'path';
 import { randomBytes } from 'crypto';
 import sharp from 'sharp';
-import { put, get, del } from '@vercel/blob';
 import {
   getLocalUploadPath,
   isBlobStorageEnabled,
@@ -11,6 +10,10 @@ import {
 
 function getBlobToken() {
   return process.env.BLOB_READ_WRITE_TOKEN || '';
+}
+
+async function loadBlobSdk() {
+  return import('@vercel/blob');
 }
 
 function toBlobPath(folder, filename) {
@@ -34,6 +37,7 @@ export async function saveImageBuffer(folder, filename, buffer) {
   const publicPath = toPublicUploadPath(folder, filename);
 
   if (isBlobStorageEnabled()) {
+    const { put } = await loadBlobSdk();
     await put(toBlobPath(folder, filename), buffer, {
       access: 'private',
       token: getBlobToken(),
@@ -71,6 +75,7 @@ export async function deleteStoredUpload(publicPath) {
 
   if (isBlobStorageEnabled()) {
     try {
+      const { del } = await loadBlobSdk();
       await del(blobPath, { token: getBlobToken() });
     } catch (err) {
       console.warn(`Failed to delete blob upload: ${blobPath}`, err.message);
@@ -103,16 +108,20 @@ export async function tryServeUploadFromBlob(req, res) {
   }
 
   try {
+    const { get } = await loadBlobSdk();
     const result = await get(blobPath, {
       access: 'private',
       token: getBlobToken(),
     });
 
-    if (!result?.stream) {
+    if (result?.statusCode !== 200 || !result?.stream) {
       return false;
     }
 
-    res.setHeader('Content-Type', result.contentType || 'image/webp');
+    res.setHeader(
+      'Content-Type',
+      result.blob?.contentType || 'image/webp',
+    );
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
 
     if (typeof result.stream.pipe === 'function') {
