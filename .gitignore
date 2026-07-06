@@ -29,3 +29,5 @@ archive/
 # Uploaded media (keep folder, ignore files)
 backend/uploads/**
 !backend/uploads/.gitkeep
+.vercel
+.env*
