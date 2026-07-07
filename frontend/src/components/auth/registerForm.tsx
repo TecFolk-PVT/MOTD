@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
@@ -19,6 +19,11 @@ import * as images from "../../../public/images/ImageIndex";
 
 export default function RegisterForm() {
     const params = useParams();
+    const searchParams = useSearchParams();
+    const redirectUrl = searchParams.get("redirect");
+    const loginHref = redirectUrl
+        ? `/auth/login?redirect=${encodeURIComponent(redirectUrl)}`
+        : "/auth/login";
     const localeParam = params.locale as string;
     const t = getTranslation(localeParam);
 
@@ -305,7 +310,7 @@ export default function RegisterForm() {
                         <footer className="mt-10 md:mt-12 pt-6 border-t border-black/10 text-center fade-in">
                             <p className="font-body-md text-[12px] md:text-[13px] text-black/50 uppercase tracking-[0.15em]">
                                 {t.signup.alreadyLabel}
-                                <Link href="/auth/login" className="text-black font-medium hover:underline underline-offset-4 ml-2">
+                                <Link href={loginHref} className="text-black font-medium hover:underline underline-offset-4 ml-2">
                                     {t.signup.signInLabel}
                                 </Link>
                             </p>
