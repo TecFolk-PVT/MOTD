@@ -1124,6 +1124,7 @@ export default function ReadyMadeCatalogPage() {
                                 image: image,
                                 price: price,
                                 slug: product.slug,
+                                size: String(product.metersPerFabric ?? ""),
                                 quantity: 1,
                                 ...(Number.isFinite(
                                   product.availableFabricStock,

@@ -18,18 +18,14 @@ import logoBlack from "../../../public/PNG/Black/MOTD_Wordmark_Black.png";
 import * as images from "../../../public/images/ImageIndex";
 
 export default function RegisterForm() {
-
   const params = useParams();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
+  const loginHref = redirectUrl
+    ? `/auth/login?redirect=${encodeURIComponent(redirectUrl)}`
+    : "/auth/login";
   const localeParam = params.locale as string;
   const t = getTranslation(localeParam);
-
-    const searchParams = useSearchParams();
-    const redirectUrl = searchParams.get("redirect");
-    const loginHref = redirectUrl
-        ? `/auth/login?redirect=${encodeURIComponent(redirectUrl)}`
-        : "/auth/login";
-    const localeParam = params.locale as string;
-    const t = getTranslation(localeParam);
 
   const locale = useLocale();
   const { register, loginWithGoogle } = useAuth();

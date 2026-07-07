@@ -264,6 +264,7 @@ export function ReadyToWearSection() {
                               image: image,
                               price: item.finalSellingPriceAED || 0,
                               slug: item.slug,
+                              size: String(item.metersPerFabric ?? ""),
                               quantity: 1,
                               // don't pass 0 for unknown stock; undefined = unknown/unlimited
                               ...(Number.isFinite(item.availableFabricStock)
