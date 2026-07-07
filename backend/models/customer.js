@@ -1,6 +1,25 @@
 // models/customer.js
 import mongoose from "mongoose";
 
+const measurementsSchema = new mongoose.Schema(
+  {
+    totalLength: { type: Number, min: 0, default: null },
+    shoulderWidth: { type: Number, min: 0, default: null },
+    armLength: { type: Number, min: 0, default: null },
+    chestWidth: { type: Number, min: 0, default: null },
+    waist: { type: Number, min: 0, default: null },
+    hips: { type: Number, min: 0, default: null },
+    neckWidth: { type: Number, min: 0, default: null },
+    neckDepth: { type: Number, min: 0, default: null },
+    armholeHeight: { type: Number, min: 0, default: null },
+    sleeveOpeningWidth: { type: Number, min: 0, default: null },
+    cuffWidth: { type: Number, min: 0, default: null },
+    cuffLength: { type: Number, min: 0, default: null },
+    notes: { type: String, default: "", trim: true },
+  },
+  { _id: false },
+);
+
 const addressSubSchema = new mongoose.Schema({
   fullName: { type: String, required: true, trim: true },
   phone: { type: String, required: true, trim: true },
@@ -22,7 +41,6 @@ const savedUserSubSchema = new mongoose.Schema({
     enum: ["mother", "aunt", "sister", "daughter", "other"],
     default: "other",
   },
-  profilePic: { type: String, trim: true },
   address: {
     fullName: { type: String, trim: true },
     phone: { type: String, trim: true },
@@ -32,6 +50,7 @@ const savedUserSubSchema = new mongoose.Schema({
     building: { type: String, trim: true },
     postalCode: { type: String, trim: true },
   },
+  measurements: measurementsSchema,
   createdAt: { type: Date, default: Date.now },
 });
 const reviewSchema = new mongoose.Schema(
@@ -44,7 +63,7 @@ const reviewSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 const customerSchema = new mongoose.Schema(
@@ -66,6 +85,7 @@ const customerSchema = new mongoose.Schema(
     savedUsers: [savedUserSubSchema],
     deletedAt: { type: Date, index: true },
     reviews: [reviewSchema],
+    measurements: measurementsSchema,
   },
   {
     timestamps: true,
