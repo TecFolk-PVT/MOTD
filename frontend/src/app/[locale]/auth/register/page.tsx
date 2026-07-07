@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { navigateAfterLogin } from "@/lib/auth/postLoginRedirect";
 import RegisterForm from "../../../../components/auth/registerForm";
@@ -9,14 +9,16 @@ import RegisterForm from "../../../../components/auth/registerForm";
 export default function RegisterPage() {
   const { user, isLoading } = useAuth();
   const params = useParams();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get("redirect");
   const locale = (params.locale as string) || "en";
   const hasRedirected = useRef(false);
 
   useEffect(() => {
     if (isLoading || !user || hasRedirected.current) return;
     hasRedirected.current = true;
-    navigateAfterLogin(user, null, locale);
-  }, [user, isLoading, locale]);
+    navigateAfterLogin(user, redirectUrl, locale);
+  }, [user, isLoading, redirectUrl, locale]);
 
   // if (isLoading || user) {
   //   return (
