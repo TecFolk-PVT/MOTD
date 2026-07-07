@@ -5,11 +5,13 @@ import sharp from 'sharp';
 import {
   getLocalUploadPath,
   isBlobStorageEnabled,
+  assertUploadStorageReady,
   toPublicUploadPath,
 } from './uploads.js';
 
-function getBlobToken() {
-  return process.env.BLOB_READ_WRITE_TOKEN || '';
+function getBlobAuthOptions() {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  return token ? { token } : {};
 }
 
 async function loadBlobSdk() {
@@ -40,12 +42,14 @@ export async function saveImageBuffer(folder, filename, buffer) {
     const { put } = await loadBlobSdk();
     await put(toBlobPath(folder, filename), buffer, {
       access: 'private',
-      token: getBlobToken(),
       contentType: 'image/webp',
       addRandomSuffix: false,
+      ...getBlobAuthOptions(),
     });
     return publicPath;
   }
+
+  assertUploadStorageReady();
 
   const localPath = getLocalUploadPath(folder, filename);
   await fs.mkdir(path.dirname(localPath), { recursive: true });
@@ -76,7 +80,7 @@ export async function deleteStoredUpload(publicPath) {
   if (isBlobStorageEnabled()) {
     try {
       const { del } = await loadBlobSdk();
-      await del(blobPath, { token: getBlobToken() });
+      await del(blobPath, getBlobAuthOptions());
     } catch (err) {
       console.warn(`Failed to delete blob upload: ${blobPath}`, err.message);
     }
@@ -111,7 +115,7 @@ export async function tryServeUploadFromBlob(req, res) {
     const { get } = await loadBlobSdk();
     const result = await get(blobPath, {
       access: 'private',
-      token: getBlobToken(),
+      ...getBlobAuthOptions(),
     });
 
     if (result?.statusCode !== 200 || !result?.stream) {

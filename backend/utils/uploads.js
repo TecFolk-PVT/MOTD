@@ -29,7 +29,20 @@ export const FABRIC_UPLOAD_DIR = path.join(UPLOADS_ROOT, "fabrics");
 export const CUSTOMER_UPLOAD_DIR = path.join(UPLOADS_ROOT, "customer");
 
 export function isBlobStorageEnabled() {
-  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    return true;
+  }
+
+  // Vercel-linked Blob stores use OIDC + BLOB_STORE_ID (no read/write token env).
+  return Boolean(process.env.VERCEL && process.env.BLOB_STORE_ID);
+}
+
+export function assertUploadStorageReady() {
+  if (process.env.VERCEL && !isBlobStorageEnabled()) {
+    throw new Error(
+      "Upload storage is not configured. Link a Vercel Blob store to this project.",
+    );
+  }
 }
 
 export function getLocalUploadPath(folder, filename) {
