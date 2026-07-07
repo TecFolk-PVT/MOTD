@@ -12,7 +12,7 @@ import {
   type RetailOrderListItem,
 } from "@/lib/customOrders";
 import { resolveReadyMadeImage } from "@/lib/readyMade";
-import { ChevronDown, ChevronUp } from "lucide-react"; // or custom icon
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 type RetailOrdersTabProps = {
   locale: Locale;
@@ -54,28 +54,32 @@ export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
 
   if (loading) {
     return (
-      <p className="[font-family:var(--font-ui)] text-sm uppercase tracking-[0.2em] text-center py-16 text-(--color-grey-muted)">
+      <p className="[font-family:var(--font-ui)] text-xs sm:text-sm uppercase tracking-[0.18em] sm:tracking-[0.2em] text-center py-12 sm:py-16 text-(--color-grey-muted)">
         {t("loading")}
       </p>
     );
   }
 
   if (error) {
-    return <p className="text-center text-red-600 py-16">{error}</p>;
+    return (
+      <p className="text-center text-red-600 py-12 sm:py-16 text-sm sm:text-base">
+        {error}
+      </p>
+    );
   }
 
   if (orders.length === 0) {
     return (
-      <div className="text-center py-16 border border-(--color-border) bg-[#FDFAF5] px-6">
-        <p className="[font-family:var(--font-display)] text-[22px] mb-3">
+      <div className="text-center py-12 sm:py-16 border border-(--color-border) bg-[#FDFAF5] px-4 sm:px-6">
+        <p className="[font-family:var(--font-display)] text-lg sm:text-[22px] mb-2 sm:mb-3">
           {t("emptyTitle")}
         </p>
-        <p className="[font-family:var(--font-body)] text-[14px] text-(--color-grey-muted) mb-6 max-w-md mx-auto">
+        <p className="[font-family:var(--font-body)] text-sm sm:text-[14px] text-(--color-grey-muted) mb-4 sm:mb-6 max-w-md mx-auto">
           {t("emptyDescription")}
         </p>
         <Link
           href="/#ready-made"
-          className="inline-block px-8 py-3 bg-black text-white text-[10px] tracking-[0.22em] uppercase hover:bg-[#2A2A28] transition [font-family:var(--font-ui)]"
+          className="inline-block px-6 sm:px-8 py-2 sm:py-3 bg-black text-white text-[8px] sm:text-[10px] tracking-[0.18em] sm:tracking-[0.22em] uppercase hover:bg-[#2A2A28] transition [font-family:var(--font-ui)]"
         >
           {t("browseReadyMade")}
         </Link>
@@ -84,7 +88,7 @@ export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {orders.map((order) => {
         const isMulti = order.items.length > 1;
         const isExpanded = expandedId === order.id;
@@ -92,15 +96,15 @@ export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
         return (
           <article
             key={order.id}
-            className="border border-(--color-border) bg-white p-5 sm:p-6"
+            className="border border-(--color-border) bg-white p-4 sm:p-5 md:p-6"
           >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
               {/* Left section */}
-              <div className="flex-1">
-                <div className="flex items-start gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-3 sm:gap-4">
                   {/* First item image always shown */}
                   {order.items[0]?.image && (
-                    <div className="w-16 h-16 shrink-0 bg-[#F0EBE3] overflow-hidden">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 bg-[#F0EBE3] overflow-hidden">
                       <img
                         src={resolveReadyMadeImage(order.items[0].image)}
                         alt={order.items[0].name}
@@ -108,17 +112,17 @@ export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
                       />
                     </div>
                   )}
-                  <div className="min-w-0">
-                    <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="[font-family:var(--font-ui)] text-[8px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.24em] text-(--color-grey-muted) mb-1.5 sm:mb-2">
                       {t("orderId", { id: shortenOrderId(order.id) })}
                     </p>
                     {/* Summary: show first item name + count if multi */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="[font-family:var(--font-display)] text-[18px]">
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                      <h3 className="[font-family:var(--font-display)] text-base sm:text-[18px] truncate">
                         {order.items[0]?.name || t("unknownItem")}
                       </h3>
                       {isMulti && (
-                        <span className="[font-family:var(--font-ui)] text-[10px] text-(--color-grey-muted) bg-[#F0EBE3] px-2 py-0.5 rounded">
+                        <span className="[font-family:var(--font-ui)] text-[8px] sm:text-[10px] text-(--color-grey-muted) bg-[#F0EBE3] px-1.5 sm:px-2 py-0.5 rounded shrink-0">
                           +{order.items.length - 1} more
                         </span>
                       )}
@@ -126,16 +130,16 @@ export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
                     {!isMulti && (
                       <>
                         {order.items[0]?.size && (
-                          <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.16em] text-(--color-grey-muted) mt-1">
+                          <p className="[font-family:var(--font-ui)] text-[8px] sm:text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.16em] text-(--color-grey-muted) mt-0.5 sm:mt-1">
                             {t("size")}: {order.items[0].size}
                           </p>
                         )}
-                        <p className="[font-family:var(--font-ui)] text-[10px] text-(--color-grey-muted) mt-0.5">
+                        <p className="[font-family:var(--font-ui)] text-[8px] sm:text-[10px] text-(--color-grey-muted) mt-0.5">
                           Quantity: {order.items[0].quantity}
                         </p>
                       </>
                     )}
-                    <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.16em] text-(--color-grey-muted) mt-2">
+                    <p className="[font-family:var(--font-ui)] text-[8px] sm:text-[10px] uppercase tracking-[0.14em] sm:tracking-[0.16em] text-(--color-grey-muted) mt-1.5 sm:mt-2">
                       {formatOrderDate(order.date.toString(), locale)}
                     </p>
                   </div>
@@ -143,37 +147,48 @@ export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
 
                 {/* Expandable details for multi-item orders */}
                 {isMulti && (
-                  <div className="mt-3 pl-20">
+                  <div className="mt-2 sm:mt-3 pl-13 sm:pl-17 md:pl-18">
                     <button
                       onClick={() => toggleExpand(order.id)}
-                      className="flex items-center gap-1 text-xs [font-family:var(--font-ui)] text-(--color-grey-muted) hover:text-black transition"
+                      className="flex items-center gap-1 text-[10px] sm:text-xs [font-family:var(--font-ui)] text-(--color-grey-muted) hover:text-black transition hover:cursor-pointer"
                     >
                       {isExpanded ? (
                         <>
-                          <ChevronUp size={14} /> Hide items
+                          <ChevronUp
+                            size={14}
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                          />{" "}
+                          Hide items
                         </>
                       ) : (
                         <>
-                          <ChevronDown size={14} /> Show all items
+                          <ChevronDown
+                            size={14}
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+                          />{" "}
+                          Show all items
                         </>
                       )}
                     </button>
                     {isExpanded && (
                       <div className="mt-3 space-y-3 border-t border-(--color-border) pt-3">
                         {order.items.map((item, idx) => (
-                          <div key={idx} className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-[#F0EBE3] overflow-hidden rounded shrink-0">
+                          <div
+                            key={idx}
+                            className="flex items-center gap-3 sm:gap-4"
+                          >
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#F0EBE3] overflow-hidden rounded shrink-0">
                               <img
                                 src={resolveReadyMadeImage(item.image)}
                                 alt={item.name}
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            <div className="flex-1">
-                              <p className="[font-family:var(--font-body)] text-sm text-black">
+                            <div className="flex-1 min-w-0">
+                              <p className="[font-family:var(--font-body)] text-xs sm:text-sm text-black truncate">
                                 {item.name}
                               </p>
-                              <div className="flex flex-wrap gap-3 text-[10px] [font-family:var(--font-ui)] text-(--color-grey-muted) uppercase tracking-[0.16em]">
+                              <div className="flex flex-wrap gap-2 sm:gap-3 text-[8px] sm:text-[10px] [font-family:var(--font-ui)] text-(--color-grey-muted) uppercase tracking-[0.14em] sm:tracking-[0.16em]">
                                 {item.size && (
                                   <span>
                                     {t("size")}: {item.size}
@@ -185,8 +200,8 @@ export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
                                 </span>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <span className="[font-family:var(--font-display)] text-sm">
+                            <div className="text-right shrink-0">
+                              <span className="[font-family:var(--font-display)] text-xs sm:text-sm">
                                 {formatCurrency(
                                   item.price * item.quantity,
                                   locale,
@@ -202,14 +217,14 @@ export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
               </div>
 
               {/* Right: status & total */}
-              <div className="flex flex-col items-start sm:items-end gap-2 shrink-0">
-                <span className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.18em] bg-black text-white px-2.5 py-1">
+              <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+                <span className="[font-family:var(--font-ui)] text-[8px] sm:text-[10px] uppercase tracking-[0.16em] sm:tracking-[0.18em] bg-black text-white px-1.5 sm:px-2.5 py-0.5 sm:py-1 whitespace-nowrap">
                   {t(`statuses.${order.status}`, {
                     defaultValue: order.status,
                   })}
                 </span>
                 {order.totalPrice !== undefined && (
-                  <span className="[font-family:var(--font-display)] text-[18px] text-black">
+                  <span className="[font-family:var(--font-display)] text-base sm:text-[18px] text-black whitespace-nowrap">
                     {formatCurrency(order.totalPrice, locale)}
                   </span>
                 )}

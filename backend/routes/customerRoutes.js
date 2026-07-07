@@ -3,7 +3,10 @@ import mongoose from "mongoose";
 import Customer from "../models/customer.js"; // adjust path/extension as needed
 import User from "../models/User.js";
 import { isAuth } from "../middleware/auth.js";
-import { uploadCustomerImageMiddleware, processCustomerImage } from "../middleware/uploadCustomerImage.js";
+import {
+  uploadCustomerImageMiddleware,
+  processCustomerImage,
+} from "../middleware/uploadCustomerImage.js";
 import expressAsyncHandler from "express-async-handler";
 
 const customerRouter = express.Router();
@@ -210,7 +213,6 @@ customerRouter.put("/profile", isAuth, async (req, res) => {
   }
 });
 
-
 // ─── GET /family-members ──────────────────────────────────────────────
 customerRouter.get("/family-members", isAuth, async (req, res) => {
   try {
@@ -229,7 +231,14 @@ customerRouter.get("/family-members", isAuth, async (req, res) => {
 // ─── POST /family-members ─────────────────────────────────────────────
 customerRouter.post("/family-members", isAuth, async (req, res) => {
   const userId = req.user._id;
-  const { name, phone, email, relationship, profilePic, address } = req.body;
+  const {
+    name,
+    phone,
+    email,
+    relationship,
+    address,
+    measurements,
+  } = req.body;
 
   if (!name?.trim() || !phone?.trim()) {
     return res.status(400).json({ error: "Name and phone are required" });
@@ -246,7 +255,6 @@ customerRouter.post("/family-members", isAuth, async (req, res) => {
       phone: phone.trim(),
       email: email?.trim() || undefined,
       relationship: relationship || "other",
-      profilePic: profilePic?.trim() || undefined,
       address: address
         ? {
             fullName: address.fullName?.trim() || name.trim(),
@@ -258,6 +266,7 @@ customerRouter.post("/family-members", isAuth, async (req, res) => {
             postalCode: address.postalCode?.trim() || "",
           }
         : undefined,
+      measurements: measurements || [],
     };
 
     customer.savedUsers.push(newMember);
@@ -275,7 +284,14 @@ customerRouter.post("/family-members", isAuth, async (req, res) => {
 customerRouter.put("/family-members/:id", isAuth, async (req, res) => {
   const userId = req.user._id;
   const memberId = req.params.id;
-  const { name, phone, email, relationship, profilePic, address } = req.body;
+  const {
+    name,
+    phone,
+    email,
+    relationship,
+    address,
+    measurements,
+  } = req.body;
 
   if (!name?.trim() || !phone?.trim()) {
     return res.status(400).json({ error: "Name and phone are required" });
@@ -297,7 +313,6 @@ customerRouter.put("/family-members/:id", isAuth, async (req, res) => {
     member.phone = phone.trim();
     member.email = email?.trim() || undefined;
     member.relationship = relationship || "other";
-    member.profilePic = profilePic?.trim() || undefined;
 
     if (address) {
       member.address = {
@@ -309,6 +324,10 @@ customerRouter.put("/family-members/:id", isAuth, async (req, res) => {
         building: address.building?.trim() || "",
         postalCode: address.postalCode?.trim() || "",
       };
+    }
+
+    if (measurements) {
+      member.measurements = measurements;
     }
 
     await customer.save();
@@ -410,5 +429,232 @@ customerRouter.get("/reviews", async (req, res) => {
     return res.status(500).json({ error: err.message || "Server error" });
   }
 });
+
+// Route for customer to add her own measurements
+customerRouter.post(
+  "/customer_measurements",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const {
+      totalLength,
+      shoulderWidth,
+      armLength,
+      chestWidth,
+      waist,
+      hips,
+      neckWidth,
+      neckDepth,
+      armholeHeight,
+      sleeveOpeningWidth,
+      cuffWidth,
+      cuffLength,
+      notes,
+    } = req.body;
+
+    const customer = await Customer.findOne({ userId });
+    if (!customer) {
+      return res.status(404).json({ error: "Customer profile not found" });
+    }
+
+    // Build measurement object
+    const measurementData = {};
+    const fields = [
+      "totalLength",
+      "shoulderWidth",
+      "armLength",
+      "chestWidth",
+      "waist",
+      "hips",
+      "neckWidth",
+      "neckDepth",
+      "armholeHeight",
+      "sleeveOpeningWidth",
+      "cuffWidth",
+      "cuffLength",
+      "notes",
+    ];
+
+    fields.forEach((field) => {
+      if (req.body[field] !== undefined && req.body[field] !== null) {
+        measurementData[field] = req.body[field];
+      }
+    });
+
+    // Handle measurements
+    if (Array.isArray(customer.measurements)) {
+      customer.measurements.push(measurementData);
+    } else {
+      if (customer.measurements) {
+        Object.assign(customer.measurements, measurementData);
+      } else {
+        customer.measurements = measurementData;
+      }
+    }
+
+    await customer.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Measurements saved successfully",
+      measurements: customer.measurements,
+    });
+  }),
+);
+
+// Route to GET customer owns measurements
+customerRouter.get(
+  "/customer_measurements",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const customer = await Customer.findOne({ userId }, { measurements: 1 });
+
+    if (!customer) {
+      return res.status(404).json({ error: "Customer profile not found" });
+    }
+
+    res.json({
+      success: true,
+      measurements: customer.measurements || null,
+    });
+  }),
+);
+
+// Route to PUT (update) customer measurements
+customerRouter.put(
+  "/customer_measurements",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const {
+      measurementId,
+      totalLength,
+      shoulderWidth,
+      armLength,
+      chestWidth,
+      waist,
+      hips,
+      neckWidth,
+      neckDepth,
+      armholeHeight,
+      sleeveOpeningWidth,
+      cuffWidth,
+      cuffLength,
+      notes,
+    } = req.body;
+
+    const customer = await Customer.findOne({ userId });
+    if (!customer) {
+      return res.status(404).json({ error: "Customer profile not found" });
+    }
+
+    const updateData = {};
+    const fields = [
+      "totalLength",
+      "shoulderWidth",
+      "armLength",
+      "chestWidth",
+      "waist",
+      "hips",
+      "neckWidth",
+      "neckDepth",
+      "armholeHeight",
+      "sleeveOpeningWidth",
+      "cuffWidth",
+      "cuffLength",
+      "notes",
+    ];
+
+    fields.forEach((field) => {
+      if (req.body[field] !== undefined && req.body[field] !== null) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    if (Array.isArray(customer.measurements) && measurementId) {
+      const measurement = customer.measurements.id(measurementId);
+      if (!measurement) {
+        return res.status(404).json({ error: "Measurement not found" });
+      }
+      Object.assign(measurement, updateData);
+    } else if (!Array.isArray(customer.measurements)) {
+      if (customer.measurements) {
+        Object.assign(customer.measurements, updateData);
+      } else {
+        customer.measurements = updateData;
+      }
+    } else {
+      return res.status(400).json({ error: "Measurement ID required" });
+    }
+
+    await customer.save();
+
+    res.json({
+      success: true,
+      message: "Measurements updated",
+      measurements: customer.measurements,
+    });
+  }),
+);
+
+// DELETE - remove measurement of customer
+customerRouter.delete(
+  "/customer_measurements",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const { measurementId } = req.query;
+
+    const customer = await Customer.findOne({ userId });
+    if (!customer) {
+      return res.status(404).json({ error: "Customer profile not found" });
+    }
+
+    if (Array.isArray(customer.measurements) && measurementId) {
+      const removed = customer.measurements.id(measurementId);
+      if (!removed) {
+        return res.status(404).json({ error: "Measurement not found" });
+      }
+      customer.measurements.pull(measurementId);
+    } else if (!Array.isArray(customer.measurements)) {
+      customer.measurements = null;
+    } else {
+      return res.status(400).json({ error: "Measurement ID required" });
+    }
+
+    await customer.save();
+
+    res.json({
+      success: true,
+      message: "Measurement deleted",
+    });
+  }),
+);
+
+// ─── GET member measurements ──────────────────────────────────────────
+customerRouter.get(
+  "/family-members/:id/measurements",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const memberId = req.params.id;
+
+    const customer = await Customer.findOne({ userId });
+    if (!customer) {
+      return res.status(404).json({ error: "Customer profile not found" });
+    }
+
+    const member = customer.savedUsers.id(memberId);
+    if (!member) {
+      return res.status(404).json({ error: "Family member not found" });
+    }
+
+    res.json({
+      success: true,
+      measurements: member.measurements || null,
+    });
+  }),
+);
 
 export default customerRouter;

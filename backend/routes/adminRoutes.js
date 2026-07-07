@@ -19,6 +19,7 @@ import {
   uploadFabricImageMiddleware,
   processFabricImage,
 } from "../middleware/uploadFabricImages.js";
+import Customer from "../models/customer.js";
 
 const adminRouter = express.Router();
 const BCRYPT_ROUNDS = 10;
@@ -96,7 +97,9 @@ adminRouter.get(
 adminRouter.get(
   "/designs",
   expressAsyncHandler(async (req, res) => {
-    const filter = req.query.tailorShopId ? { tailorShopId: req.query.tailorShopId } : {};
+    const filter = req.query.tailorShopId
+      ? { tailorShopId: req.query.tailorShopId }
+      : {};
     const designs = await Design.find(filter)
       .populate("tailorShopId", "name email")
       .sort({ createdAt: -1 });
@@ -216,8 +219,12 @@ adminRouter.put(
     // --- Fabric & Tailor relation fields ---
     product.fabricShopId = req.body.fabricShopId ?? product.fabricShopId;
     product.fabricId = req.body.fabricId ?? product.fabricId;
-    product.tailorShopId = req.body.tailorShopId !== undefined ? req.body.tailorShopId : product.tailorShopId;
-    product.designId = req.body.designId !== undefined ? req.body.designId : product.designId;
+    product.tailorShopId =
+      req.body.tailorShopId !== undefined
+        ? req.body.tailorShopId
+        : product.tailorShopId;
+    product.designId =
+      req.body.designId !== undefined ? req.body.designId : product.designId;
 
     // Fallbacks
     product.fabricType = req.body.fabricType ?? product.fabricType;
@@ -322,9 +329,9 @@ adminRouter.post(
     const { name, email, password, shopName } = req.body;
 
     if (!name?.trim() || !email?.trim() || !password || !shopName?.trim()) {
-      res
-        .status(400)
-        .send({ message: "Name, email, password, and store name are required" });
+      res.status(400).send({
+        message: "Name, email, password, and store name are required",
+      });
       return;
     }
 
@@ -335,10 +342,15 @@ adminRouter.post(
       return;
     }
 
-    const slug = shopName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    const slug = shopName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
     const existingShop = await FabricShop.findOne({ slug });
     if (existingShop) {
-      res.status(400).send({ message: "A store with this name already exists (slug taken)" });
+      res.status(400).send({
+        message: "A store with this name already exists (slug taken)",
+      });
       return;
     }
 
@@ -425,7 +437,10 @@ async function toggleFabricStorePartnerActive(req, res) {
   const updated = await user.save();
 
   // Sync associated FabricShop document isActive status
-  await FabricShop.findOneAndUpdate({ ownerId: user._id }, { isActive: user.isActive });
+  await FabricShop.findOneAndUpdate(
+    { ownerId: user._id },
+    { isActive: user.isActive },
+  );
 
   res.send({
     success: true,
@@ -470,7 +485,9 @@ async function assertFabricStorePartner(listedByStore) {
 adminRouter.get(
   "/fabrics",
   expressAsyncHandler(async (req, res) => {
-    const filter = req.query.listedByStore ? { listedByStore: req.query.listedByStore } : {};
+    const filter = req.query.listedByStore
+      ? { listedByStore: req.query.listedByStore }
+      : {};
     const fabrics = await Fabric.find(filter)
       .populate("listedByStore", "name email")
       .sort({ createdAt: -1 });
@@ -1207,7 +1224,7 @@ adminRouter.get(
         defaultDeliveryFee: 45,
         defaultTailoringFee: 150,
         platformFee: 0,
-        
+
         currency: "AED",
       });
     }
@@ -1367,12 +1384,35 @@ adminRouter.get(
 adminRouter.delete(
   "/customers/:id",
   expressAsyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).send({ message: "Customer not found" });
+    const id = req.params.id;
+
+    // Try to find as User._id first
+    let user = await User.findById(id);
+    let customer = await Customer.findOne({ userId: id });
+
+    // If not found, try as Customer._id
+    if (!user && !customer) {
+      customer = await Customer.findById(id);
+      if (customer) {
+        user = await User.findById(customer.userId);
+      }
     }
+
+    if (!user) {
+      return res.status(404).send({ message: "User not found" });
+    }
+
     if (user.role !== "customer") {
       return res.status(400).send({ message: "User is not a customer" });
+    }
+
+    // Find customer by userId if not already found
+    if (!customer) {
+      customer = await Customer.findOne({ userId: user._id });
+    }
+
+    if (customer) {
+      await customer.deleteOne();
     }
     await user.deleteOne();
     res.send({ message: "Customer deleted successfully" });
