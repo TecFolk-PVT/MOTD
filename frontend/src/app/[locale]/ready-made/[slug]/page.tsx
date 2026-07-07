@@ -230,6 +230,7 @@ export default function ReadyMadeDetailPage() {
         name: product.name,
         image: resolveReadyMadeImage(product.images?.[0]),
         price: product.finalSellingPriceAED || 0,
+        size: String(product.metersPerFabric ?? ""),
         maxStock: product.availableFabricStock || 0,
       });
     }

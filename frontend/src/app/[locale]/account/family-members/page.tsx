@@ -10,14 +10,14 @@ import {
   Plus,
   Edit,
   Trash2,
-  X,
-  Save,
+  Heart,
+  Users2,
   UserPlus,
   Loader2,
+  Clock,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "@/lib/api/client";
-import { Link } from "@/i18n/navigation";
 import { resolveMediaUrl } from "@/lib/media";
 
 // ─── Types ──────────────────────────────────────────────────────────────
@@ -32,8 +32,6 @@ type FamilyMember = {
   profilePic?: string;
   createdAt: string;
 };
-
-type FormData = Omit<FamilyMember, "_id" | "createdAt">;
 
 const RELATIONSHIP_LABELS: Record<Relationship, string> = {
   mother: "Mother",
@@ -74,11 +72,17 @@ export default function FamilyMembersPage() {
     fetchMembers();
   }, [fetchMembers]);
 
-  // Stats
   const stats = {
     total: members.length,
     mothers: members.filter((m) => m.relationship === "mother").length,
     others: members.filter((m) => m.relationship !== "mother").length,
+    recent: members.filter((m) => {
+      const now = new Date();
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      return new Date(m.createdAt) >= startOfWeek;
+    }).length,
   };
 
   const handleDelete = async (id: string) => {
@@ -151,24 +155,61 @@ export default function FamilyMembersPage() {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">
-            Total Members
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition hover:border-gray-400">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Total
+            </p>
+            <div className="w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-gray-100 flex items-center justify-center">
+              <Users className="w-3 h-3 sm:w-5 sm:h-5 text-gray-700" />
+            </div>
+          </div>
+          <p className="text-xl sm:text-3xl font-medium text-black mt-1 sm:mt-2">
+            {stats.total}
           </p>
-          <p className="text-2xl font-light text-black mt-1">{stats.total}</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">
-            Mothers
+
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition hover:border-gray-400">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Mothers
+            </p>
+            <div className="w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-gray-100 flex items-center justify-center">
+              <Heart className="w-3 h-3 sm:w-5 sm:h-5 text-gray-700" />
+            </div>
+          </div>
+          <p className="text-xl sm:text-3xl font-medium text-black mt-1 sm:mt-2">
+            {stats.mothers}
           </p>
-          <p className="text-2xl font-light text-black mt-1">{stats.mothers}</p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">
-            Other Relations
+
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition hover:border-gray-400">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Other
+            </p>
+            <div className="w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-gray-100 flex items-center justify-center">
+              <Users2 className="w-3 h-3 sm:w-5 sm:h-5 text-gray-700" />
+            </div>
+          </div>
+          <p className="text-xl sm:text-3xl font-medium text-black mt-1 sm:mt-2">
+            {stats.others}
           </p>
-          <p className="text-2xl font-light text-black mt-1">{stats.others}</p>
+        </div>
+
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-5 border border-gray-200 shadow-sm hover:shadow-md transition hover:border-gray-400">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wider">
+              This Week
+            </p>
+            <div className="w-6 h-6 sm:w-10 sm:h-10 rounded-full bg-gray-100 flex items-center justify-center">
+              <Clock className="w-3 h-3 sm:w-5 sm:h-5 text-gray-700" />
+            </div>
+          </div>
+          <p className="text-xl sm:text-3xl font-medium text-black mt-1 sm:mt-2">
+            {stats.recent}
+          </p>
         </div>
       </div>
 
@@ -194,6 +235,7 @@ export default function FamilyMembersPage() {
       </div>
 
       {/* Table */}
+      {/* Mobile Cards + Desktop Table */}
       {filteredMembers.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
           <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
@@ -205,7 +247,7 @@ export default function FamilyMembersPage() {
           {!searchTerm && (
             <button
               onClick={() => setAddingMember(true)}
-              className="mt-4 inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition"
+              className="mt-4 inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition hover:cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               Add your first member
@@ -213,91 +255,168 @@ export default function FamilyMembersPage() {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                    Relationship
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    Phone
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
-                    Added
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredMembers.map((member) => (
-                  <tr
-                    key={member._id}
-                    className="group hover:bg-gray-50 transition"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        {member.profilePic ? (
-                          <img
-                            src={resolveMediaUrl(member.profilePic)}
-                            alt={member.name}
-                            className="w-8 h-8 rounded-full object-cover bg-gray-200"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs font-bold uppercase">
-                            {member.name.charAt(0)}
-                          </div>
-                        )}
-                        <span className="text-sm font-medium text-black">
+        <>
+          {/* Mobile Cards - visible on small screens */}
+          <div className="grid grid-cols-1 gap-3 sm:hidden">
+            {filteredMembers.map((member) => (
+              <div
+                key={member._id}
+                className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
+              >
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      {member.profilePic ? (
+                        <img
+                          src={resolveMediaUrl(member.profilePic)}
+                          alt={member.name}
+                          className="w-10 h-10 rounded-full object-cover bg-gray-200 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-sm font-medium uppercase shrink-0">
+                          {member.name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-black truncate">
                           {member.name}
-                        </span>
+                        </p>
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[10px] sm:text-xs text-gray-500 truncate flex-1">
+                            {RELATIONSHIP_LABELS[member.relationship]}
+                          </p>
+                          <div className="flex gap-0.5 sm:gap-1 shrink-0">
+                            <button
+                              onClick={() => setEditingMember(member)}
+                              className="p-1 sm:p-1.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition"
+                              aria-label="Edit"
+                            >
+                              <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(member._id)}
+                              className="p-1 sm:p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition"
+                              aria-label="Delete"
+                            >
+                              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 hidden sm:table-cell">
-                      {RELATIONSHIP_LABELS[member.relationship]}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 hidden md:table-cell">
-                      {member.phone}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 hidden lg:table-cell">
-                      {member.email || "—"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 hidden xl:table-cell">
-                      {formatDate(member.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-start gap-2">
-                        <button
-                          onClick={() => setEditingMember(member)}
-                          className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition"
-                          aria-label="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(member._id)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition"
-                          aria-label="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className="text-gray-400">Phone</p>
+                      <p className="text-gray-700 font-medium truncate">
+                        {member.phone}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-gray-400">Email</p>
+                      <p className="text-gray-700 font-medium truncate">
+                        {member.email || "—"}
+                      </p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-gray-400">Added</p>
+                      <p className="text-gray-700 font-medium">
+                        {formatDate(member.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
+
+          {/* Desktop Table - hidden on small screens */}
+          <div className="hidden sm:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                      Relationship
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                      Phone
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden xl:table-cell">
+                      Added
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredMembers.map((member) => (
+                    <tr
+                      key={member._id}
+                      className="group hover:bg-gray-50 transition"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          {member.profilePic ? (
+                            <img
+                              src={resolveMediaUrl(member.profilePic)}
+                              alt={member.name}
+                              className="w-8 h-8 rounded-full object-cover bg-gray-200"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 text-xs font-medium uppercase">
+                              {member.name.charAt(0)}
+                            </div>
+                          )}
+                          <span className="text-sm font-medium text-black">
+                            {member.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 hidden sm:table-cell">
+                        {RELATIONSHIP_LABELS[member.relationship]}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 hidden md:table-cell">
+                        {member.phone}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 hidden lg:table-cell">
+                        {member.email || "—"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 hidden xl:table-cell">
+                        {formatDate(member.createdAt)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-start gap-2">
+                          <button
+                            onClick={() => setEditingMember(member)}
+                            className="p-1.5 text-gray-400 hover:text-black hover:bg-gray-100 rounded-full transition hover:cursor-pointer"
+                            aria-label="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(member._id)}
+                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition hover:cursor-pointer"
+                            aria-label="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

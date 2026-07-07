@@ -5,7 +5,15 @@ import os from "os";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** Local dev uses backend/uploads; Vercel serverless uses /tmp (ephemeral). */
+const UPLOAD_FOLDERS = [
+  "ready-made",
+  "tailor-design",
+  "tailor-shop",
+  "fabrics",
+  "customer",
+];
+
+/** Local dev uses backend/uploads; Vercel without Blob uses /tmp (ephemeral). */
 const UPLOADS_BASE = process.env.VERCEL
   ? path.join(os.tmpdir(), "motd-uploads")
   : path.join(__dirname, "..", "uploads");
@@ -20,7 +28,41 @@ export const TAILOR_SHOP_UPLOAD_DIR = path.join(UPLOADS_ROOT, "tailor-shop");
 export const FABRIC_UPLOAD_DIR = path.join(UPLOADS_ROOT, "fabrics");
 export const CUSTOMER_UPLOAD_DIR = path.join(UPLOADS_ROOT, "customer");
 
+export function isBlobStorageEnabled() {
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    return true;
+  }
+
+  // Vercel-linked Blob stores use OIDC + BLOB_STORE_ID (no read/write token env).
+  return Boolean(process.env.VERCEL && process.env.BLOB_STORE_ID);
+}
+
+export function assertUploadStorageReady() {
+  if (process.env.VERCEL && !isBlobStorageEnabled()) {
+    throw new Error(
+      "Upload storage is not configured. Link a Vercel Blob store to this project.",
+    );
+  }
+}
+
+export function getLocalUploadPath(folder, filename) {
+  if (!UPLOAD_FOLDERS.includes(folder)) {
+    throw new Error(`Invalid upload folder: ${folder}`);
+  }
+
+  const safeName = path.basename(filename);
+  if (!safeName || safeName.includes("..")) {
+    throw new Error("Invalid upload filename");
+  }
+
+  return path.join(UPLOADS_ROOT, folder, safeName);
+}
+
 export function ensureUploadDirs() {
+  if (isBlobStorageEnabled()) {
+    return;
+  }
+
   fs.mkdirSync(READY_MADE_UPLOAD_DIR, { recursive: true });
   fs.mkdirSync(TAILOR_DESIGN_UPLOAD_DIR, { recursive: true });
   fs.mkdirSync(TAILOR_SHOP_UPLOAD_DIR, { recursive: true });
@@ -32,54 +74,18 @@ export function toPublicUploadPath(folder, filename) {
   return `/uploads/${folder}/${filename}`;
 }
 
-/** Remove a stored tailor-design upload from disk. */
-export function deleteTailorDesignUpload(publicPath) {
-  if (!publicPath || typeof publicPath !== "string") return;
-
-  const normalized = publicPath.trim();
-  const prefix = "/uploads/tailor-design/";
-  if (!normalized.startsWith(prefix)) return;
-
-  const filename = path.basename(normalized);
-  if (!filename || filename.includes("..")) return;
-
-  const fullPath = path.join(TAILOR_DESIGN_UPLOAD_DIR, filename);
-  const resolved = path.resolve(fullPath);
-  const uploadsRoot = path.resolve(TAILOR_DESIGN_UPLOAD_DIR);
-
-  if (!resolved.startsWith(uploadsRoot)) return;
-
-  try {
-    if (fs.existsSync(resolved)) {
-      fs.unlinkSync(resolved);
-    }
-  } catch (err) {
-    console.warn(`Failed to delete tailor design upload: ${normalized}`, err);
-  }
+export async function deleteTailorDesignUpload(publicPath) {
+  return deleteStoredUploadByPrefix(publicPath, "/uploads/tailor-design/");
 }
 
-/** Remove a previously stored tailor-shop upload from disk (ignores seed /images paths). */
-export function deleteTailorShopUpload(publicPath) {
+export async function deleteTailorShopUpload(publicPath) {
+  return deleteStoredUploadByPrefix(publicPath, "/uploads/tailor-shop/");
+}
+
+async function deleteStoredUploadByPrefix(publicPath, prefix) {
   if (!publicPath || typeof publicPath !== "string") return;
+  if (!publicPath.startsWith(prefix)) return;
 
-  const normalized = publicPath.trim();
-  const prefix = "/uploads/tailor-shop/";
-  if (!normalized.startsWith(prefix)) return;
-
-  const filename = path.basename(normalized);
-  if (!filename || filename.includes("..")) return;
-
-  const fullPath = path.join(TAILOR_SHOP_UPLOAD_DIR, filename);
-  const resolved = path.resolve(fullPath);
-  const uploadsRoot = path.resolve(TAILOR_SHOP_UPLOAD_DIR);
-
-  if (!resolved.startsWith(uploadsRoot)) return;
-
-  try {
-    if (fs.existsSync(resolved)) {
-      fs.unlinkSync(resolved);
-    }
-  } catch (err) {
-    console.warn(`Failed to delete tailor shop upload: ${normalized}`, err);
-  }
+  const { deleteStoredUpload } = await import("./imageStorage.js");
+  await deleteStoredUpload(publicPath);
 }

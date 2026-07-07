@@ -186,18 +186,18 @@ const findOwnDesign = async (shopId, designId, res) => {
   return design;
 };
 
-const cleanupRemovedDesignImages = (previousImages = [], nextImages = []) => {
+const cleanupRemovedDesignImages = async (previousImages = [], nextImages = []) => {
   const nextSet = new Set(nextImages);
   for (const image of previousImages) {
     if (!nextSet.has(image)) {
-      deleteTailorDesignUpload(image);
+      await deleteTailorDesignUpload(image);
     }
   }
 };
 
-const cleanupAllDesignImages = (images = []) => {
+const cleanupAllDesignImages = async (images = []) => {
   for (const image of images) {
-    deleteTailorDesignUpload(image);
+    await deleteTailorDesignUpload(image);
   }
 };
 
@@ -308,7 +308,7 @@ tailorDesignRouter.put(
     Object.assign(design, data);
     const updatedDesign = await design.save();
 
-    cleanupRemovedDesignImages(previousImages, updatedDesign.images || []);
+    await cleanupRemovedDesignImages(previousImages, updatedDesign.images || []);
 
     res.json({
       success: true,
@@ -327,7 +327,7 @@ tailorDesignRouter.delete(
     const design = await findOwnDesign(shop._id, req.params.id, res);
     if (!design) return;
 
-    cleanupAllDesignImages(design.images || []);
+    await cleanupAllDesignImages(design.images || []);
     await design.deleteOne();
 
     res.json({

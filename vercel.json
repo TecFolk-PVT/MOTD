@@ -23,13 +23,6 @@
     {
       "src": "/uploads/(.*)",
       "dest": "api/index.mjs"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/$1"
     }
   ]
 }
