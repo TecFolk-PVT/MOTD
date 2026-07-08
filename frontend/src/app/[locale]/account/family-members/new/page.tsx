@@ -220,6 +220,13 @@ export default function FamilyMembersForm({
   ) => {
     const { name, value } = e.target;
 
+    let processedValue = value;
+
+    if (name === "phone" || name === "address.phone") {
+      // Keep only digits and limit to 9 characters
+      processedValue = value.replace(/[^0-9]/g, "").slice(0, 9);
+
+
     // Handle measurement fields
     if (name.startsWith("measurements.")) {
       const field = name.split(".")[1];
@@ -264,16 +271,17 @@ export default function FamilyMembersForm({
         if (addrPhoneError) setAddrPhoneError("");
       }
       return;
+
     }
 
     if (name.startsWith("address.")) {
       const field = name.split(".")[1];
       setForm((prev) => ({
         ...prev,
-        address: { ...prev.address, [field]: value },
+        address: { ...prev.address, [field]: processedValue },
       }));
     } else {
-      setForm((prev) => ({ ...prev, [name]: value }));
+      setForm((prev) => ({ ...prev, [name]: processedValue }));
     }
   };
 
@@ -323,6 +331,16 @@ export default function FamilyMembersForm({
 
     if (form.address.phone && !validateUAEPhone(form.address.phone)) {
       toast.error("Enter valid UAE number for address (+971 XX XXX XXXX)");
+      return;
+    }
+
+    if (form.phone.length !== 9) {
+      toast.error("Phone number must be exactly 9 digits");
+      return;
+    }
+
+    if (form.address.phone && form.address.phone.length !== 9) {
+      toast.error("Address phone number must be exactly 9 digits");
       return;
     }
 
@@ -432,8 +450,16 @@ export default function FamilyMembersForm({
           <h2 className="text-sm sm:text-base font-medium text-black mb-4 sm:mb-6">
             Personal Information
           </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Full Name <span className="text-red-500 font-bold ml-0.5">*</span>
+              </label>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
             <FormField label="Full Name" name="name" required>
+
               <input
                 type="text"
                 name="name"
@@ -443,6 +469,13 @@ export default function FamilyMembersForm({
                 className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
                 placeholder="Fatima Ahmed"
               />
+
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Phone <span className="text-red-500 font-bold ml-0.5">*</span>
+              </label>
+
             </FormField>
 
             <FormField label="Phone" name="phone" required error={phoneError}>
@@ -525,13 +558,20 @@ export default function FamilyMembersForm({
             </FormField>
 
             <FormField label="Email" name="email">
+
               <input
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
+
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+                placeholder="50 123 4567"
+
                 className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
                 placeholder="example@email.com"
+
               />
             </FormField>
           </div>
