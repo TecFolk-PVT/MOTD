@@ -285,23 +285,6 @@ export default function EditProfileForm({ onCancel }: EditProfileFormProps) {
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (!form.name.trim()) errors.name = "Full name is required";
-    if (!form.phone.trim()) errors.phone = "Phone number is required";
-    
-    if (!form.dob) {
-      errors.dob = "Date of Birth is required";
-    } else {
-      const dobDate = new Date(form.dob);
-      const now = new Date();
-      now.setHours(23, 59, 59, 999); // allow today as valid DOB
-      if (dobDate > now) {
-        errors.dob = "Date of Birth cannot be in the future";
-      }
-    }
-
-    if (!form.address.fullName.trim())
-
-
     // Validate name
     if (!form.name.trim()) {
       errors.name = "Full name is required";
@@ -359,10 +342,12 @@ export default function EditProfileForm({ onCancel }: EditProfileFormProps) {
     }
 
     // Validate DOB
-    if (form.dob) {
+    if (!form.dob) {
+      errors.dob = "Date of Birth is required";
+    } else {
       const dobDate = new Date(form.dob);
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      today.setHours(23, 59, 59, 999);
       if (dobDate > today) {
         errors.dob = "Date of birth cannot be in the future";
       }
@@ -566,7 +551,6 @@ export default function EditProfileForm({ onCancel }: EditProfileFormProps) {
                 </div>
               </FormField>
 
-              <FormField label="Date of Birth" name="dob" required error={fieldErrors.dob}>
               <FormField
                 label="Date of Birth"
                 name="dob"
@@ -577,10 +561,8 @@ export default function EditProfileForm({ onCancel }: EditProfileFormProps) {
                   type="date"
                   name="dob"
                   value={form.dob}
-                  max={new Date().toISOString().split("T")[0]}
+                  max={todayStr || new Date().toISOString().split("T")[0]}
                   onChange={handleChange}
-                  max={todayStr}
-                  className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent"
                   className="w-full py-1 sm:py-1.5 text-sm sm:text-base border-b border-gray-300 focus:border-black outline-none bg-transparent"
                 />
               </FormField>
@@ -803,13 +785,8 @@ export default function EditProfileForm({ onCancel }: EditProfileFormProps) {
             </button>
             <button
               type="submit"
-
               disabled={submitting || !form.dob}
-              className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 flex items-center gap-2"
-
-              disabled={submitting}
               className="px-4 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 flex items-center justify-center gap-2 hover:cursor-pointer w-full sm:w-auto"
-
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
