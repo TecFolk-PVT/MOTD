@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { api } from "@/lib/api/client";
 import FormField from "@/components/admin/FormField";
 import { motion, AnimatePresence } from "framer-motion";
+import { SUCCESS_TOAST, ERROR_TOAST } from "@/lib/tailorPortalToast";
 
 type Relationship = "mother" | "aunt" | "sister" | "daughter" | "other";
 
@@ -242,21 +243,21 @@ export default function FamilyMembersForm({
     }
 
     if (!form.name.trim()) {
-      toast.error("Full name is required");
+      toast.error("Full name is required", ERROR_TOAST);
       return;
     }
 
     if (!form.phone) {
-      toast.error("Phone number is required");
+      toast.error("Phone number is required", ERROR_TOAST);
       return;
     }
     if (!validateUAEPhone(form.phone)) {
-      toast.error("Enter valid UAE number (+971 XX XXX XXXX)");
+      toast.error("Enter valid UAE number (+971 XX XXX XXXX)", ERROR_TOAST);
       return;
     }
 
     if (form.address.phone && !validateUAEPhone(form.address.phone)) {
-      toast.error("Enter valid UAE number for address (+971 XX XXX XXXX)");
+      toast.error("Enter valid UAE number for address (+971 XX XXX XXXX)", ERROR_TOAST);
       return;
     }
 
@@ -289,14 +290,14 @@ export default function FamilyMembersForm({
           `/api/customer/family-members/${initialData._id}`,
           payload,
         );
-        toast.success("Member updated");
+        toast.success("Member updated", SUCCESS_TOAST);
       } else {
         await api.post("/api/customer/family-members", payload);
-        toast.success("Member added");
+        toast.success("Member added", SUCCESS_TOAST);
       }
       onSuccess();
     } catch (err: any) {
-      toast.error(err.message || "Operation failed");
+      toast.error(err.message || "Operation failed", ERROR_TOAST);
     } finally {
       setSubmitting(false);
     }
