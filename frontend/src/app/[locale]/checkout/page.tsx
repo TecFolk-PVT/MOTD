@@ -16,6 +16,8 @@ import type { ApiError } from "@/lib/api/client";
 import type { CartItem } from "@/context/CartContext";
 import { resolveMediaUrl } from "@/lib/media";
 import ApplePayCheckout from "@/components/payments/ApplePayCheckout";
+import toast from "react-hot-toast";
+import { SUCCESS_TOAST, ERROR_TOAST } from "@/lib/tailorPortalToast";
 
 const EMIRATES = [
   "Abu Dhabi",
@@ -246,6 +248,7 @@ export default function CheckoutPage() {
     if (!formData.phone.trim()) newErrors.phone = "Required";
     if (!formData.emirate) newErrors.emirate = "Required";
     if (!formData.city.trim()) newErrors.city = "Required";
+    if (!formData.street.trim()) newErrors.street = "Required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -274,6 +277,10 @@ export default function CheckoutPage() {
 
   const createRetailPaymentIntent = async () => {
     if (!validateForm()) {
+      toast.error(
+        locale === "ar" ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields.",
+        ERROR_TOAST
+      );
       throw new Error("Please complete all required delivery fields.");
     }
 
@@ -329,6 +336,7 @@ export default function CheckoutPage() {
           ? err.message
           : "Something went wrong. Please try again.");
       setErrorMessage(message);
+      toast.error(message, ERROR_TOAST);
       throw err;
     } finally {
       setIsSubmitting(false);
@@ -340,7 +348,13 @@ export default function CheckoutPage() {
   };
 
   const placeCodOrder = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      toast.error(
+        locale === "ar" ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields.",
+        ERROR_TOAST
+      );
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMessage(null);
@@ -374,6 +388,7 @@ export default function CheckoutPage() {
           ? err.message
           : "Something went wrong. Please try again.");
       setErrorMessage(message);
+      toast.error(message, ERROR_TOAST);
     } finally {
       setIsSubmitting(false);
     }
@@ -548,6 +563,11 @@ export default function CheckoutPage() {
                         onChange={handleChange}
                         className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
                       />
+                      {errors.street && (
+                        <p className="text-red-500 text-[11px] mt-1">
+                          {errors.street}
+                        </p>
+                      )}
                     </div>
                     <div className="sm:col-span-2">
                       <label className="font-label-sm text-[11px] md:text-[12px] text-black/60 uppercase tracking-[0.2em] block">

@@ -7,6 +7,7 @@ import FadeInSection from "@/components/shared/fadeInSection";
 import toast from "react-hot-toast";
 import { Mail, Phone, Loader2, Send } from "lucide-react";
 import { api } from "@/lib/api/client";
+import { SUCCESS_TOAST, ERROR_TOAST } from "@/lib/tailorPortalToast";
 
 export default function ContactUsPage() {
     const params = useParams();
@@ -26,24 +27,24 @@ export default function ContactUsPage() {
         
         // Simple client-side validation
         if (!formData.name.trim() || !formData.email.trim() || !formData.subject.trim() || !formData.message.trim()) {
-            toast.error(isAr ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields.");
+            toast.error(isAr ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields.", ERROR_TOAST);
             return;
         }
 
         // Email regex validation
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(formData.email)) {
-            toast.error(isAr ? "يرجى إدخال بريد إلكتروني صحيح." : "Please enter a valid email address.");
+            toast.error(isAr ? "يرجى إدخال بريد إلكتروني صحيح." : "Please enter a valid email address.", ERROR_TOAST);
             return;
         }
 
         setLoading(true);
         try {
             await api.post("/api/users/contact", formData);
-            toast.success(isAr ? "تم إرسال رسالتك بنجاح! سنتواصل معك قريبًا." : "Your message was sent successfully! We will contact you soon.");
+            toast.success(isAr ? "تم إرسال رسالتك بنجاح! سنتواصل معك قريبًا." : "Your message was sent successfully! We will contact you soon.", SUCCESS_TOAST);
             setFormData({ name: "", email: "", subject: "", message: "" });
         } catch (error) {
-            toast.error(isAr ? "فشل إرسال الرسالة. يرجى المحاولة لاحقًا." : "Failed to send message. Please try again later.");
+            toast.error(isAr ? "فشل إرسال الرسالة. يرجى المحاولة لاحقًا." : "Failed to send message. Please try again later.", ERROR_TOAST);
         } finally {
             setLoading(false);
         }

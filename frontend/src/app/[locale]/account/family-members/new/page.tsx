@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { Save, Loader2, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "@/lib/api/client";
 import CustomerImageUpload from "@/components/shared/customerImageUpload";
+import { SUCCESS_TOAST, ERROR_TOAST } from "@/lib/tailorPortalToast";
 
 type Relationship = "mother" | "aunt" | "sister" | "daughter" | "other";
 type Gender = "male" | "female" | "other";
@@ -66,6 +67,11 @@ export default function FamilyMembersForm({
   initialData,
 }: FamilyMemberFormProps) {
   const isEdit = !!initialData?._id;
+  const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
+  const isAr = locale === "ar";
+  
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<FormData>(DEFAULT_FORM);
 
@@ -119,17 +125,26 @@ export default function FamilyMembersForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim() || !form.phone.trim()) {
-      toast.error("Name and phone are required");
+      toast.error(
+        isAr ? "الاسم والهاتف مطلوبان." : "Name and phone are required.",
+        ERROR_TOAST
+      );
       return;
     }
 
     if (form.phone.length !== 9) {
-      toast.error("Phone number must be exactly 9 digits");
+      toast.error(
+        isAr ? "يجب أن يتكون رقم الهاتف من 9 أرقام بالضبط." : "Phone number must be exactly 9 digits.",
+        ERROR_TOAST
+      );
       return;
     }
 
     if (form.address.phone && form.address.phone.length !== 9) {
-      toast.error("Address phone number must be exactly 9 digits");
+      toast.error(
+        isAr ? "يجب أن يتكون رقم الهاتف للعنوان من 9 أرقام بالضبط." : "Address phone number must be exactly 9 digits.",
+        ERROR_TOAST
+      );
       return;
     }
 
@@ -158,14 +173,14 @@ export default function FamilyMembersForm({
           `/api/customer/family-members/${initialData._id}`,
           payload,
         );
-        toast.success("Member updated");
+        toast.success(isAr ? "تم تحديث بيانات العضو بنجاح." : "Member updated", SUCCESS_TOAST);
       } else {
         await api.post("/api/customer/family-members", payload);
-        toast.success("Member added");
+        toast.success(isAr ? "تم إضافة العضو بنجاح." : "Member added", SUCCESS_TOAST);
       }
       onSuccess();
     } catch (err: any) {
-      toast.error(err.message || "Operation failed");
+      toast.error(err.message || (isAr ? "فشلت العملية." : "Operation failed"), ERROR_TOAST);
     } finally {
       setSubmitting(false);
     }
