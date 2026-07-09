@@ -252,14 +252,14 @@ tailorPortalRouter.put(
     const updatedShop = await shop.save();
 
     if (data.logo !== undefined && previousLogo && previousLogo !== updatedShop.logo) {
-      deleteTailorShopUpload(previousLogo);
+      await deleteTailorShopUpload(previousLogo);
     }
     if (
       data.coverImage !== undefined &&
       previousCover &&
       previousCover !== updatedShop.coverImage
     ) {
-      deleteTailorShopUpload(previousCover);
+      await deleteTailorShopUpload(previousCover);
     }
 
     res.json({

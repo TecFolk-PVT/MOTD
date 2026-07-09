@@ -74,14 +74,13 @@ export default function OrderReviewStep() {
 
   // Recalculate pricing when delivery type changes
   useEffect(() => {
-    if (
-      !isHydrated ||
-      !previewPayload ||
-      shippingFee === null ||
-      vatRate === null
-    ) {
+    if (!isHydrated) return;
+    if (!previewPayload) {
+      setPricing(null);
+      setPricingError(null);
       return;
     }
+    if (shippingFee === null || vatRate === null) return;
 
     const fetchPreview = async () => {
       try {
@@ -91,8 +90,6 @@ export default function OrderReviewStep() {
         const payload = {
           ...previewPayload,
           deliveryType,
-          shippingFee,
-          vatRate,
         };
 
         const data = await api.post<{
@@ -116,7 +113,7 @@ export default function OrderReviewStep() {
     };
 
     fetchPreview();
-  }, [isHydrated, previewPayload, deliveryType, shippingFee, vatRate, t]);
+  }, [isHydrated, previewPayload, deliveryType, t, shippingFee, vatRate]);
 
   const canContinue = isReviewStepComplete(draft, pricing !== null);
 
@@ -132,16 +129,31 @@ export default function OrderReviewStep() {
     router.push("/custom-order/checkout");
   };
 
-  const convertMetersToWara = (meters: number): number => {
-    return Math.round((meters / WARA_TO_METERS) * 10000) / 10000;
-  };
-
-  const formatFabricAmount = (meters: number, unit: FabricUnit): string => {
-    if (unit === "wara") {
-      return `${meters.toFixed(2)} wara`;
+  const invalidPreviewReason = useMemo(() => {
+    if (!draft.lineItems || draft.lineItems.length === 0) {
+      // Fallback string so we don't crash when translation keys are missing
+      return "Add at least one item to calculate pricing.";
     }
-    return `${meters} ${t("meters")}`;
-  };
+
+    if (draft.fabricSource === "storefront") {
+      const missingFabric = draft.lineItems.some((li) => !li.fabric);
+      if (missingFabric) return "Please select fabric for all items.";
+    }
+
+    const invalidMeters = draft.lineItems.some((li) => {
+      if (li.fabricMeters === null) return true;
+      if (li.fabricMeters === 0) return true;
+      const metersInMeters =
+        li.fabricUnit === "wara"
+          ? li.fabricMeters * WARA_TO_METERS
+          : li.fabricMeters;
+      return metersInMeters < 2 || metersInMeters > 7;
+    });
+
+    if (invalidMeters) return t("pricingNotReady.invalidMeters");
+    // Fallback for any other invalid state.
+    return t("pricingNotReady.generic");
+  }, [draft.fabricSource, draft.lineItems, t]);
 
   if (!isHydrated) {
     return (
@@ -213,6 +225,7 @@ export default function OrderReviewStep() {
                         )}
                       </dd>
                     </div>
+
                     <div>
                       <dt className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-1">
                         {t("tailor")}
@@ -221,6 +234,7 @@ export default function OrderReviewStep() {
                         {tailorName}
                       </dd>
                     </div>
+
                     <div>
                       <dt className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-1">
                         {t("fabric")}
@@ -229,9 +243,12 @@ export default function OrderReviewStep() {
                         {fabricName}
                       </dd>
                     </div>
+
                     <div>
-                      <dt className="...">{t("fabricMeters")}</dt>
-                      <dd className="...">
+                      <dt className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-1">
+                        {t("fabricMeters")}
+                      </dt>
+                      <dd className="[font-family:var(--font-body)] text-[15px] text-black">
                         {item.fabricMeters ? (
                           <span>
                             {item.fabricUnit === "wara"
@@ -275,6 +292,7 @@ export default function OrderReviewStep() {
                 ) : (
                   t("measurementsNotProvided")
                 )}
+
                 {draft.measurements.notes.trim() && (
                   <p className="mt-3 text-[14px] normal-case tracking-normal text-(--color-grey-muted)">
                     <span className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.16em] text-black block mb-1">
@@ -305,6 +323,7 @@ export default function OrderReviewStep() {
                   </p>
                 </div>
               )}
+
               <div className={loadingPricing ? "opacity-50" : ""}>
                 <div className="space-y-3 [font-family:var(--font-body)] text-[14px]">
                   <div className="flex justify-between gap-4">
@@ -363,7 +382,6 @@ export default function OrderReviewStep() {
                           >
                             Pickup
                           </span>
-
                           <input
                             type="checkbox"
                             checked={deliveryType === "delivery"}
@@ -374,9 +392,7 @@ export default function OrderReviewStep() {
                             }
                             className="sr-only peer"
                           />
-
-                          <div className="relative w-11 h-6 bg-[#D1CDC5] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black shadow-inner"></div>
-
+                          <div className="relative w-11 h-6 bg-[#D1CDC5] peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-black/20 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full after:content-[''] after:absolute after:top-0.5 after:inset-s-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-black shadow-inner" />
                           <span
                             className={`text-[10px] uppercase tracking-[0.2em] font-ui transition-colors ml-2 ${
                               deliveryType === "delivery"
@@ -402,12 +418,7 @@ export default function OrderReviewStep() {
                       {t("lines.subtotal")}
                     </span>
                     <span className="text-black shrink-0">
-                      {formatCurrency(
-                        deliveryType === "delivery"
-                          ? pricing.subtotal
-                          : pricing.subtotal - pricing.deliveryFee,
-                        locale,
-                      )}
+                      {formatCurrency(pricing.subtotal, locale)}
                     </span>
                   </div>
 
@@ -416,13 +427,7 @@ export default function OrderReviewStep() {
                       {t("lines.vat", { rate: vatPercent })}
                     </span>
                     <span className="text-black shrink-0">
-                      {formatCurrency(
-                        deliveryType === "delivery"
-                          ? pricing.vatAmount
-                          : pricing.vatAmount -
-                              pricing.deliveryFee * (vatRate ?? 0.05),
-                        locale,
-                      )}
+                      {formatCurrency(pricing.vatAmount, locale)}
                     </span>
                   </div>
 
@@ -431,13 +436,7 @@ export default function OrderReviewStep() {
                       {t("lines.total")}
                     </span>
                     <span className="[font-family:var(--font-display)] text-[22px] text-black shrink-0">
-                      {formatCurrency(
-                        deliveryType === "delivery"
-                          ? pricing.total
-                          : pricing.total -
-                              pricing.deliveryFee * (1 + (vatRate ?? 0.05)),
-                        locale,
-                      )}
+                      {formatCurrency(pricing.total, locale)}
                     </span>
                   </div>
                 </div>
@@ -447,7 +446,11 @@ export default function OrderReviewStep() {
             <p className="[font-family:var(--font-ui)] text-sm uppercase tracking-[0.2em] text-(--color-grey-muted) py-8">
               {t("loadingPricing")}
             </p>
-          ) : null}
+          ) : (
+            <p className="text-(--color-grey-muted) py-8">
+              {invalidPreviewReason}
+            </p>
+          )}
         </section>
       </div>
 
@@ -471,7 +474,7 @@ export default function OrderReviewStep() {
             type="button"
             onClick={handleContinue}
             disabled={!canContinue}
-            className="px-8 py-3 bg-black text-white text-[10px] tracking-[0.22em] uppercase hover:bg-[#2A2A28] transition disabled:opacity-40 disabled:cursor-not-allowed [font-family:var(--font-ui)]"
+            className="px-8 py-3 bg-black text-white text-[10px] tracking-[0.22em] uppercase hover:bg-[#2A2A28] transition disabled:opacity-40 disabled:cursor-not-allowed [font-family:var(--font-ui)] hover:cursor-pointer"
           >
             {t("continue")}
           </button>

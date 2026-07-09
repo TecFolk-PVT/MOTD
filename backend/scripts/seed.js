@@ -6,6 +6,7 @@ import PlatformSettings from '../models/PlatformSettings.js';
 import ReadyMadeProduct from '../models/ReadyMadeProduct.js';
 import Fabric from '../models/Fabric.js';
 import TailorShop from '../models/TailorShop.js';
+import FabricShop from '../models/FabricShop.js';
 import Design from '../models/Design.js';
 import RetailOrder from '../models/RetailOrder.js';
 import CustomOrder from '../models/CustomOrder.js';
@@ -15,6 +16,7 @@ const MODELS = [
   PlatformSettings,
   ReadyMadeProduct,
   Fabric,
+  FabricShop,
   TailorShop,
   Design,
   RetailOrder,
@@ -33,6 +35,7 @@ export const seedContext = {
   platformSettings: null,
   readyMadeProducts: [],
   fabrics: [],
+  fabricShops: [],
   tailorShops: [],
   designs: [],
 };
@@ -147,7 +150,79 @@ async function seedUsersAndSettings() {
   console.log(`  Test password (all accounts): ${SEED_PASSWORD}`);
 }
 
+async function seedFabricShops() {
+  const [hanayan, mauzan, sharjahHeritage] = seedContext.fabricStores;
+  if (!hanayan || !mauzan || !sharjahHeritage) {
+    throw new Error('Fabric store users must be seeded before fabric shops (L-10)');
+  }
+
+  const shops = await FabricShop.insertMany([
+    {
+      name: 'Hanayan Fabrics',
+      nameAr: 'أقمشة حنايان',
+      slug: 'hanayan-fabrics',
+      description: 'Premium silk and brocade from the heart of Deira.',
+      descriptionAr: 'حرير وبrocade فاخر من قلب ديرة.',
+      logo: '/images/fab1.png',
+      coverImage: '/images/fab1.png',
+      location: 'Al Rigga Road',
+      city: 'Dubai',
+      phone: '+971 4 234 5678',
+      rating: 4.8,
+      reviewCount: 156,
+      ownerId: hanayan._id,
+      isActive: true,
+    },
+    {
+      name: 'Mauzan Textiles',
+      nameAr: 'مؤنس للأقمشة',
+      slug: 'mauzan-textiles',
+      description: 'Luxury cashmere and ceremonial fabrics in Abu Dhabi.',
+      descriptionAr: 'كشمير فاخر وأقمشة احتفالية في أبوظبي.',
+      logo: '/images/fab2.png',
+      coverImage: '/images/fab2.png',
+      location: 'Khalifa Street',
+      city: 'Abu Dhabi',
+      phone: '+971 2 345 6789',
+      rating: 4.9,
+      reviewCount: 98,
+      ownerId: mauzan._id,
+      isActive: true,
+    },
+    {
+      name: 'Sharjah Heritage Fabrics',
+      nameAr: 'أقمشة تراث الشارقة',
+      slug: 'sharjah-heritage-fabrics',
+      description: 'Heritage cotton and linen from Sharjah souq traditions.',
+      descriptionAr: 'قطن وكتان تراثي من تقاليد سوق الشارقة.',
+      logo: '/images/fab3.png',
+      coverImage: '/images/fab3.png',
+      location: 'King Faisal Street',
+      city: 'Sharjah',
+      phone: '+971 6 456 7890',
+      rating: 4.7,
+      reviewCount: 72,
+      ownerId: sharjahHeritage._id,
+      isActive: true,
+    },
+  ]);
+
+  seedContext.fabricShops = shops;
+
+  console.log('Seeded fabric shops:');
+  for (const shop of shops) {
+    console.log(`  ${shop.slug} — ${shop.name} (${shop.city})`);
+  }
+}
+
 async function seedReadyMadeProducts() {
+  const fabrics = seedContext.fabrics;
+  if (!fabrics || fabrics.length < 3) {
+    throw new Error('Fabrics must be seeded before ready-made products');
+  }
+
+  const [fabric1, fabric2, fabric3] = fabrics;
+
   const products = await ReadyMadeProduct.insertMany([
     {
       name: 'Emirati Silver Kandura',
@@ -162,6 +237,8 @@ async function seedReadyMadeProducts() {
       colors: ['silver', 'white'],
       fabricType: 'cotton',
       fabricTypeAr: 'قطن',
+      fabricId: fabric1._id,
+      fabricShopId: fabric1.fabricShopId,
       metersPerFabric: 4,
       fabricPriceAED: 400,
       mukhawarPriceAED: 450,
@@ -184,6 +261,8 @@ async function seedReadyMadeProducts() {
       colors: ['red', 'black'],
       fabricType: 'silk velvet',
       fabricTypeAr: 'مخمل حرير',
+      fabricId: fabric2._id,
+      fabricShopId: fabric2.fabricShopId,
       metersPerFabric: 3.5,
       fabricPriceAED: 600,
       mukhawarPriceAED: 650,
@@ -206,6 +285,8 @@ async function seedReadyMadeProducts() {
       colors: ['blue', 'gold'],
       fabricType: 'chiffon',
       fabricTypeAr: 'شيفون',
+      fabricId: fabric3._id,
+      fabricShopId: fabric3.fabricShopId,
       metersPerFabric: 3,
       fabricPriceAED: 1900,
       mukhawarPriceAED: 2000,
@@ -256,6 +337,17 @@ async function seedFabrics() {
   if (!hanayan || !mauzan || !sharjahHeritage) {
     throw new Error('Fabric store users must be seeded before fabrics (L-10)');
   }
+  if (!seedContext.fabricShops?.length) {
+    throw new Error('Fabric shops must be seeded before fabrics');
+  }
+
+  const shopByOwner = new Map(
+    seedContext.fabricShops.map((shop) => [String(shop.ownerId), shop._id]),
+  );
+  const withShopId = (entry) => ({
+    ...entry,
+    fabricShopId: shopByOwner.get(String(entry.listedByStore)),
+  });
 
   const fabrics = await Fabric.insertMany([
     {
@@ -422,7 +514,7 @@ async function seedFabrics() {
       storePickupAddress: STORE_PICKUP_ADDRESSES.hanayan,
       isActive: true,
     },
-  ]);
+  ].map(withShopId));
 
   seedContext.fabrics = fabrics;
 
@@ -734,9 +826,10 @@ async function seed() {
   await clearDatabase();
 
   await seedUsersAndSettings();
-  await seedReadyMadeProducts();
+  await seedFabricShops();
   await seedFabrics();
   await seedTailorShopsAndDesigns();
+  await seedReadyMadeProducts();
   await verifySeed();
 
   console.log('Seed complete');

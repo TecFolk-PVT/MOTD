@@ -117,6 +117,8 @@
     "description": "Discover the Emirates' most celebrated master tailors, preserving centuries-old heritage through exceptional craftsmanship",
     "viewAll": "View All Master Tailors of the UAE",
     "bookConsultation": "Check Tailor Designs",
+    "explore": "Explore Atelier",
+    "ateliers": "Ateliers",
     "reviews": "reviews",
     "loading": "Loading tailors...",
     "empty": "No tailor shops available",
@@ -177,6 +179,9 @@
     "unknownDesign": "Custom design"
   },
   "CustomOrderReview": {
+     "pricingNotReady": {
+      "generic": "Pricing not available. Please try again."
+    },
     "stepLabel": "Step {step} of {total}",
     "title": "Review Your Order",
     "description": "Confirm your selections and review the itemized price breakdown before checkout.",

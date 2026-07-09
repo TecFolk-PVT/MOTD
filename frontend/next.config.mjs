@@ -10,9 +10,13 @@ const apiProxyTarget =
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  turbopack: {
-    root: frontendRoot,
-  },
+  ...(process.env.NODE_ENV === "development"
+    ? {
+        turbopack: {
+          root: frontendRoot,
+        },
+      }
+    : {}),
   async rewrites() {
     return [
       {

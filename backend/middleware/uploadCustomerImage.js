@@ -1,9 +1,6 @@
 // middleware/uploadCustomerImage.js
 import multer from "multer";
-import sharp from "sharp";
-import path from "path";
-import { randomBytes } from "crypto";
-import { CUSTOMER_UPLOAD_DIR, toPublicUploadPath } from "../utils/uploads.js";
+import { processAndStoreImage } from "../utils/imageStorage.js";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
@@ -35,20 +32,16 @@ export function uploadCustomerImageMiddleware(req, res, next) {
   });
 }
 
-export async function processCustomerImage(file) {
-  const filename = `customer-${Date.now()}-${randomBytes(4).toString("hex")}.webp`;
-  const outputPath = path.join(CUSTOMER_UPLOAD_DIR, filename);
-
-  await sharp(file.buffer)
-    .rotate()
-    .resize({
-      width: 400, // profile pics need smaller size
+export function processCustomerImage(file) {
+  return processAndStoreImage(file, {
+    folder: "customer",
+    filenamePrefix: "customer",
+    resize: {
+      width: 400,
       height: 400,
-      fit: "cover", // crop to square
+      fit: "cover",
       withoutEnlargement: true,
-    })
-    .webp({ quality: 85 })
-    .toFile(outputPath);
-
-  return toPublicUploadPath("customer", filename);
+    },
+    webpQuality: 85,
+  });
 }

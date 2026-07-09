@@ -1,22 +1,20 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Save, Loader2, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Save, Loader2, X, ChevronDown, ChevronUp, Ruler } from "lucide-react";
 import toast from "react-hot-toast";
 import { api } from "@/lib/api/client";
 import CustomerImageUpload from "@/components/shared/customerImageUpload";
+import FormField from "@/components/admin/FormField";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Relationship = "mother" | "aunt" | "sister" | "daughter" | "other";
-type Gender = "male" | "female" | "other";
 
 type FormData = {
   name: string;
   relationship: Relationship;
-  gender: Gender;
   phone: string;
   email: string;
-  profilePic: string;
   address: {
     fullName: string;
     phone: string;
@@ -25,6 +23,21 @@ type FormData = {
     street: string;
     building: string;
     postalCode: string;
+  };
+  measurements: {
+    totalLength: number | null;
+    shoulderWidth: number | null;
+    armLength: number | null;
+    chestWidth: number | null;
+    waist: number | null;
+    hips: number | null;
+    neckWidth: number | null;
+    neckDepth: number | null;
+    armholeHeight: number | null;
+    sleeveOpeningWidth: number | null;
+    cuffWidth: number | null;
+    cuffLength: number | null;
+    notes: string;
   };
 };
 
@@ -39,16 +52,37 @@ type FamilyMemberFormProps = {
     email?: string;
     profilePic?: string;
     address?: Partial<FormData["address"]>;
+    measurements?: Partial<FormData["measurements"]>;
   };
+};
+
+const UAE_PHONE_REGEX = /^\+971[0-9]{9}$/;
+
+const validateUAEPhone = (phone: string): boolean => {
+  const cleaned = phone.replace(/\s/g, "");
+  return UAE_PHONE_REGEX.test(cleaned);
+};
+
+const normalizeUAEPhone = (phone: string): string => {
+  const cleaned = phone.replace(/\s/g, "");
+  const digits = cleaned.replace(/\D/g, "");
+
+  if (/^\+971\d{9}$/.test(cleaned)) {
+    const num = cleaned.slice(4);
+    return `+971 ${num.slice(0, 2)} ${num.slice(2, 5)} ${num.slice(5)}`;
+  }
+  if (digits.startsWith("971") && digits.length === 12) {
+    const num = digits.slice(3);
+    return `+971 ${num.slice(0, 2)} ${num.slice(2, 5)} ${num.slice(5)}`;
+  }
+  return `+971 ${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5)}`;
 };
 
 const DEFAULT_FORM: FormData = {
   name: "",
   relationship: "other",
-  gender: "other",
   phone: "",
   email: "",
-  profilePic: "",
   address: {
     fullName: "",
     phone: "",
@@ -58,6 +92,53 @@ const DEFAULT_FORM: FormData = {
     building: "",
     postalCode: "",
   },
+  measurements: {
+    totalLength: null,
+    shoulderWidth: null,
+    armLength: null,
+    chestWidth: null,
+    waist: null,
+    hips: null,
+    neckWidth: null,
+    neckDepth: null,
+    armholeHeight: null,
+    sleeveOpeningWidth: null,
+    cuffWidth: null,
+    cuffLength: null,
+    notes: "",
+  },
+};
+
+// Add relationship options
+const RELATIONSHIP_OPTIONS = [
+  { value: "mother", label: "Mother" },
+  { value: "aunt", label: "Aunt" },
+  { value: "sister", label: "Sister" },
+  { value: "daughter", label: "Daughter" },
+  { value: "other", label: "Other" },
+];
+
+// UAE Emirates list
+const UAE_EMIRATES = [
+  "Abu Dhabi",
+  "Dubai",
+  "Sharjah",
+  "Ajman",
+  "Umm Al Quwain",
+  "Ras Al Khaimah",
+  "Fujairah",
+];
+
+// Convert cm to inches
+const cmToInches = (cm: number | null | undefined): number | null => {
+  if (cm === null || cm === undefined) return null;
+  return Math.round((cm / 2.54) * 10) / 10;
+};
+
+// Convert inches to cm
+const inchesToCm = (inches: number | null | undefined): number | null => {
+  if (inches === null || inches === undefined) return null;
+  return Math.round(inches * 2.54 * 10) / 10;
 };
 
 export default function FamilyMembersForm({
@@ -68,17 +149,40 @@ export default function FamilyMembersForm({
   const isEdit = !!initialData?._id;
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<FormData>(DEFAULT_FORM);
+  const [phoneError, setPhoneError] = useState<string>("");
+  const [addrPhoneError, setAddrPhoneError] = useState<string>("");
+  const [emirateOpen, setEmirateOpen] = useState(false);
+  const emirateRef = useRef<HTMLDivElement>(null);
+  const [relationshipOpen, setRelationshipOpen] = useState(false);
+  const relationshipRef = useRef<HTMLDivElement>(null);
 
-  // Populate form when editing
+  // Add close on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        emirateRef.current &&
+        !emirateRef.current.contains(e.target as Node)
+      ) {
+        setEmirateOpen(false);
+      }
+      if (
+        relationshipRef.current &&
+        !relationshipRef.current.contains(e.target as Node)
+      ) {
+        setRelationshipOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   useEffect(() => {
     if (initialData) {
       setForm({
         name: initialData.name || "",
         relationship: initialData.relationship || "other",
-        gender: "other",
         phone: initialData.phone || "",
         email: initialData.email || "",
-        profilePic: initialData.profilePic || "",
         address: {
           fullName: initialData.address?.fullName || "",
           phone: initialData.address?.phone || "",
@@ -87,6 +191,23 @@ export default function FamilyMembersForm({
           street: initialData.address?.street || "",
           building: initialData.address?.building || "",
           postalCode: initialData.address?.postalCode || "",
+        },
+        measurements: {
+          totalLength: cmToInches(initialData.measurements?.totalLength),
+          shoulderWidth: cmToInches(initialData.measurements?.shoulderWidth),
+          armLength: cmToInches(initialData.measurements?.armLength),
+          chestWidth: cmToInches(initialData.measurements?.chestWidth),
+          waist: cmToInches(initialData.measurements?.waist),
+          hips: cmToInches(initialData.measurements?.hips),
+          neckWidth: cmToInches(initialData.measurements?.neckWidth),
+          neckDepth: cmToInches(initialData.measurements?.neckDepth),
+          armholeHeight: cmToInches(initialData.measurements?.armholeHeight),
+          sleeveOpeningWidth: cmToInches(
+            initialData.measurements?.sleeveOpeningWidth,
+          ),
+          cuffWidth: cmToInches(initialData.measurements?.cuffWidth),
+          cuffLength: cmToInches(initialData.measurements?.cuffLength),
+          notes: initialData.measurements?.notes || "",
         },
       });
     }
@@ -98,58 +219,148 @@ export default function FamilyMembersForm({
     >,
   ) => {
     const { name, value } = e.target;
-    let processedValue = value;
 
-    if (name === "phone" || name === "address.phone") {
-      // Keep only digits and limit to 9 characters
-      processedValue = value.replace(/[^0-9]/g, "").slice(0, 9);
+    // Handle measurement fields
+    if (name.startsWith("measurements.")) {
+      const field = name.split(".")[1];
+      if (field === "notes") {
+        setForm((prev) => ({
+          ...prev,
+          measurements: { ...prev.measurements, notes: value },
+        }));
+      } else {
+        const numValue = value === "" ? null : parseFloat(value);
+        if (
+          numValue === null ||
+          (typeof numValue === "number" && numValue >= 0)
+        ) {
+          setForm((prev) => ({
+            ...prev,
+            measurements: { ...prev.measurements, [field]: numValue },
+          }));
+        }
+      }
+      return;
+    }
+
+    if (name === "phone") {
+      const digits = value.replace(/\D/g, "");
+      if (digits.length <= 9) {
+        const full = `+971${digits}`;
+        setForm((prev) => ({ ...prev, phone: full }));
+        if (phoneError) setPhoneError("");
+      }
+      return;
+    }
+
+    if (name === "address.phone") {
+      const digits = value.replace(/\D/g, "");
+      if (digits.length <= 9) {
+        const full = `+971${digits}`;
+        setForm((prev) => ({
+          ...prev,
+          address: { ...prev.address, phone: full },
+        }));
+        if (addrPhoneError) setAddrPhoneError("");
+      }
+      return;
     }
 
     if (name.startsWith("address.")) {
       const field = name.split(".")[1];
       setForm((prev) => ({
         ...prev,
-        address: { ...prev.address, [field]: processedValue },
+        address: { ...prev.address, [field]: value },
       }));
     } else {
-      setForm((prev) => ({ ...prev, [name]: processedValue }));
+      setForm((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handlePhoneBlur = (field: "phone" | "address.phone") => {
+    const phoneValue = field === "phone" ? form.phone : form.address.phone;
+    const setError = field === "phone" ? setPhoneError : setAddrPhoneError;
+    const updateForm =
+      field === "phone"
+        ? (val: string) => setForm((prev) => ({ ...prev, phone: val }))
+        : (val: string) =>
+            setForm((prev) => ({
+              ...prev,
+              address: { ...prev.address, phone: val },
+            }));
+
+    if (!phoneValue) {
+      setError("Phone number is required");
+      return;
+    }
+
+    const isValid = validateUAEPhone(phoneValue);
+    if (!isValid) {
+      setError("Enter valid UAE number (+971 XX XXX XXXX)");
+    } else {
+      setError("");
+      const normalized = normalizeUAEPhone(phoneValue);
+      updateForm(normalized);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.phone.trim()) {
-      toast.error("Name and phone are required");
+
+    if (!form.name.trim()) {
+      toast.error("Full name is required");
       return;
     }
 
-    if (form.phone.length !== 9) {
-      toast.error("Phone number must be exactly 9 digits");
+    if (!form.phone) {
+      toast.error("Phone number is required");
+      return;
+    }
+    if (!validateUAEPhone(form.phone)) {
+      toast.error("Enter valid UAE number (+971 XX XXX XXXX)");
       return;
     }
 
-    if (form.address.phone && form.address.phone.length !== 9) {
-      toast.error("Address phone number must be exactly 9 digits");
+    if (form.address.phone && !validateUAEPhone(form.address.phone)) {
+      toast.error("Enter valid UAE number for address (+971 XX XXX XXXX)");
       return;
     }
 
     setSubmitting(true);
     try {
+      const normalizedPhone = normalizeUAEPhone(form.phone);
+      const normalizedAddrPhone = form.address.phone
+        ? normalizeUAEPhone(form.address.phone)
+        : "";
+
       const payload = {
         name: form.name.trim(),
-        phone: form.phone.trim(),
+        phone: normalizedPhone,
         relationship: form.relationship,
-        gender: form.gender,
         email: form.email.trim() || undefined,
-        profilePic: form.profilePic.trim() || undefined,
         address: {
           fullName: form.address.fullName.trim() || form.name.trim(),
-          phone: form.address.phone.trim() || form.phone.trim(),
+          phone: normalizedAddrPhone || normalizedPhone,
           emirate: form.address.emirate.trim(),
           city: form.address.city.trim(),
           street: form.address.street.trim(),
           building: form.address.building.trim(),
           postalCode: form.address.postalCode.trim(),
+        },
+        measurements: {
+          totalLength: inchesToCm(form.measurements.totalLength),
+          shoulderWidth: inchesToCm(form.measurements.shoulderWidth),
+          armLength: inchesToCm(form.measurements.armLength),
+          chestWidth: inchesToCm(form.measurements.chestWidth),
+          waist: inchesToCm(form.measurements.waist),
+          hips: inchesToCm(form.measurements.hips),
+          neckWidth: inchesToCm(form.measurements.neckWidth),
+          neckDepth: inchesToCm(form.measurements.neckDepth),
+          armholeHeight: inchesToCm(form.measurements.armholeHeight),
+          sleeveOpeningWidth: inchesToCm(form.measurements.sleeveOpeningWidth),
+          cuffWidth: inchesToCm(form.measurements.cuffWidth),
+          cuffLength: inchesToCm(form.measurements.cuffLength),
+          notes: form.measurements.notes || "",
         },
       };
 
@@ -171,156 +382,575 @@ export default function FamilyMembersForm({
     }
   };
 
+  const renderPhoneInput = (
+    value: string,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
+    onBlur: () => void,
+    placeholder: string,
+    name: string,
+  ) => (
+    <div className="relative">
+      <div className="flex items-center border-b border-black/15 focus-within:border-black transition-all">
+        <span className="text-black/40 font-mono text-[15px] md:text-[16px] pr-2">
+          +971
+        </span>
+        <input
+          type="tel"
+          name={name}
+          value={value.replace(/\D/g, "").slice(3) || ""}
+          onChange={onChange}
+          onBlur={onBlur}
+          placeholder={placeholder}
+          maxLength={9}
+          className="flex-1 h-11 md:h-12 bg-transparent text-[15px] md:text-[16px] font-mono rounded-none px-0 focus:outline-none placeholder:text-black/40 text-black"
+        />
+      </div>
+      <p className="text-[10px] text-gray-400 mt-1">
+        Enter 9 digits after +971
+      </p>
+    </div>
+  );
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-      <div className="border-b border-gray-100 px-8 py-6">
-        <h1 className="text-2xl font-semibold text-black">
+      <div className="border-b border-gray-100 px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6">
+        <h1 className="text-xl sm:text-2xl font-medium text-black">
           {isEdit ? "Edit Family Member" : "Add Family Member"}
         </h1>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-xs sm:text-sm text-gray-500">
           {isEdit
             ? "Update family member details."
             : "Add a family member who can receive deliveries on your behalf."}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="p-8 space-y-10">
+      <form
+        onSubmit={handleSubmit}
+        className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 md:space-y-10"
+      >
         <section>
-          <h2 className="text-base font-semibold text-black mb-6">
+          <h2 className="text-sm sm:text-base font-medium text-black mb-4 sm:mb-6">
             Personal Information
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Full Name <span className="text-red-500 font-bold ml-0.5">*</span>
-              </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <FormField label="Full Name" name="name" required>
               <input
                 type="text"
                 name="name"
                 value={form.name}
                 onChange={handleChange}
                 required
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
                 placeholder="Fatima Ahmed"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Phone <span className="text-red-500 font-bold ml-0.5">*</span>
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={form.phone}
-                onChange={handleChange}
-                required
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
-                placeholder="50 123 4567"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Relationship
-              </label>
-              <select
-                name="relationship"
-                value={form.relationship}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="mother">Mother</option>
-                <option value="aunt">Aunt</option>
-                <option value="sister">Sister</option>
-                <option value="daughter">Daughter</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Gender</label>
-              <select
-                name="gender"
-                value={form.gender}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
+            </FormField>
+
+            <FormField label="Phone" name="phone" required error={phoneError}>
+              {renderPhoneInput(
+                form.phone,
+                handleChange,
+                () => handlePhoneBlur("phone"),
+                "XXXXXXXXX",
+                "phone",
+              )}
+            </FormField>
+
+            <FormField label="Relationship" name="relationship">
+              <div className="relative" ref={relationshipRef}>
+                <button
+                  type="button"
+                  onClick={() => setRelationshipOpen(!relationshipOpen)}
+                  className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none text-black flex items-center justify-between hover:cursor-pointer"
+                >
+                  <span
+                    className={
+                      form.relationship ? "text-black" : "text-black/40"
+                    }
+                  >
+                    {form.relationship
+                      ? RELATIONSHIP_OPTIONS.find(
+                          (opt) => opt.value === form.relationship,
+                        )?.label
+                      : "Select Relationship"}
+                  </span>
+                  {relationshipOpen ? (
+                    <ChevronUp className="w-4 h-4 text-black/40" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-black/40" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {relationshipOpen && (
+                    <motion.ul
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50 py-1"
+                      style={{ overscrollBehavior: "contain" }}
+                      onWheel={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
+                    >
+                      {RELATIONSHIP_OPTIONS.map((option) => (
+                        <motion.li
+                          key={option.value}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.05 }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForm((prev) => ({
+                                ...prev,
+                                relationship: option.value as Relationship,
+                              }));
+                              setRelationshipOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-[15px] md:text-[16px] hover:bg-gray-50 transition hover:cursor-pointer ${
+                              form.relationship === option.value
+                                ? "text-black font-medium bg-gray-50"
+                                : "text-gray-700"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        </motion.li>
+                      ))}
+                    </motion.ul>
+                  )}
+                </AnimatePresence>
+              </div>
+            </FormField>
+
+            <FormField label="Email" name="email">
               <input
                 type="email"
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
                 placeholder="example@email.com"
               />
-            </div>
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium mb-3">
-                Profile Picture
-              </label>
-              <CustomerImageUpload
-                value={form.profilePic}
-                onChange={(url) =>
-                  setForm((prev) => ({ ...prev, profilePic: url }))
-                }
-                uploadEndpoint="/api/customer/uploads/customer"
-                chooseFileLabel="Upload photo"
-                uploadingLabel="Uploading..."
-                uploadFailedLabel="Upload failed"
-                removeLabel="Remove"
-              />
-            </div>
+            </FormField>
           </div>
         </section>
 
         <section>
-          <h2 className="text-base font-semibold text-black mb-6">
+          <h2 className="text-sm sm:text-base font-medium text-black mb-4 sm:mb-6">
             Delivery Address (Optional)
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              ["Full Name", "address.fullName", "Full name"],
-              ["Phone", "address.phone", "+971 50 123 4567"],
-              ["Emirate", "address.emirate", "Dubai"],
-              ["City", "address.city", "Dubai"],
-              ["Street", "address.street", "Sheikh Zayed Road"],
-              ["Building", "address.building", "Burj Khalifa"],
-              ["Postal Code", "address.postalCode", "12345"],
-            ].map(([label, name, placeholder]) => (
-              <div
-                key={name}
-                className={name === "address.postalCode" ? "md:col-span-2" : ""}
-              >
-                <label className="block text-sm font-medium mb-2">
-                  {label}
-                </label>
-                <input
-                  type="text"
-                  name={name}
-                  value={
-                    form.address[
-                      name.split(".")[1] as keyof typeof form.address
-                    ]
-                  }
-                  onChange={handleChange}
-                  placeholder={placeholder}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-black"
-                />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <FormField label="Full Name" name="address.fullName">
+              <input
+                type="text"
+                name="address.fullName"
+                value={form.address.fullName}
+                onChange={handleChange}
+                placeholder="Full name"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField
+              label="Phone"
+              name="address.phone"
+              error={addrPhoneError}
+            >
+              {renderPhoneInput(
+                form.address.phone,
+                handleChange,
+                () => handlePhoneBlur("address.phone"),
+                "XXXXXXXXX",
+                "address.phone",
+              )}
+            </FormField>
+
+            <FormField label="Emirate" name="address.emirate">
+              <div className="relative" ref={emirateRef}>
+                <button
+                  type="button"
+                  onClick={() => setEmirateOpen(!emirateOpen)}
+                  className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none text-black flex items-center justify-between hover:cursor-pointer"
+                >
+                  <span
+                    className={
+                      form.address.emirate ? "text-black" : "text-black/40"
+                    }
+                  >
+                    {form.address.emirate || "Select Emirate"}
+                  </span>
+                  {emirateOpen ? (
+                    <ChevronUp className="w-4 h-4 text-black/40" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-black/40" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {emirateOpen && (
+                    <motion.ul
+                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto z-50 py-1"
+                      style={{ overscrollBehavior: "contain" }}
+                      onWheel={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
+                    >
+                      {UAE_EMIRATES.map((emirate) => (
+                        <motion.li
+                          key={emirate}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.05 }}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForm((prev) => ({
+                                ...prev,
+                                address: { ...prev.address, emirate },
+                              }));
+                              setEmirateOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-[15px] md:text-[16px] hover:bg-gray-50 transition hover:cursor-pointer ${
+                              form.address.emirate === emirate
+                                ? "text-black font-medium bg-gray-50"
+                                : "text-gray-700"
+                            }`}
+                          >
+                            {emirate}
+                          </button>
+                        </motion.li>
+                      ))}
+                    </motion.ul>
+                  )}
+                </AnimatePresence>
               </div>
-            ))}
+            </FormField>
+
+            <FormField label="City" name="address.city">
+              <input
+                type="text"
+                name="address.city"
+                value={form.address.city}
+                onChange={handleChange}
+                placeholder="Dubai"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Street" name="address.street">
+              <input
+                type="text"
+                name="address.street"
+                value={form.address.street}
+                onChange={handleChange}
+                placeholder="Sheikh Zayed Road"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Building" name="address.building">
+              <input
+                type="text"
+                name="address.building"
+                value={form.address.building}
+                onChange={handleChange}
+                placeholder="Burj Khalifa"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Postal Code" name="address.postalCode">
+              <input
+                type="text"
+                name="address.postalCode"
+                value={form.address.postalCode}
+                onChange={handleChange}
+                placeholder="12345"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
           </div>
         </section>
 
-        <div className="border-t border-gray-100 pt-6 flex justify-end gap-3">
+        {/* Measurements Section */}
+        <section>
+          <h2 className="text-sm sm:text-base font-medium text-black mb-4 sm:mb-6 flex items-center gap-2">
+            <Ruler className="w-4 h-4" />
+            Body Measurements (Optional)
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <FormField
+              label="Total Length (in)"
+              name="measurements.totalLength"
+            >
+              <input
+                type="number"
+                name="measurements.totalLength"
+                value={form.measurements.totalLength ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 67"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField
+              label="Shoulder Width (in)"
+              name="measurements.shoulderWidth"
+            >
+              <input
+                type="number"
+                name="measurements.shoulderWidth"
+                value={form.measurements.shoulderWidth ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 18"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Arm Length (in)" name="measurements.armLength">
+              <input
+                type="number"
+                name="measurements.armLength"
+                value={form.measurements.armLength ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 24"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Chest Width (in)" name="measurements.chestWidth">
+              <input
+                type="number"
+                name="measurements.chestWidth"
+                value={form.measurements.chestWidth ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 39"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Waist (in)" name="measurements.waist">
+              <input
+                type="number"
+                name="measurements.waist"
+                value={form.measurements.waist ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 31"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Hips (in)" name="measurements.hips">
+              <input
+                type="number"
+                name="measurements.hips"
+                value={form.measurements.hips ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 39"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Neck Width (in)" name="measurements.neckWidth">
+              <input
+                type="number"
+                name="measurements.neckWidth"
+                value={form.measurements.neckWidth ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 15"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Neck Depth (in)" name="measurements.neckDepth">
+              <input
+                type="number"
+                name="measurements.neckDepth"
+                value={form.measurements.neckDepth ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 3"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField
+              label="Armhole Height (in)"
+              name="measurements.armholeHeight"
+            >
+              <input
+                type="number"
+                name="measurements.armholeHeight"
+                value={form.measurements.armholeHeight ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 8.5"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField
+              label="Sleeve Opening (in)"
+              name="measurements.sleeveOpeningWidth"
+            >
+              <input
+                type="number"
+                name="measurements.sleeveOpeningWidth"
+                value={form.measurements.sleeveOpeningWidth ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 6"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Cuff Width (in)" name="measurements.cuffWidth">
+              <input
+                type="number"
+                name="measurements.cuffWidth"
+                value={form.measurements.cuffWidth ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 8.5"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <FormField label="Cuff Length (in)" name="measurements.cuffLength">
+              <input
+                type="number"
+                name="measurements.cuffLength"
+                value={form.measurements.cuffLength ?? ""}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === "-" || e.key === "Minus") {
+                    e.preventDefault();
+                  }
+                }}
+                onWheel={(e) => e.preventDefault()}
+                placeholder="e.g. 2"
+                min="0"
+                step="0.1"
+                className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
+              />
+            </FormField>
+
+            <div className="sm:col-span-2 lg:col-span-3">
+              <FormField label="Notes" name="measurements.notes">
+                <textarea
+                  name="measurements.notes"
+                  value={form.measurements.notes}
+                  onChange={handleChange}
+                  placeholder="Any special instructions or notes about measurements..."
+                  rows={1}
+                  className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black resize-none overflow-hidden"
+                  style={{ minHeight: "2.75rem" }}
+                  onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = "auto";
+                    target.style.height = target.scrollHeight + "px";
+                  }}
+                />
+              </FormField>
+            </div>
+          </div>
+        </section>
+
+        <div className="border-t border-gray-100 pt-4 sm:pt-6 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-gray-300 px-5 py-2.5 text-gray-700 hover:bg-gray-50 transition flex items-center gap-2"
+            className="rounded-lg border border-gray-300 px-4 sm:px-5 py-2 sm:py-2.5 text-gray-700 hover:bg-gray-50 transition flex items-center justify-center gap-2 text-sm sm:text-base w-full sm:w-auto hover:cursor-pointer"
           >
             <X className="w-4 h-4" />
             Cancel
@@ -328,7 +958,7 @@ export default function FamilyMembersForm({
           <button
             type="submit"
             disabled={submitting}
-            className="rounded-lg bg-black px-5 py-2.5 text-white flex items-center gap-2 disabled:opacity-50"
+            className="rounded-lg bg-black px-4 sm:px-5 py-2 sm:py-2.5 text-white flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-gray-800 transition text-sm sm:text-base w-full sm:w-auto hover:cursor-pointer"
           >
             {submitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
