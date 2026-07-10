@@ -137,6 +137,8 @@ type PageInnerProps = {
 
 function AccountMeasurementsPageInner({ memberIdParam }: PageInnerProps) {
   const t = useTranslations("CustomOrderMeasurements");
+  const searchParams = useSearchParams();
+  const memberIdParam = searchParams.get("memberId");
 
   const [measurements, setMeasurements] =
     useState<MeasurementData>(DEFAULT_MEASUREMENTS);
@@ -178,7 +180,6 @@ function AccountMeasurementsPageInner({ memberIdParam }: PageInnerProps) {
     } else {
       fetchCustomerMeasurements();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMemberId]);
 
   const fetchMembers = async () => {
