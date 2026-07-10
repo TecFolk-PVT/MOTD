@@ -48,6 +48,7 @@ export interface CustomOrderDesignSelection {
   nameAr?: string;
   category: string;
   basePrice: number;
+  priceType?: "fixed" | "per_meter";
   tailoringFee: number;
   estimatedMeters: number;
   estimatedDays?: number;
@@ -291,6 +292,7 @@ function normalizeDesign(value: unknown): CustomOrderDesignSelection | null {
     nameAr: design.nameAr,
     category: design.category || "",
     basePrice: Number(design.basePrice) || 0,
+    priceType: design.priceType || "fixed",
     tailoringFee: Number(design.tailoringFee) || 0,
     estimatedMeters: Number(design.estimatedMeters) || 0,
     estimatedDays: design.estimatedDays,
@@ -549,6 +551,7 @@ export function toCustomOrderDesignSelection(
     nameAr: item.nameAr,
     category: item.category,
     basePrice: item.basePrice,
+    priceType: item.priceType,
     tailoringFee: item.tailoringFee,
     estimatedMeters: item.estimatedMeters,
     estimatedDays: item.estimatedDays,
