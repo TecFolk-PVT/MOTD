@@ -178,7 +178,6 @@ function AccountMeasurementsPageInner({ memberIdParam }: PageInnerProps) {
     } else {
       fetchCustomerMeasurements();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMemberId]);
 
   const fetchMembers = async () => {
