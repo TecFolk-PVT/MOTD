@@ -40,6 +40,12 @@ const designSchema = new mongoose.Schema(
     ageMin: { type: Number, required: true, default: 0, min: 0 },
     ageMax: { type: Number, required: true, default: 100, min: 0, max: 100 },
     basePrice: { type: Number, required: true, min: 0 },
+    priceType: {
+      type: String,
+      enum: ["fixed", "per_meter"],
+      default: "fixed",
+      required: true,
+    },
     tailoringFee: { type: Number, required: true, min: 0 },
     estimatedMeters: { type: Number, required: true, min: 0 },
     estimatedDays: { type: Number, default: 7, min: 1 },

@@ -288,7 +288,7 @@ export default function TailorDesignSelectionStep() {
                                         <span>
                                             {t("fromPrice")}{" "}
                                             <span className="text-black">
-                                                {formatDesignBasePrice(item.basePrice, locale)}
+                                                {formatDesignBasePrice(item.basePrice, locale, item.priceType)}
                                             </span>
                                         </span>
                                         <span>

@@ -87,7 +87,7 @@ export default function DesignGallery({
                   <span>
                     {labels.fromPrice}{" "}
                     <span className="text-black font-medium">
-                      {formatDesignBasePrice(design.basePrice, locale)}
+                      {formatDesignBasePrice(design.basePrice, locale, design.priceType)}
                     </span>
                   </span>
                   <span>

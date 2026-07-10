@@ -59,6 +59,7 @@ const designSnapshotSchema = new mongoose.Schema(
     slug: { type: String, default: '', trim: true },
     category: { type: String, default: '', trim: true },
     basePrice: { type: Number, required: true, min: 0 },
+    priceType: { type: String, enum: ["fixed", "per_meter"], default: "fixed" },
     tailoringFee: { type: Number, required: true, min: 0 },
     estimatedMeters: { type: Number, min: 0, default: null },
   },

@@ -420,8 +420,42 @@ export default function TailorDesignForm({ designId }: TailorDesignFormProps) {
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="sm:col-span-2">
+              <label className="block text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 mb-2">
+                {t("fields.priceType")} *
+              </label>
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => handleChange("priceType", "fixed")}
+                  className={`flex-1 py-3 px-4 border text-[11px] uppercase tracking-wider transition-all rounded-lg text-center ${
+                    formData.priceType === "fixed"
+                      ? "border-black bg-black text-white font-medium"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-black"
+                  }`}
+                >
+                  {t("fields.fixedPrice")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleChange("priceType", "per_meter")}
+                  className={`flex-1 py-3 px-4 border text-[11px] uppercase tracking-wider transition-all rounded-lg text-center ${
+                    formData.priceType === "per_meter"
+                      ? "border-black bg-black text-white font-medium"
+                      : "border-gray-200 bg-white text-gray-700 hover:border-black"
+                  }`}
+                >
+                  {t("fields.perMeterPrice")}
+                </button>
+              </div>
+            </div>
+
             <FormField
-              label={t("fields.basePrice")}
+              label={
+                formData.priceType === "per_meter"
+                  ? t("fields.perMeterPrice")
+                  : t("fields.basePrice")
+              }
               name="basePrice"
               required
               error={fieldErrors.basePrice}

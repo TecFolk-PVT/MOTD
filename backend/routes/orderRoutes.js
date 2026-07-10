@@ -223,6 +223,7 @@ function buildDesignSnapshot(design) {
     slug: design.slug || "",
     category: design.category || "",
     basePrice: design.basePrice,
+    priceType: design.priceType || "fixed",
     tailoringFee: design.tailoringFee,
     estimatedMeters: design.estimatedMeters,
   };

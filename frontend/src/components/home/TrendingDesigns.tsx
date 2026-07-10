@@ -25,6 +25,7 @@ interface TailorDesignExtended {
   images?: string[];
   category: string;
   basePrice: number;
+  priceType?: "fixed" | "per_meter";
   tailoringFee: number;
   estimatedMeters: number;
   estimatedDays: number;
@@ -332,6 +333,7 @@ export function TrendingSection() {
                 const priceText = formatDesignBasePrice(
                   design.basePrice,
                   localParams as any,
+                  design.priceType,
                 );
 
                 return (
