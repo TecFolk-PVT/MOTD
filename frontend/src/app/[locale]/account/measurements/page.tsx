@@ -137,8 +137,6 @@ type PageInnerProps = {
 
 function AccountMeasurementsPageInner({ memberIdParam }: PageInnerProps) {
   const t = useTranslations("CustomOrderMeasurements");
-  const searchParams = useSearchParams();
-  const memberIdParam = searchParams.get("memberId");
 
   const [measurements, setMeasurements] =
     useState<MeasurementData>(DEFAULT_MEASUREMENTS);
