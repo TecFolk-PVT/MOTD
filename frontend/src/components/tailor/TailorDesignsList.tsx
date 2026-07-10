@@ -13,7 +13,7 @@ import {
     isShopMissingError,
     type TailorDesignProfile,
 } from "@/lib/tailorDesigns";
-import { formatDesignCategory } from "@/lib/tailors";
+import { formatDesignCategory, formatDesignBasePrice } from "@/lib/tailors";
 import { useParams } from "next/navigation";
 
 export default function TailorDesignsList() {
@@ -164,7 +164,8 @@ export default function TailorDesignsList() {
                                         </span>
                                     </div>
                                     <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.18em] text-(--color-grey-muted) mb-2">
-                                        {category} · {t("basePrice", { price: design.basePrice })} ·{" "}
+                                        {category} · {locale === "ar" ? "من" : "From"}{" "}
+                                        {formatDesignBasePrice(design.basePrice, locale, design.priceType)} ·{" "}
                                         {t("estimatedDays", { days: design.estimatedDays })}
                                     </p>
                                     <p className="[font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) line-clamp-2">

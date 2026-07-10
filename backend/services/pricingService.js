@@ -243,8 +243,12 @@ export function buildCustomOrderPricing({
     throw new PricingValidationError('fabric must not be provided when fabricSource is self');
   }
 
+  const calculatedDesignBase = design.priceType === 'per_meter'
+    ? roundMoney(design.basePrice * fabricMeters)
+    : design.basePrice;
+
   return calculateCustomOrderPricing({
-    designBase: design.basePrice,
+    designBase: calculatedDesignBase,
     tailoringFee: design.tailoringFee,
     fabricMeters,
     fabricSource,
@@ -334,8 +338,12 @@ export function buildCustomOrderItemPricing({
     throw new PricingValidationError('fabric must not be provided when fabricSource is self');
   }
 
+  const calculatedDesignBase = design.priceType === 'per_meter'
+    ? roundMoney(design.basePrice * fabricMeters)
+    : design.basePrice;
+
   return calculateCustomOrderItemPricing({
-    designBase: design.basePrice,
+    designBase: calculatedDesignBase,
     tailoringFee: design.tailoringFee,
     fabricMeters,
     fabricSource,

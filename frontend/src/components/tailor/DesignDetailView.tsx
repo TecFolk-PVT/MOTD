@@ -36,6 +36,7 @@ export interface DesignDetailItem {
   images?: string[];
   category: string;
   basePrice: number;
+  priceType?: "fixed" | "per_meter";
   tailoringFee: number;
   estimatedMeters: number;
   estimatedDays: number;
@@ -142,7 +143,7 @@ export default function DesignDetailView({
                 {name}
               </h1>
               <p className="[font-family:var(--font-ui)] text-2xl text-black">
-                {formatDesignBasePrice(design.basePrice, locale)}
+                {formatDesignBasePrice(design.basePrice, locale, design.priceType)}
               </p>
             </div>
 

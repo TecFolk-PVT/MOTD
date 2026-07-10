@@ -16,6 +16,7 @@ const DESIGN_FIELDS = [
   "images",
   "category",
   "basePrice",
+  "priceType",
   "tailoringFee",
   "estimatedMeters",
   "estimatedDays",
@@ -35,6 +36,7 @@ const formatDesign = (design) => ({
   images: design.images,
   category: design.category,
   basePrice: design.basePrice,
+  priceType: design.priceType,
   tailoringFee: design.tailoringFee,
   estimatedMeters: design.estimatedMeters,
   estimatedDays: design.estimatedDays,
@@ -143,6 +145,12 @@ const validateDesignPayload = (data, { requireCore = false } = {}) => {
       if (!Number.isFinite(data[field]) || data[field] < 0) {
         return `${field} must be a non-negative number`;
       }
+    }
+  }
+
+  if (data.priceType !== undefined) {
+    if (!["fixed", "per_meter"].includes(data.priceType)) {
+      return "priceType must be either fixed or per_meter";
     }
   }
 

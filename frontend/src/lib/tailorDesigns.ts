@@ -23,6 +23,7 @@ export interface TailorDesignProfile {
   images: string[];
   category: DesignCategory | string;
   basePrice: number;
+  priceType?: "fixed" | "per_meter";
   tailoringFee: number;
   estimatedMeters: number;
   estimatedDays: number;
@@ -42,6 +43,7 @@ export interface TailorDesignFormData {
   images: string[];
   category: DesignCategory;
   basePrice: number;
+  priceType: "fixed" | "per_meter";
   tailoringFee: number;
   estimatedMeters: number;
   estimatedDays: number;
@@ -64,6 +66,7 @@ export function emptyTailorDesignForm(): TailorDesignFormData {
     images: [""],
     category: "kandura",
     basePrice: 0,
+    priceType: "fixed",
     tailoringFee: DEFAULT_TAILORING_FEE,
     estimatedMeters: 3.5,
     estimatedDays: 7,
@@ -97,6 +100,7 @@ export function designToForm(
       ? design.category
       : "kandura") as DesignCategory,
     basePrice: design.basePrice ?? 0,
+    priceType: design.priceType ?? "fixed",
     tailoringFee: design.tailoringFee ?? DEFAULT_TAILORING_FEE,
     estimatedMeters: design.estimatedMeters ?? 3.5,
     estimatedDays: design.estimatedDays ?? 7,
@@ -118,6 +122,7 @@ export function toTailorDesignPayload(
     images: form.images.map((image) => image.trim()).filter(Boolean),
     category: form.category,
     basePrice: Number(form.basePrice),
+    priceType: form.priceType,
     tailoringFee: Number(form.tailoringFee),
     estimatedMeters: Number(form.estimatedMeters),
     estimatedDays: Number(form.estimatedDays),

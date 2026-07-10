@@ -51,6 +51,7 @@ export interface TailorDesignListItem {
   images?: string[];
   category: string;
   basePrice: number;
+  priceType?: "fixed" | "per_meter";
   tailoringFee: number;
   estimatedMeters: number;
   estimatedDays: number;
@@ -162,8 +163,13 @@ export function formatDesignCategory(category: string, locale: Locale): string {
 export function formatDesignBasePrice(
   basePrice: number,
   locale: Locale,
+  priceType?: string,
 ): string {
-  return formatCurrency(basePrice, locale);
+  const formatted = formatCurrency(basePrice, locale);
+  if (priceType === "per_meter") {
+    return locale === "ar" ? `${formatted} / متر` : `${formatted} / meter`;
+  }
+  return formatted;
 }
 
 export function buildCustomOrderDesignHref(
