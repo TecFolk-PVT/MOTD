@@ -292,7 +292,8 @@ export default function AdminCustomOrdersPage() {
           { label: t("stats.total"), value: filteredOrders.length },
           {
             label: t("stats.pending"),
-            value: filteredOrders.filter((o) => o.status === "pending").length,
+            value: filteredOrders.filter((o) => o.status === "confirmed")
+              .length,
           },
           {
             label: t("stats.inProduction"),
@@ -455,10 +456,10 @@ export default function AdminCustomOrdersPage() {
                       order.items.map((item, idx) => (
                         <div
                           key={idx}
-                          className="bg-gray-50/50 rounded-xl p-3 border border-gray-100/50 space-y-1"
+                          className="bg-gray-50/50 rounded-xl border border-gray-100/50 space-y-1"
                         >
                           <div className="flex justify-between items-start gap-2">
-                            <span className="text-xs font-semibold text-black">
+                            <span className="text-xs font-medium text-black">
                               {item.designSnapshot?.name || t("unknownDesign")}
                             </span>
                             {item.pricing?.total !== undefined && (
@@ -479,7 +480,7 @@ export default function AdminCustomOrdersPage() {
                               })}
                             </span>
                             <span>
-                              {locale === "ar" ? `الخياط: ` : `Tailor: `}
+                              {locale === "ar" ? `الخياط:` : `Tailor:`}{" "}
                               {readPartnerName(
                                 item.tailorShopId,
                                 t("unknownTailor"),
@@ -489,16 +490,16 @@ export default function AdminCustomOrdersPage() {
                         </div>
                       ))
                     ) : (
-                      <div className="bg-gray-50/50 rounded-xl p-3 border border-gray-100/50 space-y-1">
+                      <div className="bg-gray-50/50 rounded-xl p-3 border border-gray-100/50 space-y-">
                         <div className="flex justify-between items-start gap-2">
-                          <span className="text-xs font-semibold text-black">
+                          <span className="text-xs font-medium text-black">
                             {order.designSnapshot?.name || t("unknownDesign")}
                           </span>
                         </div>
                         <div className="flex flex-col gap-0.5 text-[11px] text-gray-500">
                           <span>{t("fabricLabel", { name: fabricName })}</span>
                           <span>
-                            {locale === "ar" ? `الخياط: ` : `Tailor: `}
+                            {locale === "ar" ? `الخياط:` : `Tailor:`}{" "}
                             {tailorName}
                           </span>
                         </div>
@@ -555,46 +556,8 @@ export default function AdminCustomOrdersPage() {
                       disabled={isUpdating}
                     />
 
-                    {previousStatus && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleStatusChange(order, previousStatus)
-                        }
-                        disabled={
-                          isUpdating || order.status === "return_requested"
-                        }
-                        className="border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-1 min-w-35 hover:bg-gray-100 disabled:opacity-50 hover:cursor-pointer transition"
-                      >
-                        {isUpdating ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-500" />
-                        ) : (
-                          t("revertTo", { status: statusLabel(previousStatus) })
-                        )}
-                      </button>
-                    )}
-
-                    {nextStatus && (
-                      <button
-                        type="button"
-                        onClick={() => handleStatusChange(order, nextStatus)}
-                        disabled={
-                          isUpdating ||
-                          order.status === "delivered" ||
-                          [
-                            "return_requested", 
-                            "refund_processed",
-                          ].includes(nextStatus)
-                        }
-                        className="bg-black text-white px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-1 min-w-35 disabled:opacity-50 hover:cursor-pointer transition font-medium"
-                      >
-                        {isUpdating ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                        ) : (
-                          t("advanceTo", { status: statusLabel(nextStatus) })
-                        )}
-                      </button>
-                    )}
+                    {/* Status is auto-confirmed on placement; admin dashboard should be read-only for status changes. */}
+                    {null}
                   </div>
                 </div>
               </div>

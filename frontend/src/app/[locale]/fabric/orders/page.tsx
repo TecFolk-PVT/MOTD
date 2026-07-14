@@ -101,7 +101,9 @@ export default function FabricOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
+  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Filters State
   const [filterCustomer, setFilterCustomer] = useState<string>("");
@@ -118,7 +120,9 @@ export default function FabricOrdersPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get<{ success: boolean; items: Order[] }>("/api/fabric/orders");
+      const res = await api.get<{ success: boolean; items: Order[] }>(
+        "/api/fabric/orders",
+      );
       setOrders(res.items || []);
     } catch (err) {
       setError(getApiErrorMessage(err, t("loadError")));
@@ -145,6 +149,45 @@ export default function FabricOrdersPage() {
       currency,
     }).format(amount);
 
+  const getNextFabricStatus = (currentStatus: string): string | null => {
+    const nextMap: Record<string, string> = {
+      confirmed: "fabric_delivered",
+    };
+
+    return nextMap[currentStatus] || null;
+  };
+
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+
+  const updateOrderStatus = async (orderId: string) => {
+    const order = orders.find((o) => o._id === orderId);
+    if (!order) return;
+
+    const nextStatus = getNextFabricStatus(order.status);
+    if (!nextStatus) return;
+
+    setUpdatingOrderId(orderId);
+    try {
+      await api.patch(`/api/fabric/orders/${orderId}/status`, {
+        status: nextStatus,
+      });
+      toast.success(
+        locale === "ar" ? "تم تحديث حالة الطلب" : "Order status updated",
+      );
+      await fetchOrders();
+    } catch (err) {
+      toast.error(
+        getApiErrorMessage(
+          err,
+          locale === "ar" ? "فشل التحديث" : "Update failed",
+        ),
+        ERROR_TOAST,
+      );
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  };
+
   // Client-side filtering logic
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -155,10 +198,14 @@ export default function FabricOrdersPage() {
           typeof order.userId === "object" ? order.userId : null,
           "",
         ).toLowerCase();
-        const customerEmail =
-          (typeof order.userId === "object" && order.userId?.email || "").toLowerCase();
-        const customerPhone =
-          (typeof order.userId === "object" && order.userId?.phone || "").toLowerCase();
+        const customerEmail = (
+          (typeof order.userId === "object" && order.userId?.email) ||
+          ""
+        ).toLowerCase();
+        const customerPhone = (
+          (typeof order.userId === "object" && order.userId?.phone) ||
+          ""
+        ).toLowerCase();
         const orderId = order._id.toLowerCase();
 
         if (
@@ -184,7 +231,7 @@ export default function FabricOrdersPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20">
         <Loader2 className="w-10 h-10 animate-spin text-black mb-4" />
-        <p className="text-gray-500 font-['TT_Norms_Pro_Mono'] text-sm tracking-widest uppercase [font-family:var(--font-ui)]">
+        <p className="text-gray-500 text-sm tracking-widest uppercase [font-family:var(--font-ui)]">
           {t("loading")}
         </p>
       </div>
@@ -194,7 +241,9 @@ export default function FabricOrdersPage() {
   if (error && orders.length === 0) {
     return (
       <div className="p-6 text-center">
-        <p className="text-red-500 mb-4 [font-family:var(--font-body)]">{error}</p>
+        <p className="text-red-500 mb-4 [font-family:var(--font-body)]">
+          {error}
+        </p>
         <button
           onClick={fetchOrders}
           className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm hover:bg-gray-800 transition [font-family:var(--font-ui)]"
@@ -213,7 +262,9 @@ export default function FabricOrdersPage() {
           <h1 className="[font-family:var(--font-display)] text-2xl md:text-3xl font-light text-black tracking-tight">
             {t("title")}
           </h1>
-          <p className="text-gray-500 text-sm mt-1 [font-family:var(--font-body)]">{t("subtitle")}</p>
+          <p className="text-gray-500 text-sm mt-1 [font-family:var(--font-body)]">
+            {t("subtitle")}
+          </p>
         </div>
 
         <button
@@ -256,10 +307,12 @@ export default function FabricOrdersPage() {
             onChange={(e) => setFilterStatus(e.target.value)}
             className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-black text-black bg-white transition hover:cursor-pointer [font-family:var(--font-body)]"
           >
-            <option value="">{locale === "ar" ? "كل الحالات" : "All Statuses"}</option>
+            <option value="">
+              {locale === "ar" ? "كل الحالات" : "All Statuses"}
+            </option>
             {CUSTOM_ORDER_STATUSES.map((status) => (
               <option key={status} value={status}>
-                {statusLabel(status)}
+                {tStatus(status)}
               </option>
             ))}
           </select>
@@ -269,8 +322,13 @@ export default function FabricOrdersPage() {
       {/* Orders List Section */}
       {filteredOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-gray-100 py-20 shadow-sm">
-          <PackageSearch className="w-16 h-16 text-gray-300 mb-4" strokeWidth={1} />
-          <p className="text-gray-550 mt-1 max-w-sm [font-family:var(--font-body)]">{t("empty")}</p>
+          <PackageSearch
+            className="w-16 h-16 text-gray-300 mb-4"
+            strokeWidth={1}
+          />
+          <p className="text-gray-550 mt-1 max-w-sm [font-family:var(--font-body)]">
+            {t("empty")}
+          </p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -283,7 +341,9 @@ export default function FabricOrdersPage() {
               typeof order.userId === "object" ? order.userId.email : "";
             const customerPhone =
               typeof order.userId === "object" ? order.userId.phone : "";
-            const fabricName = order.fabricSnapshot?.name || (locale === "ar" ? "قماش خاص" : "Self Fabric");
+            const fabricName =
+              order.fabricSnapshot?.name ||
+              (locale === "ar" ? "قماش خاص" : "Self Fabric");
             const isExpanded = !!expandedOrders[order._id];
 
             return (
@@ -294,13 +354,15 @@ export default function FabricOrdersPage() {
                 {/* Upper card info grid */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-5">
                   <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">{t("customer")}</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">
+                      {t("customer")}
+                    </p>
                     <p className="font-medium text-sm text-black flex items-center gap-1.5 [font-family:var(--font-body)]">
                       <User className="w-3.5 h-3.5 text-gray-400" />
                       {customerName}
                     </p>
                     {customerPhone && (
-                      <p className="text-xs text-black font-semibold font-mono mt-1 flex items-center gap-1.5 bg-[#FFFDF9] border border-amber-100 px-2 py-0.5 rounded w-max [font-family:var(--font-body)]">
+                      <p className="text-xs text-black font-semibold mt-1 flex items-center gap-1.5 bg-[#FFFDF9] border border-amber-100 px-2 py-0.5 rounded w-max [font-family:var(--font-body)]">
                         <Phone className="w-3 h-3 text-amber-600 shrink-0" />
                         {customerPhone}
                       </p>
@@ -314,29 +376,85 @@ export default function FabricOrdersPage() {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">{t("design")}</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">
+                      {t("design")}
+                    </p>
                     <p className="text-sm font-medium text-black [font-family:var(--font-body)]">
                       {fabricName}
                     </p>
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">{t("date")}</p>
-                    <p className="text-sm text-black [font-family:var(--font-body)]">{formatOrderDate(order.createdAt, locale)}</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">
+                      {t("date")}
+                    </p>
+                    <p className="text-sm text-black [font-family:var(--font-body)]">
+                      {formatOrderDate(order.createdAt, locale)}
+                    </p>
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">{t("status")}</p>
-                    <StatusBadge
-                      status={order.status}
-                      label={statusLabel(order.status)}
-                    />
+                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">
+                      {t("status")}
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      <StatusBadge
+                        status={order.status}
+                        label={statusLabel(order.status)}
+                      />
+
+                      <select
+                        value={order.status}
+                        disabled={updatingOrderId === order._id}
+                        onChange={(e) => {
+                          const next = e.target.value;
+                          if (next === order.status) return;
+                          if (!next) return;
+
+                          // Only allow the fabric-flow progression
+                          if (
+                            next !== getNextFabricStatus(order.status) &&
+                            getNextFabricStatus(order.status) !== null
+                          )
+                            return;
+
+                          updateOrderStatus(order._id);
+                        }}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-[11px] md:text-xs bg-white text-black transition hover:cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed [font-family:var(--font-body)]"
+                      >
+                        {(() => {
+                          const next = getNextFabricStatus(order.status);
+                          // If no next status, keep only current status option
+                          if (!next) {
+                            return (
+                              <option value={order.status}>
+                                {statusLabel(order.status)}
+                              </option>
+                            );
+                          }
+
+                          return (
+                            <>
+                              <option value={order.status}>
+                                {statusLabel(order.status)}
+                              </option>
+                              <option value={next}>{statusLabel(next)}</option>
+                            </>
+                          );
+                        })()}
+                      </select>
+                    </div>
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">{t("total")}</p>
+                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">
+                      {t("total")}
+                    </p>
                     <p className="font-medium text-black text-sm [font-family:var(--font-body)]">
-                      {formatCurrency(order.pricing.fabricCost || 0, order.pricing.currency || "AED")}
+                      {formatCurrency(
+                        order.pricing.fabricCost || 0,
+                        order.pricing.currency || "AED",
+                      )}
                     </p>
                     <p className="text-2xs text-gray-400 [font-family:var(--font-body)]">
                       {locale === "ar" ? "سعر القماش فقط" : "Fabric cost only"}
@@ -353,14 +471,20 @@ export default function FabricOrdersPage() {
                   >
                     <Ruler className="w-3.5 h-3.5" />
                     {isExpanded ? t("hideMeasurements") : t("showMeasurements")}
-                    {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                    {isExpanded ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
                   </button>
 
                   {isExpanded && (
                     <div className="mt-4 p-4 border border-dashed border-gray-200 rounded-xl bg-gray-50/50 grid grid-cols-1 sm:grid-cols-3 gap-4 [font-family:var(--font-body)]">
                       <div className="bg-white p-3 border border-gray-100 rounded-lg">
                         <p className="text-3xs text-gray-400 uppercase font-medium">
-                          {locale === "ar" ? "كمية القماش المطلوبة" : "Fabric Quantity Requested"}
+                          {locale === "ar"
+                            ? "كمية القماش المطلوبة"
+                            : "Fabric Quantity Requested"}
                         </p>
                         <p className="text-sm font-semibold font-mono text-black mt-0.5">
                           {order.fabricMeters || 0} meters (m)
@@ -371,15 +495,24 @@ export default function FabricOrdersPage() {
                           {locale === "ar" ? "السعر للمتر" : "Price Per Meter"}
                         </p>
                         <p className="text-sm font-semibold font-mono text-black mt-0.5">
-                          {formatCurrency(order.pricing.fabricPricePerMeter || 0, order.pricing.currency || "AED")} / m
+                          {formatCurrency(
+                            order.pricing.fabricPricePerMeter || 0,
+                            order.pricing.currency || "AED",
+                          )}{" "}
+                          / m
                         </p>
                       </div>
                       <div className="bg-white p-3 border border-gray-100 rounded-lg">
                         <p className="text-3xs text-gray-400 uppercase font-medium">
-                          {locale === "ar" ? "إجمالي تكلفة القماش" : "Total Fabric Payout"}
+                          {locale === "ar"
+                            ? "إجمالي تكلفة القماش"
+                            : "Total Fabric Payout"}
                         </p>
                         <p className="text-sm font-semibold font-mono text-black mt-0.5">
-                          {formatCurrency(order.pricing.fabricCost || 0, order.pricing.currency || "AED")}
+                          {formatCurrency(
+                            order.pricing.fabricCost || 0,
+                            order.pricing.currency || "AED",
+                          )}
                         </p>
                       </div>
                     </div>
@@ -389,7 +522,9 @@ export default function FabricOrdersPage() {
                 {/* Footer bar showing Order ID */}
                 <div className="p-4 border-t border-gray-100 bg-gray-50/70 text-xs text-gray-500">
                   {locale === "ar" ? "الرقم التعريفي للطلب:" : "Order ID:"}{" "}
-                  <span className="font-mono text-black font-medium">#{order._id.slice(-8).toUpperCase()}</span>
+                  <span className="font-mono text-black font-medium">
+                    #{order._id.slice(-8).toUpperCase()}
+                  </span>
                 </div>
               </div>
             );

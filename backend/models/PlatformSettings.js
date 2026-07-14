@@ -37,6 +37,22 @@ const platformSettingsSchema = new mongoose.Schema(
       max: 1,
       required: true,
     },
+
+    // Return/refund policy settings (for retail items)
+    returnDeductionPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100,
+      required: true,
+    },
+    returnAllowedDays: {
+      type: Number,
+      default: 0,
+      min: 0,
+      required: true,
+    },
+
     currency: {
       type: String,
       default: CURRENCY,

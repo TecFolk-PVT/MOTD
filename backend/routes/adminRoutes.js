@@ -1244,6 +1244,8 @@ adminRouter.put(
       platformFee,
       vatRate,
       currency,
+      returnDeductionPercent,
+      returnAllowedDays,
     } = req.body;
 
     // 1. Structural Number Validations
@@ -1288,6 +1290,30 @@ adminRouter.put(
       return;
     }
 
+    if (
+      returnDeductionPercent !== undefined &&
+      (typeof returnDeductionPercent !== "number" ||
+        returnDeductionPercent < 0 ||
+        returnDeductionPercent > 100)
+    ) {
+      res.status(400).send({
+        message:
+          "Return deduction percent must be a valid number between 0 and 100",
+      });
+      return;
+    }
+
+    if (
+      returnAllowedDays !== undefined &&
+      (typeof returnAllowedDays !== "number" || returnAllowedDays < 0)
+    ) {
+      res.status(400).send({
+        message: "Return allowed days must be a valid number greater than or equal to 0",
+      });
+      return;
+    }
+
+
     // 2. Fetch the current singleton record
     let settings = await PlatformSettings.findOne({});
     if (!settings) {
@@ -1304,7 +1330,12 @@ adminRouter.put(
       settings.defaultTailoringFee = defaultTailoringFee;
     if (platformFee !== undefined) settings.platformFee = platformFee;
     if (vatRate !== undefined) settings.vatRate = vatRate;
+    if (returnDeductionPercent !== undefined)
+      settings.returnDeductionPercent = returnDeductionPercent;
+    if (returnAllowedDays !== undefined)
+      settings.returnAllowedDays = returnAllowedDays;
     if (currency !== undefined) settings.currency = currency; // Fixed AED standard in MVP layout
+
 
     const updatedSettings = await settings.save();
     res.send({

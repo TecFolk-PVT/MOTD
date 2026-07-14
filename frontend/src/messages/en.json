@@ -986,14 +986,14 @@
       "statuses": {
         "pending": "Pending",
         "confirmed": "Confirmed",
-        "fabric_pickup_scheduled": "Fabric pickup scheduled",
+        "fabric_delivered": "Fabric delivered",
         "at_tailor": "At tailor",
-        "in_production": "In production",
-        "ready": "Ready",
+        "in_production": "Stitching in progress",
         "out_for_delivery": "Out for delivery",
         "delivered": "Delivered",
-        "return_requested": "Return requested",
-        "refund_processed": "Refund processed"
+        "return_requested": "Return Requested",
+        "return_request_accepted": "Return Request Accepted",
+        "refund_processed": "Refund Processed"
       }
     },
     "retail": {
@@ -1019,34 +1019,34 @@
       "inProgress": "In progress",
       "statuses": {
         "pending": {
-          "title": "Order placed"
+          "title": "Order Placed"
         },
         "confirmed": {
-          "title": "Order confirmed"
+          "title": "Order Confirmed"
         },
-        "fabric_pickup_scheduled": {
-          "title": "Fabric pickup scheduled"
+        "fabric_delivered": {
+          "title": "Fabric Delivered"
         },
         "at_tailor": {
-          "title": "At tailor shop"
+          "title": "Tailor Received Fabric"
         },
         "in_production": {
-          "title": "In production"
-        },
-        "ready": {
-          "title": "Garment ready"
+          "title": "Stiching in Progress"
         },
         "out_for_delivery": {
-          "title": "Out for delivery"
+          "title": "Out for Delivered"
         },
         "delivered": {
-          "title": "Delivered"
+          "title": "Customer Received"
         },
         "return_requested": {
-          "title": "Return requested"
+          "title": "Return REquested"
+        },
+        "return_request_accepted": {
+          "title": "Return Request Accepted"
         },
         "refund_processed": {
-          "title": "Refund processed"
+          "title": "Refund Processed"
         }
       }
     }

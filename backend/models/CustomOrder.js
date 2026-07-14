@@ -7,7 +7,7 @@ const FABRIC_SOURCES = ["storefront", "self"];
 const CUSTOM_STATUSES = [
   "pending",
   "confirmed",
-  "fabric_pickup_scheduled",
+  "fabric_delivered", // Fabric Delivered (new)
   "at_tailor",
   "in_production",
   "ready",

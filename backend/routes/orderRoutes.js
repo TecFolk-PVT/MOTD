@@ -541,6 +541,8 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
         resolvedPickupAddress = buildPickupAddressFromFabric(firstFabric);
       }
 
+      const confirmedAt = new Date();
+
       const order = await CustomOrder.create({
         userId: req.user._id,
         fabricSource: orderInput.fabricSource,
@@ -551,12 +553,12 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
         customerDeliveryAddress:
           deliveryType === "delivery" ? deliveryAddr : null,
         pickupAddress: deliveryType === "pickup" ? resolvedPickupAddress : null,
-        status: "pending",
+        status: "confirmed",
         statusHistory: [
           {
-            status: "pending",
-            note: "Order placed",
-            changedAt: new Date(),
+            status: "confirmed",
+            note: "Order confirmed",
+            changedAt: confirmedAt,
             changedBy: req.user._id,
           },
         ],
@@ -618,6 +620,8 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       deliveryType,
     });
 
+    const confirmedAt = new Date();
+
     const order = await CustomOrder.create({
       userId: req.user._id,
       fabricSource: orderInput.fabricSource,
@@ -633,12 +637,12 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       customerDeliveryAddress:
         deliveryType === "delivery" ? deliveryAddr : null,
       pickupAddress: deliveryType === "pickup" ? resolvedPickupAddress : null,
-      status: "pending",
+      status: "confirmed",
       statusHistory: [
         {
-          status: "pending",
-          note: "Order placed",
-          changedAt: new Date(),
+          status: "confirmed",
+          note: "Order confirmed",
+          changedAt: confirmedAt,
           changedBy: req.user._id,
         },
       ],
@@ -1135,6 +1139,62 @@ orderRoutes.post("/custom/:id/return-accept", isAuth, async (req, res) => {
   }
 });
 
+// Customer: Mark order as received (out_for_delivery -> delivered)
+// POST /api/orders/custom/:id/mark-received
+orderRoutes.post("/custom/:id/mark-received", isAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid order ID" });
+    }
+
+    const order = await CustomOrder.findById(id);
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+    }
+
+    if (order.userId.toString() !== req.user._id && !req.user.isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: "You are not allowed to modify this order",
+      });
+    }
+
+    // Customer can only move the order forward when it's currently out for delivery
+    if (order.status !== "out_for_delivery") {
+      return res.status(400).json({
+        success: false,
+        message: `Order cannot be marked received while status is ${order.status}`,
+      });
+    }
+
+    order.status = "delivered";
+    order.statusHistory = [
+      ...(order.statusHistory || []),
+      {
+        status: "delivered",
+        note: "Customer received",
+        changedAt: new Date(),
+        changedBy: req.user._id,
+      },
+    ];
+
+    await order.save();
+
+    return res.json({ success: true, order });
+  } catch (error) {
+    console.error("POST /api/orders/custom/:id/mark-received error:", error);
+    return res
+      .status(500)
+      .json({ success: false, message: "Failed to mark order received" });
+  }
+});
+
 // Admin: Reject custom return request (creates customer notification)
 // POST /api/admin/orders/custom/:id/return-reject
 orderRoutes.post("/custom/:id/return-reject", isAuth, async (req, res) => {
@@ -1190,8 +1250,13 @@ orderRoutes.post("/custom/:id/return-reject", isAuth, async (req, res) => {
 
     res.json({ success: true, order });
   } catch (error) {
-    console.error("POST /api/admin/orders/custom/:id/return-reject error:", error);
-    res.status(500).json({ success: false, message: "Failed to reject return" });
+    console.error(
+      "POST /api/admin/orders/custom/:id/return-reject error:",
+      error,
+    );
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to reject return" });
   }
 });
 

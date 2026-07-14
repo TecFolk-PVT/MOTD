@@ -40,6 +40,10 @@ export default function CustomOrdersTab({ locale }: CustomOrdersTabProps) {
   const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null);
   const [detailError, setDetailError] = useState<string | null>(null);
 
+  // Customer-side forward lock: once order hits "out_for_delivery",
+  // customer should be able to move it forward (customer received / return flow).
+  // (Tailor-side is already locked in TailorOrdersPage.)
+
   const [returnCheckedById, setReturnCheckedById] = useState<
     Record<string, boolean>
   >({});
@@ -55,6 +59,13 @@ export default function CustomOrdersTab({ locale }: CustomOrdersTabProps) {
   >({});
   const [conditionDropdownOpenById, setConditionDropdownOpenById] = useState<
     Record<string, boolean>
+  >({});
+
+  const [receivedSubmittingById, setReceivedSubmittingById] = useState<
+    Record<string, boolean>
+  >({});
+  const [receivedErrorById, setReceivedErrorById] = useState<
+    Record<string, string | null>
   >({});
 
   const [returnDraftById, setReturnDraftById] = useState<
@@ -394,6 +405,75 @@ export default function CustomOrdersTab({ locale }: CustomOrdersTabProps) {
                       {formatCurrency(order.total, locale)}
                     </span>
                   )}
+
+                  {detail?.status === "out_for_delivery" && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setReceivedErrorById((prev) => ({
+                          ...prev,
+                          [order.id]: null,
+                        }));
+                        setReceivedSubmittingById((prev) => ({
+                          ...prev,
+                          [order.id]: true,
+                        }));
+
+                        try {
+                          const apiRes = await api.post<{
+                            success: boolean;
+                            order?: any;
+                          }>(
+                            `/api/orders/custom/${order.id}/mark-received`,
+                            {},
+                          );
+
+                          if (!apiRes?.success) {
+                            throw new Error("Failed to mark as received");
+                          }
+
+                          await loadDetail(order.id);
+
+                          setOrders((prev) =>
+                            prev.map((o) =>
+                              o.id === order.id
+                                ? { ...o, status: "delivered" }
+                                : o,
+                            ),
+                          );
+
+                          // If status is updated, the button will disappear (as desired)
+                          setReceivedErrorById((prev) => ({
+                            ...prev,
+                            [order.id]: null,
+                          }));
+                        } catch (err: unknown) {
+                          const message =
+                            (err as ApiError)?.message ||
+                            (err instanceof Error ? err.message : t("error"));
+                          setReceivedErrorById((prev) => ({
+                            ...prev,
+                            [order.id]: message,
+                          }));
+                        } finally {
+                          setReceivedSubmittingById((prev) => ({
+                            ...prev,
+                            [order.id]: false,
+                          }));
+                        }
+                      }}
+                      disabled={
+                        !!receivedSubmittingById[order.id] ||
+                        detail?.status !== "out_for_delivery"
+                      }
+                      className="text-[10px] uppercase tracking-[0.18em] text-white bg-black hover:bg-[#2A2A28] transition hover:cursor-pointer disabled:opacity-50 disabled:hover:bg-black px-3 py-1 rounded-lg"
+                    >
+                      {receivedSubmittingById[order.id]
+                        ? t("loading")
+                        : "Customer Received"}
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => handleToggleTimeline(order.id)}
@@ -408,6 +488,80 @@ export default function CustomOrdersTab({ locale }: CustomOrdersTabProps) {
 
             <div className="px-4 sm:px-6 pb-4">
               <div className="mt-2 border border-gray-200 rounded-xl bg-[#FDFAF5] p-4">
+                {/* Customer Received action */}
+                {detail?.status === "out_for_delivery" && (
+                  <div className="mb-4">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setReceivedErrorById((prev) => ({
+                          ...prev,
+                          [order.id]: null,
+                        }));
+                        setReceivedSubmittingById((prev) => ({
+                          ...prev,
+                          [order.id]: true,
+                        }));
+
+                        try {
+                          const apiRes = await api.post<{
+                            success: boolean;
+                            order?: any;
+                          }>(
+                            `/api/orders/custom/${order.id}/mark-received`,
+                            {},
+                          );
+
+                          if (!apiRes?.success) {
+                            throw new Error("Failed to mark as received");
+                          }
+
+                          // Refresh timeline/checkbox state
+                          await loadDetail(order.id);
+
+                          setReceivedErrorById((prev) => ({
+                            ...prev,
+                            [order.id]: null,
+                          }));
+
+                          setOrders((prev) =>
+                            prev.map((o) =>
+                              o.id === order.id
+                                ? { ...o, status: "delivered" }
+                                : o,
+                            ),
+                          );
+                        } catch (err: unknown) {
+                          const message =
+                            (err as ApiError)?.message ||
+                            (err instanceof Error ? err.message : t("error"));
+                          setReceivedErrorById((prev) => ({
+                            ...prev,
+                            [order.id]: message,
+                          }));
+                        } finally {
+                          setReceivedSubmittingById((prev) => ({
+                            ...prev,
+                            [order.id]: false,
+                          }));
+                        }
+                      }}
+                      disabled={!!receivedSubmittingById[order.id]}
+                      className="w-full px-6 py-2 bg-black text-white text-[10px] tracking-[0.2em] uppercase hover:bg-[#2A2A28] transition font-ui rounded-lg disabled:opacity-50 disabled:hover:bg-black"
+                    >
+                      {receivedSubmittingById[order.id]
+                        ? t("loading")
+                        : "Customer Received"}
+                    </button>
+
+                    {receivedErrorById[order.id] && (
+                      <p className="mt-2 text-red-600 text-sm">
+                        {receivedErrorById[order.id]}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
