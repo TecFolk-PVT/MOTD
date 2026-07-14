@@ -144,10 +144,33 @@ export default function TailorOrdersPage() {
     return status.replace(/_/g, " ");
   };
 
-  // Once the order reaches "out_for_delivery", tailor users must not be able to
-  // move it forward anymore (next status disabled/hidden).
-  // They can still move backward (previous button stays available with existing rules).
-  const isLockedForward = (status: string) => status === "out_for_delivery";
+  // Status checks - COMPLETED includes delivered, returned, refunded, return_requested
+  const isOutForDelivery = (status: string) => status === "out_for_delivery";
+  const isDelivered = (status: string) => status === "delivered";
+  const isCompleted = (status: string) =>
+    status === "delivered" ||
+    status === "returned" ||
+    status === "refunded" ||
+    status === "return_requested" ||
+    status === "return_approved" ||
+    status === "refund_processed";
+
+  // Tailor cannot act on completed orders
+  const isTailorActionable = (status: string) => !isCompleted(status);
+
+  // Tailor cannot advance from OUT_FOR_DELIVERY or COMPLETED
+  const canAdvance = (status: string) => {
+    if (isCompleted(status)) return false;
+    if (isOutForDelivery(status)) return false;
+    return true;
+  };
+
+  // Tailor can revert if not completed and not fabric_delivered
+  const canRevert = (status: string) => {
+    if (isCompleted(status)) return false;
+    if (status === "fabric_delivered") return false;
+    return true;
+  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -180,6 +203,31 @@ export default function TailorOrdersPage() {
     order: Order,
     newStatus: CustomOrderStatus,
   ) => {
+    // Block all actions on completed orders (delivered, returned, refunded, return_requested)
+    if (isCompleted(order.status)) {
+      toast.error(
+        locale === "ar"
+          ? "لا يمكن تغيير حالة الطلب بعد تسليمه للعميل."
+          : "Cannot change status after order delivered.",
+        ERROR_TOAST,
+      );
+      return;
+    }
+
+    // Block advance from OUT_FOR_DELIVERY
+    if (isOutForDelivery(order.status)) {
+      const previousStatus = getPreviousCustomOrderStatus(order.status);
+      if (newStatus !== previousStatus) {
+        toast.error(
+          locale === "ar"
+            ? "لا يمكن التقدم من حالة OUT FOR DELIVERY. فقط الرجوع مسموح."
+            : "Cannot advance from OUT FOR DELIVERY. Only revert allowed.",
+          ERROR_TOAST,
+        );
+        return;
+      }
+    }
+
     setUpdatingOrderId(order._id);
     try {
       await api.patch(`/api/tailor/orders/${order._id}/status`, {
@@ -188,7 +236,6 @@ export default function TailorOrdersPage() {
       });
 
       toast.success(t("updateSuccess"), SUCCESS_TOAST);
-      // Reset note for this order
       setNote((prev) => ({ ...prev, [order._id]: "" }));
       await fetchOrders();
     } catch (err) {
@@ -373,11 +420,21 @@ export default function TailorOrdersPage() {
               (locale === "ar" ? "قماش خاص" : "Self Fabric");
             const isExpanded = !!expandedOrders[order._id];
             const isOptionsExpanded = !!expandedOptions[order._id];
+            const isOutForDeliveryStatus = isOutForDelivery(order.status);
+            const isDeliveredStatus = isDelivered(order.status);
+            const isCompletedStatus = isCompleted(order.status);
+            const canAdvanceStatus = canAdvance(order.status);
+            const canRevertStatus = canRevert(order.status);
+            const isActionable = isTailorActionable(order.status);
 
             return (
               <div
                 key={order._id}
-                className="border border-gray-100 rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
+                className={`border rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 ${
+                  isCompletedStatus
+                    ? "border-green-200 bg-green-50/30"
+                    : "border-gray-100"
+                }`}
               >
                 {/* Upper card info grid */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-5">
@@ -432,6 +489,20 @@ export default function TailorOrdersPage() {
                       status={order.status}
                       label={statusLabel(order.status)}
                     />
+                    {isOutForDeliveryStatus && (
+                      <p className="text-[9px] text-amber-600 mt-1 font-medium">
+                        ⚠️{" "}
+                        {locale === "ar"
+                          ? "بانتظار استلام العميل"
+                          : "Awaiting customer receipt"}
+                      </p>
+                    )}
+                    {isDeliveredStatus && (
+                      <p className="text-[9px] text-green-600 mt-1 font-medium">
+                        ✅{" "}
+                        {locale === "ar" ? "تم استلام الطلب" : "Order received"}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -551,12 +622,31 @@ export default function TailorOrdersPage() {
                 </div>
 
                 {/* Lower card action footer */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border-t border-gray-100 bg-gray-50/70 items-center">
+                <div
+                  className={`grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border-t ${
+                    isCompletedStatus
+                      ? "border-green-200 bg-green-50/50"
+                      : "border-gray-100 bg-gray-50/70"
+                  } items-center`}
+                >
                   <div className="text-xs text-gray-500">
                     {locale === "ar" ? "الرقم التعريفي للطلب:" : "Order ID:"}{" "}
                     <span className="font-mono text-black font-medium">
                       #{order._id.slice(-8).toUpperCase()}
                     </span>
+                    {isOutForDeliveryStatus && (
+                      <span className="ml-3 text-[10px] text-amber-600 font-medium">
+                        🔒{" "}
+                        {locale === "ar"
+                          ? "مقفل للتقدم"
+                          : "Locked - customer action required"}
+                      </span>
+                    )}
+                    {isCompletedStatus && (
+                      <span className="ml-3 text-[10px] text-green-600 font-medium">
+                        ✅ {locale === "ar" ? "مكتمل" : "Completed"}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-2 sm:justify-end sm:items-center flex-wrap">
@@ -571,16 +661,17 @@ export default function TailorOrdersPage() {
                         }))
                       }
                       className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm flex-1 min-w-35 focus:outline-none focus:border-black text-black bg-white transition"
-                      disabled={isUpdating}
+                      disabled={isUpdating || !isActionable}
                     />
 
-                    {previousStatus && order.status !== "fabric_delivered" && (
+                    {/* Revert button - ONLY visible when actionable and not completed */}
+                    {previousStatus && canRevertStatus && isActionable && (
                       <button
                         type="button"
                         onClick={() =>
                           handleStatusChange(order, previousStatus)
                         }
-                        disabled={isUpdating || isLockedForward(order.status)}
+                        disabled={isUpdating}
                         className="border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-1 min-w-35 hover:bg-gray-100 disabled:opacity-50 hover:cursor-pointer transition"
                       >
                         {isUpdating ? (
@@ -591,7 +682,8 @@ export default function TailorOrdersPage() {
                       </button>
                     )}
 
-                    {nextStatus && !isLockedForward(order.status) && (
+                    {/* Advance button - ONLY visible when actionable and not out_for_delivery */}
+                    {nextStatus && canAdvanceStatus && isActionable && (
                       <button
                         type="button"
                         onClick={() => handleStatusChange(order, nextStatus)}
@@ -604,6 +696,23 @@ export default function TailorOrdersPage() {
                           t("advanceTo", { status: statusLabel(nextStatus) })
                         )}
                       </button>
+                    )}
+
+                    {/* Status message for completed orders - replaces buttons */}
+                    {isCompletedStatus && (
+                      <span className="text-[11px] text-green-700 bg-green-100 px-4 py-2 rounded-lg border border-green-300 whitespace-nowrap font-medium">
+                        ✅{" "}
+                        {locale === "ar" ? "تم تسليم الطلب" : "Order delivered"}
+                      </span>
+                    )}
+
+                    {/* Locked message when OUT_FOR_DELIVERY - replaces advance button */}
+                    {isOutForDeliveryStatus && !isCompletedStatus && (
+                      <span className="text-[10px] text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200 whitespace-nowrap">
+                        {locale === "ar"
+                          ? "⏳ انتظار تأكيد العميل"
+                          : "⏳ Awaiting customer confirmation"}
+                      </span>
                     )}
                   </div>
                 </div>

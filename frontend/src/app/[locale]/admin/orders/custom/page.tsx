@@ -556,8 +556,43 @@ export default function AdminCustomOrdersPage() {
                       disabled={isUpdating}
                     />
 
-                    {/* Status is auto-confirmed on placement; admin dashboard should be read-only for status changes. */}
-                    {null}
+                    {previousStatus && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleStatusChange(order, previousStatus)
+                        }
+                        disabled={
+                          isUpdating || order.status === "return_requested"
+                        }
+                        className="border border-gray-300 text-gray-700 px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-1 min-w-35 hover:bg-gray-100 disabled:opacity-50 hover:cursor-pointer transition"
+                      >
+                        {isUpdating ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-500" />
+                        ) : (
+                          t("revertTo", { status: statusLabel(previousStatus) })
+                        )}
+                      </button>
+                    )}
+
+                    {nextStatus && (
+                      <button
+                        type="button"
+                        onClick={() => handleStatusChange(order, nextStatus)}
+                        disabled={
+                          isUpdating ||
+                          order.status === "delivered" ||
+                          ["return_requested"].includes(nextStatus)
+                        }
+                        className="bg-black text-white px-3 py-2 rounded-lg text-xs flex items-center justify-center gap-1 min-w-35 disabled:opacity-50 hover:cursor-pointer transition font-medium"
+                      >
+                        {isUpdating ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                        ) : (
+                          t("advanceTo", { status: statusLabel(nextStatus) })
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

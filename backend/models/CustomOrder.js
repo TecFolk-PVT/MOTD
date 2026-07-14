@@ -15,6 +15,7 @@ const CUSTOM_STATUSES = [
   "delivered",
   // Returns & refunds flow (admin reviewed)
   "return_requested",
+  "return_approved",
   "refund_processed",
 ];
 

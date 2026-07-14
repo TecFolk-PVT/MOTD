@@ -1202,8 +1202,12 @@
         "fabric_delivered": "تم تسليم القماش",
         "at_tailor": "عند الخياط",
         "in_production": "قيد الإنتاج",
+        "ready": "جاهز",
         "out_for_delivery": "في التوصيل",
-        "delivered": "تم الاستلام"
+        "delivered": "تم الاستلام",
+        "return_requested": "تم طلب الإرجاع",
+        "return_approved": "تمت الموافقة على الإرجاع",
+        "refund_processed": "تمت معالجة الاسترداد"
       }
     },
     "retail": {
@@ -1232,10 +1236,12 @@
         "confirmed": { "title": "Order Confirmed" },
         "fabric_delivered": { "title": "Fabric Delivered" },
         "at_tailor": { "title": "Tailor Received Fabric" },
-        "in_production": { "title": "Stiching in Progress" },
-        "out_for_delivery": { "title": "Delivered" },
-        "delivered": { "title": "Return Requested" },
-        "return_requested": { "title": "Refund Processed" },
+        "in_production": { "title": "Stitching in Progress" },
+        "ready": { "title": "Ready" },
+        "out_for_delivery": { "title": "Out for Delivery" },
+        "delivered": { "title": "Delivered" },
+        "return_requested": { "title": "Return Requested" },
+        "return_approved": { "title": "Return Approved" },
         "refund_processed": { "title": "Refund Processed" }
       }
     }

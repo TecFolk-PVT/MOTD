@@ -988,12 +988,13 @@
         "confirmed": "Confirmed",
         "fabric_delivered": "Fabric delivered",
         "at_tailor": "At tailor",
-        "in_production": "Stitching in progress",
+        "in_production": "In production",
+        "ready": "Ready",
         "out_for_delivery": "Out for delivery",
         "delivered": "Delivered",
-        "return_requested": "Return Requested",
-        "return_request_accepted": "Return Request Accepted",
-        "refund_processed": "Refund Processed"
+        "return_requested": "Return requested",
+        "return_approved": "Return approved",
+        "refund_processed": "Refund processed"
       }
     },
     "retail": {
@@ -1031,19 +1032,22 @@
           "title": "Tailor Received Fabric"
         },
         "in_production": {
-          "title": "Stiching in Progress"
+          "title": "Stitching in Progress"
+        },
+        "ready": {
+          "title": "Ready"
         },
         "out_for_delivery": {
-          "title": "Out for Delivered"
+          "title": "Out for Delivery"
         },
         "delivered": {
-          "title": "Customer Received"
+          "title": "Delivered"
         },
         "return_requested": {
-          "title": "Return REquested"
+          "title": "Return Requested"
         },
-        "return_request_accepted": {
-          "title": "Return Request Accepted"
+        "return_approved": {
+          "title": "Return Approved"
         },
         "refund_processed": {
           "title": "Refund Processed"

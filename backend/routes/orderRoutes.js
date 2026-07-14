@@ -1069,7 +1069,8 @@ orderRoutes.post("/custom/:id/return-request", isAuth, async (req, res) => {
 
 // Admin: Accept custom return request (creates customer dashboard notification)
 // POST /api/admin/orders/custom/:id/return-accept
-orderRoutes.post("/custom/:id/return-accept", isAuth, async (req, res) => {
+// 1. Approve return (return_requested → return_approved)
+orderRoutes.post("/custom/:id/return-approve", isAuth, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -1090,37 +1091,29 @@ orderRoutes.post("/custom/:id/return-accept", isAuth, async (req, res) => {
         .json({ success: false, message: "Order not found" });
     }
 
-    // Only accept when a return was requested
     if (order.status !== "return_requested") {
       return res.status(400).json({
         success: false,
-        message: `Return cannot be accepted while order status is ${order.status}`,
+        message: `Return cannot be approved while order status is ${order.status}`,
       });
     }
 
-    // When admin accepts return we finalize the return/refund flow.
-    // Requirement: status must NOT progress into `items_delivered` automatically.
-    // Admin acceptance should result in `refund_processed` for customer visibility.
-
-    order.status = "refund_processed";
+    order.status = "return_approved";
     order.statusHistory = [
       ...(order.statusHistory || []),
       {
-        status: "refund_processed",
-        note: "Return accepted, refund processed",
+        status: "return_approved",
+        note: "Return request approved by admin",
         changedAt: new Date(),
         changedBy: req.user._id,
       },
     ];
     await order.save();
 
-    // Create customer-facing notification
-    // NOTE: current system uses a single AdminNotification model; until a dedicated CustomerNotification model exists,
-    // we still create the notification record expected by /api/customer/notifications.
     await AdminNotification.create({
-      type: "custom_return_accepted",
-      title: "Refund processed",
-      message: `Your return request for order ${order._id} has been accepted and your refund has been processed.`,
+      type: "custom_return_approved",
+      title: "Return Approved",
+      message: `Your return request for order ${order._id} has been approved. Refund will be processed shortly.`,
       orderId: order._id,
       createdBy: req.user._id,
       read: false,
@@ -1129,12 +1122,78 @@ orderRoutes.post("/custom/:id/return-accept", isAuth, async (req, res) => {
     res.json({ success: true, order });
   } catch (error) {
     console.error(
-      "POST /api/admin/orders/custom/:id/return-accept error:",
+      "POST /api/admin/orders/custom/:id/return-approve error:",
       error,
     );
     res.status(500).json({
       success: false,
-      message: "Failed to accept return",
+      message: "Failed to approve return",
+    });
+  }
+});
+
+// 2. Process refund (return_approved → refund_processed)
+orderRoutes.post("/custom/:id/refund-process", isAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid order ID" });
+    }
+
+    if (!req.user?.isAdmin) {
+      return res.status(403).json({ success: false, message: "Forbidden" });
+    }
+
+    const order = await CustomOrder.findById(id);
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+    }
+
+    if (order.status !== "return_approved") {
+      return res.status(400).json({
+        success: false,
+        message: `Refund can only be processed when order status is return_approved, current: ${order.status}`,
+      });
+    }
+
+    // Process actual refund logic here (payment gateway integration)
+    // ...
+
+    order.status = "refund_processed";
+    order.statusHistory = [
+      ...(order.statusHistory || []),
+      {
+        status: "refund_processed",
+        note: "Refund processed successfully",
+        changedAt: new Date(),
+        changedBy: req.user._id,
+      },
+    ];
+    await order.save();
+
+    await AdminNotification.create({
+      type: "custom_refund_processed",
+      title: "Refund Processed",
+      message: `Your refund for order ${order._id} has been processed.`,
+      orderId: order._id,
+      createdBy: req.user._id,
+      read: false,
+    });
+
+    res.json({ success: true, order });
+  } catch (error) {
+    console.error(
+      "POST /api/admin/orders/custom/:id/refund-process error:",
+      error,
+    );
+    res.status(500).json({
+      success: false,
+      message: "Failed to process refund",
     });
   }
 });

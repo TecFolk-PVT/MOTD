@@ -7,13 +7,14 @@ export const CUSTOM_ORDER_STATUSES = [
   "fabric_delivered", // Fabric delivered to tailor
   "at_tailor", // Tailor Received Fabric
 
-  "in_production", // Stiching in Progress
-  "out_for_delivery",
-  "delivered",
+  "in_production", // Stitching in Progress
+  "ready", // Ready for handoff
+  "out_for_delivery", // Out for delivery
+  "delivered", // Delivered
 
   // Returns & refunds flow
   "return_requested", // Return requested
-  "return_request_accepted", // Return request accepted
+  "return_approved", // Return approved
   "refund_processed", // Refund processed
 ] as const;
 
