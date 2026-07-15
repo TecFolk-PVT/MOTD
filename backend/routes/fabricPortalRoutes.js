@@ -48,7 +48,8 @@ const pickShopFields = (body) => {
   const data = {};
   for (const field of SHOP_FIELDS) {
     if (body[field] !== undefined) {
-      data[field] = typeof body[field] === "string" ? body[field].trim() : body[field];
+      data[field] =
+        typeof body[field] === "string" ? body[field].trim() : body[field];
     }
   }
   if (data.slug) {
@@ -68,7 +69,11 @@ const validateShopPayload = (data, { requireCore = false } = {}) => {
     }
   }
 
-  if (data.phone !== undefined && data.phone !== "" && !/^\d{9}$/.test(data.phone)) {
+  if (
+    data.phone !== undefined &&
+    data.phone !== "" &&
+    !/^\d{9}$/.test(data.phone)
+  ) {
     return "phone number must be exactly 9 digits";
   }
 
@@ -95,7 +100,7 @@ fabricPortalRouter.get(
         approvalStatus: req.user.approvalStatus,
       },
     });
-  })
+  }),
 );
 
 // GET /api/fabric/shop — own shop profile
@@ -104,11 +109,13 @@ fabricPortalRouter.get(
   expressAsyncHandler(async (req, res) => {
     const shop = await findOwnShop(req.user._id);
     if (!shop) {
-      res.status(404).json({ success: false, message: "Fabric shop not found" });
+      res
+        .status(404)
+        .json({ success: false, message: "Fabric shop not found" });
       return;
     }
     res.json({ success: true, item: formatShop(shop) });
-  })
+  }),
 );
 
 // POST /api/fabric/shop — create own shop
@@ -117,7 +124,10 @@ fabricPortalRouter.post(
   expressAsyncHandler(async (req, res) => {
     const existingShop = await findOwnShop(req.user._id);
     if (existingShop) {
-      res.status(409).json({ success: false, message: "Fabric shop already exists for this account" });
+      res.status(409).json({
+        success: false,
+        message: "Fabric shop already exists for this account",
+      });
       return;
     }
 
@@ -130,7 +140,9 @@ fabricPortalRouter.post(
 
     const slugTaken = await FabricShop.findOne({ slug: data.slug });
     if (slugTaken) {
-      res.status(409).json({ success: false, message: "Shop slug is already in use" });
+      res
+        .status(409)
+        .json({ success: false, message: "Shop slug is already in use" });
       return;
     }
 
@@ -140,7 +152,7 @@ fabricPortalRouter.post(
     });
 
     res.status(201).json({ success: true, item: formatShop(shop) });
-  })
+  }),
 );
 
 // PUT /api/fabric/shop — update own shop
@@ -149,7 +161,9 @@ fabricPortalRouter.put(
   expressAsyncHandler(async (req, res) => {
     const shop = await findOwnShop(req.user._id);
     if (!shop) {
-      res.status(404).json({ success: false, message: "Fabric shop not found" });
+      res
+        .status(404)
+        .json({ success: false, message: "Fabric shop not found" });
       return;
     }
 
@@ -163,7 +177,9 @@ fabricPortalRouter.put(
     if (data.slug && data.slug !== shop.slug) {
       const slugTaken = await FabricShop.findOne({ slug: data.slug });
       if (slugTaken) {
-        res.status(409).json({ success: false, message: "Shop slug is already in use" });
+        res
+          .status(409)
+          .json({ success: false, message: "Shop slug is already in use" });
         return;
       }
     }
@@ -171,7 +187,7 @@ fabricPortalRouter.put(
     Object.assign(shop, data);
     const updatedShop = await shop.save();
     res.json({ success: true, item: formatShop(updatedShop) });
-  })
+  }),
 );
 
 // POST /api/fabric/uploads/shop-image?variant=logo|cover
@@ -186,7 +202,7 @@ fabricPortalRouter.post(
     const variant = req.query.variant === "logo" ? "logo" : "cover";
     const url = await processTailorShopImage(req.file, { variant });
     res.status(201).json({ success: true, url });
-  })
+  }),
 );
 
 // POST /api/fabric/uploads/fabric-image
@@ -200,7 +216,7 @@ fabricPortalRouter.post(
     }
     const url = await processTailorDesignImage(req.file);
     res.status(201).json({ success: true, url });
-  })
+  }),
 );
 
 // GET /api/fabric/fabrics — list own fabrics
@@ -209,26 +225,33 @@ fabricPortalRouter.get(
   expressAsyncHandler(async (req, res) => {
     const shop = await findOwnShop(req.user._id);
     if (!shop) {
-      res.status(404).json({ success: false, message: "Fabric shop not found" });
+      res
+        .status(404)
+        .json({ success: false, message: "Fabric shop not found" });
       return;
     }
 
-    const fabrics = await Fabric.find({ listedByStore: req.user._id }).sort({ createdAt: -1 });
+    const fabrics = await Fabric.find({ listedByStore: req.user._id }).sort({
+      createdAt: -1,
+    });
     res.json({ success: true, items: fabrics });
-  })
+  }),
 );
 
 // GET /api/fabric/fabrics/:id — single fabric details
 fabricPortalRouter.get(
   "/fabrics/:id",
   expressAsyncHandler(async (req, res) => {
-    const fabric = await Fabric.findOne({ _id: req.params.id, listedByStore: req.user._id });
+    const fabric = await Fabric.findOne({
+      _id: req.params.id,
+      listedByStore: req.user._id,
+    });
     if (!fabric) {
       res.status(404).json({ success: false, message: "Fabric not found" });
       return;
     }
     res.json({ success: true, item: fabric });
-  })
+  }),
 );
 
 // POST /api/fabric/fabrics — create a fabric
@@ -237,7 +260,9 @@ fabricPortalRouter.post(
   expressAsyncHandler(async (req, res) => {
     const shop = await findOwnShop(req.user._id);
     if (!shop) {
-      res.status(404).json({ success: false, message: "Fabric shop not found" });
+      res
+        .status(404)
+        .json({ success: false, message: "Fabric shop not found" });
       return;
     }
 
@@ -259,19 +284,33 @@ fabricPortalRouter.post(
       isActive,
     } = req.body;
 
-    if (!name || !nameAr || !slug || !material || pricePerMeter === undefined || pricePerMeter === null) {
-      res.status(400).json({ success: false, message: "name, nameAr, slug, material, and pricePerMeter are required" });
+    if (
+      !name ||
+      !nameAr ||
+      !slug ||
+      !material ||
+      pricePerMeter === undefined ||
+      pricePerMeter === null
+    ) {
+      res.status(400).json({
+        success: false,
+        message: "name, nameAr, slug, material, and pricePerMeter are required",
+      });
       return;
     }
 
     if (!Array.isArray(images) || images.length === 0) {
-      res.status(400).json({ success: false, message: "At least one image is required" });
+      res
+        .status(400)
+        .json({ success: false, message: "At least one image is required" });
       return;
     }
 
     const slugTaken = await Fabric.findOne({ slug: slug.toLowerCase() });
     if (slugTaken) {
-      res.status(409).json({ success: false, message: "Fabric slug is already in use" });
+      res
+        .status(409)
+        .json({ success: false, message: "Fabric slug is already in use" });
       return;
     }
 
@@ -302,7 +341,7 @@ fabricPortalRouter.post(
     });
 
     res.status(201).json({ success: true, item: fabric });
-  })
+  }),
 );
 
 // PUT /api/fabric/fabrics/:id — update a fabric
@@ -311,11 +350,16 @@ fabricPortalRouter.put(
   expressAsyncHandler(async (req, res) => {
     const shop = await findOwnShop(req.user._id);
     if (!shop) {
-      res.status(404).json({ success: false, message: "Fabric shop not found" });
+      res
+        .status(404)
+        .json({ success: false, message: "Fabric shop not found" });
       return;
     }
 
-    const fabric = await Fabric.findOne({ _id: req.params.id, listedByStore: req.user._id });
+    const fabric = await Fabric.findOne({
+      _id: req.params.id,
+      listedByStore: req.user._id,
+    });
     if (!fabric) {
       res.status(404).json({ success: false, message: "Fabric not found" });
       return;
@@ -342,7 +386,9 @@ fabricPortalRouter.put(
     if (slug && slug.toLowerCase() !== fabric.slug) {
       const slugTaken = await Fabric.findOne({ slug: slug.toLowerCase() });
       if (slugTaken) {
-        res.status(409).json({ success: false, message: "Fabric slug is already in use" });
+        res
+          .status(409)
+          .json({ success: false, message: "Fabric slug is already in use" });
         return;
       }
       fabric.slug = slug.toLowerCase();
@@ -358,45 +404,94 @@ fabricPortalRouter.put(
     if (colors) fabric.colors = colors;
     if (tag !== undefined) fabric.tag = tag;
     if (tagAr !== undefined) fabric.tagAr = tagAr;
-    if (pricePerMeter !== undefined) fabric.pricePerMeter = Number(pricePerMeter);
-    if (stockInMeters !== undefined) fabric.stockInMeters = Number(stockInMeters);
+    if (pricePerMeter !== undefined)
+      fabric.pricePerMeter = Number(pricePerMeter);
+    if (stockInMeters !== undefined)
+      fabric.stockInMeters = Number(stockInMeters);
     if (isActive !== undefined) fabric.isActive = isActive;
 
     if (storePickupAddress) {
       fabric.storePickupAddress = {
-        emirate: storePickupAddress.emirate || fabric.storePickupAddress.emirate,
+        emirate:
+          storePickupAddress.emirate || fabric.storePickupAddress.emirate,
         city: storePickupAddress.city || fabric.storePickupAddress.city,
-        street: storePickupAddress.street !== undefined ? storePickupAddress.street : fabric.storePickupAddress.street,
-        building: storePickupAddress.building !== undefined ? storePickupAddress.building : fabric.storePickupAddress.building,
-        phone: storePickupAddress.phone !== undefined ? storePickupAddress.phone : fabric.storePickupAddress.phone,
+        street:
+          storePickupAddress.street !== undefined
+            ? storePickupAddress.street
+            : fabric.storePickupAddress.street,
+        building:
+          storePickupAddress.building !== undefined
+            ? storePickupAddress.building
+            : fabric.storePickupAddress.building,
+        phone:
+          storePickupAddress.phone !== undefined
+            ? storePickupAddress.phone
+            : fabric.storePickupAddress.phone,
       };
     }
 
     const updatedFabric = await fabric.save();
     res.json({ success: true, item: updatedFabric });
-  })
+  }),
 );
 
 // DELETE /api/fabric/fabrics/:id — delete a fabric
 fabricPortalRouter.delete(
   "/fabrics/:id",
   expressAsyncHandler(async (req, res) => {
-    const result = await Fabric.deleteOne({ _id: req.params.id, listedByStore: req.user._id });
+    const result = await Fabric.deleteOne({
+      _id: req.params.id,
+      listedByStore: req.user._id,
+    });
     if (result.deletedCount === 0) {
-      res.status(404).json({ success: false, message: "Fabric not found or not owned by you" });
+      res.status(404).json({
+        success: false,
+        message: "Fabric not found or not owned by you",
+      });
       return;
     }
     res.json({ success: true, message: "Fabric deleted successfully" });
-  })
+  }),
 );
 
 // GET /api/fabric/orders — get all custom orders containing fabric from this store
 fabricPortalRouter.get(
   "/orders",
   expressAsyncHandler(async (req, res) => {
-    const orders = await CustomOrder.find({
-      fabricStoreId: req.user._id,
-    })
+    // Primary match (new schema)
+    // - top-level: fabricStoreId
+    // - items array: items[].fabricStoreId
+    const primaryMatchOrdersQuery = {
+      $or: [
+        { fabricStoreId: req.user._id },
+        { "items.fabricStoreId": req.user._id },
+      ],
+    };
+
+    // Fallback match for legacy/older orders where fabricStoreId might be null,
+    // but the fabricId belongs to fabrics listed by this store.
+    const storeFabricIds = await Fabric.find({
+      listedByStore: req.user._id,
+    }).select("_id");
+
+    const storeFabricIdValues = storeFabricIds.map((f) => f._id);
+
+    const legacyMatchQuery = storeFabricIdValues.length
+      ? {
+          $or: [
+            { fabricId: { $in: storeFabricIdValues } },
+            { "items.fabricId": { $in: storeFabricIdValues } },
+          ],
+        }
+      : null;
+
+    const finalQuery = legacyMatchQuery
+      ? {
+          $or: [primaryMatchOrdersQuery, legacyMatchQuery],
+        }
+      : primaryMatchOrdersQuery;
+
+    const orders = await CustomOrder.find(finalQuery)
       .populate("userId", "name email phone")
       .sort({ createdAt: -1 });
 
@@ -404,40 +499,80 @@ fabricPortalRouter.get(
       success: true,
       items: orders,
     });
-  })
+  }),
 );
 
-// PATCH /api/fabric/orders/:id/status — update order status by the fabric store
+// PATCH /api/fabric/orders/:id/status — fabric store updates the fabric handoff milestone
+// This must update both `status` and `statusHistory` so timelines update everywhere.
 fabricPortalRouter.patch(
   "/orders/:id/status",
   expressAsyncHandler(async (req, res) => {
-    const { status, note } = req.body;
+    const { id } = req.params;
+    const { status, note = "" } = req.body || {};
 
-    const order = await CustomOrder.findOne({
-      _id: req.params.id,
-      fabricStoreId: req.user._id,
-    });
+    if (!id) {
+      res.status(400).json({ success: false, message: "Order id is required" });
+      return;
+    }
+
+    // The fabric store should advance confirmed orders to fabric delivery.
+    const allowedFabricStatuses = ["fabric_delivered"];
+
+    if (
+      !status ||
+      typeof status !== "string" ||
+      !allowedFabricStatuses.includes(status)
+    ) {
+      res.status(400).json({
+        success: false,
+        message: `status must be one of: ${allowedFabricStatuses.join(", ")}`,
+      });
+      return;
+    }
+
+    const order = await CustomOrder.findById(id);
     if (!order) {
       res.status(404).json({ success: false, message: "Order not found" });
       return;
     }
 
-    if (status) {
-      order.status = status;
-      order.statusHistory.push({
-        status,
-        note: typeof note === 'string' ? note.trim() : '',
-        changedAt: new Date(),
-        changedBy: req.user._id,
+    // Authorize: order must belong to this fabric store
+    const isBelongsToThisStore =
+      order.fabricStoreId?.toString() === req.user._id.toString() ||
+      order.items?.some(
+        (it) => it?.fabricStoreId?.toString() === req.user._id.toString(),
+      );
+
+    if (!isBelongsToThisStore) {
+      res.status(403).json({
+        success: false,
+        message: "You are not allowed to update this order",
       });
-      await order.save();
+      return;
     }
 
-    res.json({
-      success: true,
-      order,
+    if (order.status !== "confirmed") {
+      res.status(400).json({
+        success: false,
+        message: "Only confirmed orders can be marked as fabric delivered",
+      });
+      return;
+    }
+
+    // Update status + append to statusHistory (timeline source of truth)
+    order.status = status;
+    order.statusHistory = order.statusHistory || [];
+    order.statusHistory.push({
+      status,
+      note: typeof note === "string" ? note : "",
+      changedAt: new Date(),
+      changedBy: req.user._id,
     });
-  })
+
+    await order.save();
+
+    res.json({ success: true, order });
+  }),
 );
 
 export default fabricPortalRouter;

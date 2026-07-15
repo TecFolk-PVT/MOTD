@@ -1203,12 +1203,15 @@
       "statuses": {
         "pending": "قيد الانتظار",
         "confirmed": "مؤكد",
-        "fabric_pickup_scheduled": "جدولة استلام القماش",
+        "fabric_delivered": "تم تسليم القماش",
         "at_tailor": "عند الخياط",
         "in_production": "قيد الإنتاج",
         "ready": "جاهز",
         "out_for_delivery": "في التوصيل",
-        "delivered": "تم التسليم"
+        "delivered": "تم الاستلام",
+        "return_requested": "تم طلب الإرجاع",
+        "return_approved": "تمت الموافقة على الإرجاع",
+        "refund_processed": "تمت معالجة الاسترداد"
       }
     },
     "retail": {
@@ -1233,14 +1236,17 @@
       "pending": "معلّق",
       "inProgress": "قيد التنفيذ",
       "statuses": {
-        "pending": { "title": "تم تقديم الطلب" },
-        "confirmed": { "title": "تأكيد الطلب" },
-        "fabric_pickup_scheduled": { "title": "جدولة استلام القماش" },
-        "at_tailor": { "title": "عند متجر الخياطة" },
-        "in_production": { "title": "قيد الإنتاج" },
-        "ready": { "title": "القطعة جاهزة" },
-        "out_for_delivery": { "title": "في التوصيل" },
-        "delivered": { "title": "تم التسليم" }
+        "pending": { "title": "Order Placed" },
+        "confirmed": { "title": "Order Confirmed" },
+        "fabric_delivered": { "title": "Fabric Delivered" },
+        "at_tailor": { "title": "Tailor Received Fabric" },
+        "in_production": { "title": "Stitching in Progress" },
+        "ready": { "title": "Ready" },
+        "out_for_delivery": { "title": "Out for Delivery" },
+        "delivered": { "title": "Delivered" },
+        "return_requested": { "title": "Return Requested" },
+        "return_approved": { "title": "Return Approved" },
+        "refund_processed": { "title": "Refund Processed" }
       }
     }
   },
