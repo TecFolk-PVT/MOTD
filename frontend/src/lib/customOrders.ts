@@ -1,14 +1,21 @@
 import type { Locale } from "@/i18n/routing";
 
 export const CUSTOM_ORDER_STATUSES = [
-  "pending",
-  "confirmed",
-  "fabric_pickup_scheduled",
-  "at_tailor",
-  "in_production",
-  "ready",
-  "out_for_delivery",
-  "delivered",
+  // Orders flow
+  "pending", // Order Placed
+  "confirmed", // Order Confirmed
+  "fabric_delivered", // Fabric delivered to tailor
+  "at_tailor", // Tailor Received Fabric
+
+  "in_production", // Stitching in Progress
+  "ready", // Ready for handoff
+  "out_for_delivery", // Out for delivery
+  "delivered", // Delivered
+
+  // Returns & refunds flow
+  "return_requested", // Return requested
+  "return_approved", // Return approved
+  "refund_processed", // Refund processed
 ] as const;
 
 export type CustomOrderStatus = (typeof CUSTOM_ORDER_STATUSES)[number];

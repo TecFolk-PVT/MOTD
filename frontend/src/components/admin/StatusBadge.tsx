@@ -27,8 +27,7 @@ const statusStyles: Record<string, string> = {
   cancelled: "bg-red-50 text-red-700 border border-red-200",
 
   // ---------- Custom order logistics statuses ----------
-  fabric_pickup_scheduled:
-    "bg-indigo-50 text-indigo-700 border border-indigo-200",
+  fabric_delivered: "bg-indigo-50 text-indigo-700 border border-indigo-200",
   at_tailor: "bg-amber-50 text-amber-700 border border-amber-200",
   in_production: "bg-yellow-100 text-yellow-800 border border-yellow-300", // slightly different from pending
   ready: "bg-teal-50 text-teal-700 border border-teal-200",

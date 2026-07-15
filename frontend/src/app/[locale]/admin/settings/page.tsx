@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { api, getApiErrorMessage } from "@/lib/api/client";
 import FormField from "@/components/admin/FormField";
 import toast from "react-hot-toast";
@@ -44,11 +44,14 @@ const ERROR_TOAST = {
 const translations = {
   en: {
     title: "Platform Settings",
-    subtitle: "Manage global pricing defaults, delivery fees, tailoring fees, VAT rate, and currency defaults.",
+    subtitle:
+      "Manage global pricing defaults, delivery fees, tailoring fees, VAT rate, and currency defaults.",
     deliveryFee: "Default Delivery Fee (AED)",
     tailoringFee: "Default Tailoring Fee (AED)",
     platformFee: "Platform Fee (AED)",
     vatRate: "VAT Rate (%)",
+    returnDeductionPercent: "Return Deduction (%)",
+    returnAllowedDays: "Return Allowed Days",
     currency: "Currency",
     currencyHelp: "The primary base currency is locked to AED.",
     saveButton: "Save Settings",
@@ -57,19 +60,29 @@ const translations = {
     errorMessage: "Failed to update Changes.",
     loading: "Loading settings...",
     validation: {
-      deliveryFeeMin: "Delivery fee must be a valid number greater than or equal to 0.",
-      tailoringFeeMin: "Tailoring fee must be a valid number greater than or equal to 0.",
-      platformFeeMin: "Platform fee must be a valid number greater than or equal to 0.",
+      deliveryFeeMin:
+        "Delivery fee must be a valid number greater than or equal to 0.",
+      tailoringFeeMin:
+        "Tailoring fee must be a valid number greater than or equal to 0.",
+      platformFeeMin:
+        "Platform fee must be a valid number greater than or equal to 0.",
       vatRateRange: "VAT rate must be a valid percentage between 0% and 100%.",
-    }
+      returnDeductionRange:
+        "Return deduction percent must be a valid percentage between 0% and 100%.",
+      returnAllowedDaysMin:
+        "Return allowed days must be a valid number greater than or equal to 0.",
+    },
   },
   ar: {
     title: "إعدادات المنصة",
-    subtitle: "إدارة قيم التسعير الافتراضية العالمية، رسوم التوصيل، رسوم الخياطة، ضريبة القيمة المضافة، والعملة الافتراضية.",
+    subtitle:
+      "إدارة قيم التسعير الافتراضية العالمية، رسوم التوصيل، رسوم الخياطة، ضريبة القيمة المضافة، والعملة الافتراضية.",
     deliveryFee: "رسوم التوصيل الافتراضية (درهم)",
     tailoringFee: "رسوم الخياطة الافتراضية (درهم)",
     platformFee: "رسوم المنصة (درهم)",
     vatRate: "نسبة ضريبة القيمة المضافة (%)",
+    returnDeductionPercent: "خصم الإرجاع (%)",
+    returnAllowedDays: "عدد أيام الإرجاع المسموحة",
     currency: "العملة",
     currencyHelp: "العملة الأساسية مقفلة على الدرهم الإماراتي (AED).",
     saveButton: "حفظ الإعدادات",
@@ -79,18 +92,22 @@ const translations = {
     loading: "جاري تحميل الإعدادات...",
     validation: {
       deliveryFeeMin: "يجب أن تكون رسوم التوصيل قيمة صحيحة أكبر من أو تساوي 0.",
-      tailoringFeeMin: "يجب أن تكون رسوم الخياطة قيمة صحيحة أكبر من أو تساوي 0.",
+      tailoringFeeMin:
+        "يجب أن تكون رسوم الخياطة قيمة صحيحة أكبر من أو تساوي 0.",
       platformFeeMin: "يجب أن تكون رسوم المنصة قيمة صحيحة أكبر من أو تساوي 0.",
       vatRateRange: "يجب أن تكون نسبة ضريبة القيمة المضافة بين 0% و 100%.",
-    }
-  }
+      returnDeductionRange: "يجب أن تكون نسبة خصم الإرجاع بين 0% و 100%.",
+      returnAllowedDaysMin:
+        "يجب أن يكون عدد أيام الإرجاع مسموحًا قيمة صحيحة أكبر من أو تساوي 0.",
+    },
+  },
 };
 
 export default function AdminSettingsPage() {
   const params = useParams();
-  const router = useRouter();
   const locale = (params.locale as string) || "en";
-  const t = translations[locale as keyof typeof translations] || translations.en;
+  const t =
+    translations[locale as keyof typeof translations] || translations.en;
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -101,6 +118,9 @@ export default function AdminSettingsPage() {
   const [tailoringFee, setTailoringFee] = useState<string>("0");
   const [platformFee, setPlatformFee] = useState<string>("0");
   const [vatRatePercent, setVatRatePercent] = useState<string>("5");
+  const [returnDeductionPercent, setReturnDeductionPercent] =
+    useState<string>("0");
+  const [returnAllowedDays, setReturnAllowedDays] = useState<string>("0");
   const [currency, setCurrency] = useState<string>("AED");
 
   useEffect(() => {
@@ -112,6 +132,8 @@ export default function AdminSettingsPage() {
           defaultTailoringFee: number;
           platformFee: number;
           vatRate: number;
+          returnDeductionPercent: number;
+          returnAllowedDays: number;
           currency: string;
         }>("/api/admin/settings");
 
@@ -119,6 +141,10 @@ export default function AdminSettingsPage() {
         setTailoringFee(data.defaultTailoringFee.toString());
         setPlatformFee(data.platformFee.toString());
         setVatRatePercent((data.vatRate * 100).toString());
+        setReturnDeductionPercent(
+          (data.returnDeductionPercent ?? 0).toString(),
+        );
+        setReturnAllowedDays((data.returnAllowedDays ?? 0).toString());
         setCurrency(data.currency || "AED");
       } catch (err: unknown) {
         toast.error(getApiErrorMessage(err, t.errorMessage), ERROR_TOAST);
@@ -135,6 +161,8 @@ export default function AdminSettingsPage() {
     if (field === "tailoringFee") setTailoringFee(val);
     if (field === "platformFee") setPlatformFee(val);
     if (field === "vatRatePercent") setVatRatePercent(val);
+    if (field === "returnDeductionPercent") setReturnDeductionPercent(val);
+    if (field === "returnAllowedDays") setReturnAllowedDays(val);
 
     if (fieldErrors[field]) {
       setFieldErrors((prev) => ({ ...prev, [field]: "" }));
@@ -143,11 +171,13 @@ export default function AdminSettingsPage() {
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
-    
+
     const delFee = parseFloat(deliveryFee);
     const tailFee = parseFloat(tailoringFee);
     const platFee = parseFloat(platformFee);
     const vat = parseFloat(vatRatePercent);
+    const returnDeduction = parseFloat(returnDeductionPercent);
+    const returnDays = parseFloat(returnAllowedDays);
 
     if (isNaN(delFee) || delFee < 0) {
       errors.deliveryFee = t.validation.deliveryFeeMin;
@@ -160,6 +190,18 @@ export default function AdminSettingsPage() {
     }
     if (isNaN(vat) || vat < 0 || vat > 100) {
       errors.vatRatePercent = t.validation.vatRateRange;
+    }
+
+    if (
+      isNaN(returnDeduction) ||
+      returnDeduction < 0 ||
+      returnDeduction > 100
+    ) {
+      errors.returnDeductionPercent = t.validation.returnDeductionRange;
+    }
+
+    if (isNaN(returnDays) || returnDays < 0) {
+      errors.returnAllowedDays = t.validation.returnAllowedDaysMin;
     }
 
     setFieldErrors(errors);
@@ -178,6 +220,8 @@ export default function AdminSettingsPage() {
         defaultTailoringFee: parseFloat(tailoringFee),
         platformFee: parseFloat(platformFee),
         vatRate: parseFloat(vatRatePercent) / 100,
+        returnDeductionPercent: parseFloat(returnDeductionPercent),
+        returnAllowedDays: parseFloat(returnAllowedDays),
         currency,
       };
 
@@ -188,18 +232,24 @@ export default function AdminSettingsPage() {
           defaultTailoringFee: number;
           platformFee: number;
           vatRate: number;
+          returnDeductionPercent: number;
+          returnAllowedDays: number;
           currency: string;
         };
       }>("/api/admin/settings", payload);
 
       toast.success(t.successMessage, SUCCESS_TOAST);
-      
+
       // Update with exact response numbers from the server just in case
       if (response && response.settings) {
         setDeliveryFee(response.settings.defaultDeliveryFee.toString());
         setTailoringFee(response.settings.defaultTailoringFee.toString());
         setPlatformFee(response.settings.platformFee.toString());
         setVatRatePercent((response.settings.vatRate * 100).toString());
+        setReturnDeductionPercent(
+          response.settings.returnDeductionPercent.toString(),
+        );
+        setReturnAllowedDays(response.settings.returnAllowedDays.toString());
         setCurrency(response.settings.currency || "AED");
       }
     } catch (err: unknown) {
@@ -237,8 +287,6 @@ export default function AdminSettingsPage() {
         </h1>
         <p className="text-gray-500 text-sm mt-1">{t.subtitle}</p>
       </div>
-
-
 
       <form
         onSubmit={handleSubmit}
@@ -310,12 +358,45 @@ export default function AdminSettingsPage() {
             />
           </FormField>
 
+          <FormField
+            label={t.returnDeductionPercent}
+            name="returnDeductionPercent"
+            required
+            error={fieldErrors.returnDeductionPercent}
+          >
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              value={returnDeductionPercent}
+              onChange={(e) =>
+                handleChange("returnDeductionPercent", e.target.value)
+              }
+              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-sm text-black"
+            />
+          </FormField>
+
+          <FormField
+            label={t.returnAllowedDays}
+            name="returnAllowedDays"
+            required
+            error={fieldErrors.returnAllowedDays}
+          >
+            <input
+              type="number"
+              step="1"
+              min="0"
+              value={returnAllowedDays}
+              onChange={(e) =>
+                handleChange("returnAllowedDays", e.target.value)
+              }
+              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-sm text-black"
+            />
+          </FormField>
+
           <div className="md:col-span-2">
-            <FormField
-              label={t.currency}
-              name="currency"
-              hint={t.currencyHelp}
-            >
+            <FormField label={t.currency} name="currency" hint={t.currencyHelp}>
               <input
                 type="text"
                 value={currency}
