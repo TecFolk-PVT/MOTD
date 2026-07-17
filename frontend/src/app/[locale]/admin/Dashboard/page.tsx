@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api/client";
 import {
@@ -13,6 +13,9 @@ import {
   DollarSign,
   BarChart3,
   PieChart,
+  Search,
+  PackageSearch,
+  Loader2,
 } from "lucide-react";
 import LocaleSwitcher from "@/components/shared/LocaleSwitcher";
 import Chart from "chart.js/auto";
@@ -35,6 +38,11 @@ export default function AdminDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Pricing integration states
+  const [pricingOrders, setPricingOrders] = useState<any[]>([]);
+  const [pricingLoading, setPricingLoading] = useState(true);
+  const [pricingSearch, setPricingSearch] = useState("");
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -51,6 +59,73 @@ export default function AdminDashboardPage() {
     };
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    const fetchPricingOrders = async () => {
+      try {
+        setPricingLoading(true);
+        const data = await api.get<any>("/api/admin/orders/custom");
+        const items = Array.isArray(data) ? data : data.items || [];
+        setPricingOrders(items);
+      } catch (err) {
+        console.error("Pricing fetch error:", err);
+      } finally {
+        setPricingLoading(false);
+      }
+    };
+    fetchPricingOrders();
+  }, []);
+
+  const getOrderFees = (order: any) => {
+    if (order.items && order.items.length > 0) {
+      const tailorFee = order.items.reduce((sum: number, item: any) => sum + (item.pricing?.designBase || 0), 0);
+      const tailoringFee = order.items.reduce((sum: number, item: any) => sum + (item.pricing?.tailoringFee || 0), 0);
+      const fabricFee = order.items.reduce((sum: number, item: any) => sum + (item.pricing?.fabricCost || 0), 0);
+      return { tailorFee, tailoringFee, fabricFee };
+    }
+    return {
+      tailorFee: order.pricing?.designBase || 0,
+      tailoringFee: order.pricing?.tailoringFee || 0,
+      fabricFee: order.pricing?.fabricCost || 0,
+    };
+  };
+
+  const readPartnerName = (value: any, fallback: string) => {
+    if (!value) return fallback;
+    if (typeof value === "string") return value;
+    return value.name || fallback;
+  };
+
+  const formatOrderDateLocal = (dateStr: string) => {
+    if (!dateStr) return "";
+    return new Date(dateStr).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const filteredPricingOrders = useMemo(() => {
+    return pricingOrders.filter((order) => {
+      if (pricingSearch.trim()) {
+        const term = pricingSearch.toLowerCase();
+        const customerName = readPartnerName(
+          typeof order.userId === "object" ? order.userId : null,
+          "",
+        ).toLowerCase();
+        const customerEmail = (
+          typeof order.userId === "object" ? order.userId.email || "" : ""
+        ).toLowerCase();
+        const orderIdHex = order._id.toLowerCase();
+        return (
+          customerName.includes(term) ||
+          customerEmail.includes(term) ||
+          orderIdHex.includes(term)
+        );
+      }
+      return true;
+    });
+  }, [pricingOrders, pricingSearch]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -617,6 +692,108 @@ export default function AdminDashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Pricing & Fees Section */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-50 p-6 mt-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h3 className="text-sm font-medium text-black uppercase tracking-wider flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-[#C9A84C]" strokeWidth={1.5} />
+              Pricing & Fees
+            </h3>
+            <p className="text-xs text-gray-400 mt-1">
+              Consolidated breakdown of tailor fees, tailoring fees, and fabric costs per order.
+            </p>
+          </div>
+          <div className="relative max-w-xs w-full">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search customer or order..."
+              value={pricingSearch}
+              onChange={(e) => setPricingSearch(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:border-black text-black bg-white transition"
+            />
+          </div>
+        </div>
+
+        {pricingLoading && pricingOrders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-black mb-3" />
+            <p className="text-xs text-gray-400 uppercase tracking-widest font-mono">Loading data...</p>
+          </div>
+        ) : filteredPricingOrders.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <PackageSearch className="w-12 h-12 text-gray-300 mb-3" strokeWidth={1} />
+            <p className="text-xs text-gray-400">No orders found matching filters.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left text-xs text-gray-500">
+              <thead className="bg-gray-50/70 text-[9px] uppercase tracking-wider text-gray-400 font-semibold border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-3">Order ID</th>
+                  <th className="px-4 py-3">Customer</th>
+                  <th className="px-4 py-3">Date</th>
+                  <th className="px-4 py-3">Tailor Fee</th>
+                  <th className="px-4 py-3">Tailoring Fee</th>
+                  <th className="px-4 py-3">Fabric Fee</th>
+                  <th className="px-4 py-3">Total</th>
+                  <th className="px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredPricingOrders.map((order: any) => {
+                  const customerName = readPartnerName(
+                    typeof order.userId === "object" ? order.userId : null,
+                    "Unknown Customer",
+                  );
+                  const { tailorFee, tailoringFee, fabricFee } = getOrderFees(order);
+                  const orderTotal = tailorFee + tailoringFee + fabricFee;
+
+                  return (
+                    <tr key={order._id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-4 py-3 font-mono font-medium text-black text-2xs">
+                        #{order._id.slice(-8).toUpperCase()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="font-medium text-black block">
+                          {customerName}
+                        </span>
+                        {typeof order.userId === "object" && (
+                          <span className="text-3xs text-gray-400 block">
+                            {order.userId.email}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-2xs">
+                        {formatOrderDateLocal(order.createdAt)}
+                      </td>
+                      <td className="px-4 py-3 text-black">
+                        {formatCurrency(tailorFee)}
+                      </td>
+                      <td className="px-4 py-3 text-black">
+                        {formatCurrency(tailoringFee)}
+                      </td>
+                      <td className="px-4 py-3 text-black">
+                        {formatCurrency(fabricFee)}
+                      </td>
+                      <td className="px-4 py-3 font-semibold text-black">
+                        {formatCurrency(orderTotal)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded-full text-3xs font-medium bg-gray-100 text-gray-700 capitalize">
+                          {order.status.replace(/_/g, " ")}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

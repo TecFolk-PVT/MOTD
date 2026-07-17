@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { LayoutDashboard, LogOut, Menu, Scissors, Store, X, ShoppingBag } from "lucide-react";
+import { LayoutDashboard, LogOut, Menu, Scissors, Store, X, ShoppingBag, DollarSign } from "lucide-react";
 import logoBlack from "../../../public/PNG/Black/MOTD_Wordmark_Black.png";
 
 type TailorPortalShellProps = {
