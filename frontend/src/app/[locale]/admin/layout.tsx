@@ -20,6 +20,7 @@ import {
   UserRoundPlus,
   UserRoundPen,
   Bell,
+  DollarSign,
 } from "lucide-react";
 import white_logo from "../../../../public/PNG/White/MOTD_Wordmark_White.png";
 

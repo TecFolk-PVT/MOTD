@@ -498,6 +498,7 @@ fabricPortalRouter.get(
     res.json({
       success: true,
       items: orders,
+      fabricShopId: req.user._id,
     });
   }),
 );
