@@ -288,6 +288,7 @@ tailorPortalRouter.get(
     res.json({
       success: true,
       items: orders,
+      tailorShopId: shop._id,
     });
   })
 );

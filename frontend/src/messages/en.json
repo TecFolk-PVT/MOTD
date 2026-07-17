@@ -673,7 +673,8 @@
       "dashboard": "Dashboard",
       "shop": "Shop Profile",
       "designs": "Designs",
-      "orders": "Orders"
+      "orders": "Orders",
+      "pricing": "Pricing"
     },
     "orders": {
       "title": "Custom Orders",
@@ -938,7 +939,8 @@
       "pipelineComplete": "Delivered — workflow complete",
       "tabs": {
         "retail": "Retail orders",
-        "custom": "Custom orders"
+        "custom": "Custom orders",
+        "pricing": "Pricing"
       },
       "stats": {
         "total": "Total",
