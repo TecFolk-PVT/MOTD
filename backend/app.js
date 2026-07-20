@@ -6,6 +6,7 @@ import { tryServeUploadFromBlob } from "./utils/imageStorage.js";
 import userRouter from "./routes/userRoutes.js";
 import readyMadeRoutes from "./routes/readyMadeRoutes.js";
 import fabricRoutes from "./routes/fabricRoutes.js";
+import addOnRoutes from "./routes/addOnRoutes.js";
 import tailorRoutes from "./routes/tailorRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import adminRouter from "./routes/adminRoutes.js";
@@ -50,6 +51,7 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/users", userRouter);
 app.use("/api/ready-made", readyMadeRoutes);
 app.use("/api/fabrics", fabricRoutes);
+app.use("/api/addons", addOnRoutes);
 app.use("/api/tailors", tailorRoutes);
 app.use("/api/tailor", isAuth, isApprovedTailor, tailorPortalRoutes);
 app.use("/api/fabric", isAuth, isApprovedFabricStore, fabricPortalRoutes);

@@ -58,6 +58,7 @@ type CustomOrderContextType = {
   getPreviewPayload: () => CustomOrderPreviewPayload | null;
   syncAutoLineItems: () => void;
   updateLineItemUnit: (itemId: string, unit: FabricUnit) => void;
+  toggleAddon: (addonId: string) => void;
 };
 
 const CustomOrderContext = createContext<CustomOrderContextType | undefined>(
@@ -328,6 +329,21 @@ export function CustomOrderProvider({ children }: { children: ReactNode }) {
     }));
   };
 
+  const toggleAddon = useCallback((addonId: string) => {
+    setDraft((prev) => {
+      const addonIds = prev.addonIds || [];
+      const index = addonIds.indexOf(addonId);
+      const nextAddonIds =
+        index > -1
+          ? addonIds.filter((id) => id !== addonId)
+          : [...addonIds, addonId];
+      return {
+        ...prev,
+        addonIds: nextAddonIds,
+      };
+    });
+  }, []);
+
   const resetOrder = useCallback(
     (firstStep: CustomOrderFirstStep | null = null) => {
       setDraft(createEmptyCustomOrderDraft(firstStep));
@@ -377,6 +393,7 @@ export function CustomOrderProvider({ children }: { children: ReactNode }) {
       getPreviewPayload,
       syncAutoLineItems,
       updateLineItemUnit,
+      toggleAddon,
     }),
     [
       draft,
@@ -401,6 +418,7 @@ export function CustomOrderProvider({ children }: { children: ReactNode }) {
       syncAutoLineItems,
       updateLineItemUnit,
       setDeliveryTypeAction,
+      toggleAddon,
     ],
   );
 

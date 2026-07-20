@@ -59,6 +59,13 @@ interface Order {
     currency: string;
   };
   items?: CustomOrderItem[];
+  addons?: Array<{
+    addonId: string;
+    name: string;
+    nameAr: string;
+    price: number;
+    thumbnailImage: string;
+  }>;
 }
 
 const TOAST_BASE = {
@@ -506,6 +513,26 @@ export default function AdminCustomOrdersPage() {
                       </div>
                     )}
                   </div>
+                  {order.addons && order.addons.length > 0 && (
+                    <div className="md:col-span-2 space-y-2 border-t border-gray-100 pt-3 mt-1">
+                      <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-medium">
+                        {locale === "ar" ? "الإضافات المختارة" : "Selected Add-Ons"}
+                      </p>
+                      <div className="space-y-1.5 bg-gray-50/50 p-3 rounded-xl border border-gray-100/50">
+                        {order.addons.map((addon, idx) => {
+                          const name = locale === "ar" ? addon.nameAr || addon.name : addon.name;
+                          return (
+                            <div key={idx} className="flex justify-between items-center text-xs">
+                              <span className="text-gray-600 font-medium">{name}</span>
+                              <span className="text-black font-semibold font-mono">
+                                {formatCurrency(addon.price, order.pricing.currency)}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">

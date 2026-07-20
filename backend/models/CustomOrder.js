@@ -266,6 +266,19 @@ const customOrderSchema = new mongoose.Schema(
     estimatedReadyDate: { type: Date, default: null },
     addPocket: { type: Boolean, default: false },
     addBottomWideFold: { type: Boolean, default: false },
+    addons: [
+      {
+        addonId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "AddOn",
+          required: true,
+        },
+        name: { type: String, required: true },
+        nameAr: { type: String, required: true },
+        price: { type: Number, required: true, min: 0 },
+        thumbnailImage: { type: String, required: true },
+      }
+    ],
 
     // Return request details
     returnCondition: { type: String, default: "", trim: true },

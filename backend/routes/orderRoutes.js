@@ -14,6 +14,7 @@ import Fabric from "../models/Fabric.js";
 import TailorShop from "../models/TailorShop.js";
 import { isAuth } from "../middleware/auth.js";
 import AdminNotification from "../models/AdminNotification.js";
+import AddOn from "../models/AddOn.js";
 
 import {
   getCustomOrderPricing,
@@ -393,7 +394,13 @@ async function buildMultiItemOrderData(orderInput, deliveryType = "delivery") {
 }
 
 async function getCustomOrderTotalFromBody(body) {
-  const { deliveryType = "delivery" } = body;
+  const { deliveryType = "delivery", addonIds = [] } = body;
+
+  let addonsCost = 0;
+  if (addonIds && addonIds.length > 0) {
+    const dbAddons = await AddOn.find({ _id: { $in: addonIds }, isActive: true });
+    addonsCost = dbAddons.reduce((sum, item) => sum + item.price, 0);
+  }
 
   if (isMultiItemPayload(body)) {
     const orderInput = validateMultiItemOrderInput(body);
@@ -401,7 +408,10 @@ async function getCustomOrderTotalFromBody(body) {
       ...orderInput,
       deliveryType,
     });
-    return pricing.total;
+    const subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
+    const vatAmount = Number((subtotal * pricing.vatRate).toFixed(2));
+    const total = Number((subtotal + vatAmount + pricing.deliveryFee).toFixed(2));
+    return total;
   }
 
   const orderInput = validateFabricOrderInput(body);
@@ -409,12 +419,22 @@ async function getCustomOrderTotalFromBody(body) {
     ...orderInput,
     deliveryType,
   });
-  return pricing.total;
+  const subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
+  const vatAmount = Number((subtotal * pricing.vatRate).toFixed(2));
+  const total = Number((subtotal + vatAmount + pricing.deliveryFee).toFixed(2));
+  return total;
 }
 
 orderRoutes.post("/custom/preview", async (req, res) => {
   try {
-    const { deliveryType = "delivery" } = req.body;
+    const { deliveryType = "delivery", addonIds = [] } = req.body;
+
+    let dbAddons = [];
+    let addonsCost = 0;
+    if (addonIds && addonIds.length > 0) {
+      dbAddons = await AddOn.find({ _id: { $in: addonIds }, isActive: true });
+      addonsCost = dbAddons.reduce((sum, item) => sum + item.price, 0);
+    }
 
     if (isMultiItemPayload(req.body)) {
       const orderInput = validateMultiItemOrderInput(req.body);
@@ -423,9 +443,20 @@ orderRoutes.post("/custom/preview", async (req, res) => {
         deliveryType,
       });
 
+      pricing.subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
+      pricing.vatAmount = Number((pricing.subtotal * pricing.vatRate).toFixed(2));
+      pricing.total = Number((pricing.subtotal + pricing.vatAmount + pricing.deliveryFee).toFixed(2));
+
       return res.json({
         success: true,
         pricing,
+        addons: dbAddons.map(a => ({
+          addonId: a._id,
+          name: a.name,
+          nameAr: a.nameAr,
+          price: a.price,
+          thumbnailImage: a.thumbnailImage
+        }))
       });
     }
 
@@ -435,9 +466,20 @@ orderRoutes.post("/custom/preview", async (req, res) => {
       deliveryType,
     });
 
+    pricing.subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
+    pricing.vatAmount = Number((pricing.subtotal * pricing.vatRate).toFixed(2));
+    pricing.total = Number((pricing.subtotal + pricing.vatAmount + pricing.deliveryFee).toFixed(2));
+
     res.json({
       success: true,
       pricing,
+      addons: dbAddons.map(a => ({
+        addonId: a._id,
+        name: a.name,
+        nameAr: a.nameAr,
+        price: a.price,
+        thumbnailImage: a.thumbnailImage
+      }))
     });
   } catch (error) {
     if (error instanceof PricingValidationError) {
@@ -471,6 +513,7 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       addPocket = false,
       addBottomWideFold = false,
       paymentIntentId,
+      addonIds = [],
     } = req.body;
 
     if (!PAYMENT_METHODS.includes(paymentMethod)) {
@@ -527,6 +570,13 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       ? normalizePickupAddress(pickupAddress)
       : null;
 
+    let dbAddons = [];
+    let addonsCost = 0;
+    if (addonIds && addonIds.length > 0) {
+      dbAddons = await AddOn.find({ _id: { $in: addonIds }, isActive: true });
+      addonsCost = dbAddons.reduce((sum, item) => sum + item.price, 0);
+    }
+
     if (isMultiItemPayload(req.body)) {
       const orderInput = validateMultiItemOrderInput({ fabricSource, items });
       const { pricing, orderItems, legacyFields, firstFabric } =
@@ -542,6 +592,10 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       }
 
       const confirmedAt = new Date();
+
+      pricing.subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
+      pricing.vatAmount = Number((pricing.subtotal * pricing.vatRate).toFixed(2));
+      pricing.total = Number((pricing.subtotal + pricing.vatAmount + pricing.deliveryFee).toFixed(2));
 
       const order = await CustomOrder.create({
         userId: req.user._id,
@@ -566,6 +620,13 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
         paymentMethod,
         addPocket,
         addBottomWideFold,
+        addons: dbAddons.map(a => ({
+          addonId: a._id,
+          name: a.name,
+          nameAr: a.nameAr,
+          price: a.price,
+          thumbnailImage: a.thumbnailImage
+        })),
         ...paymentDetails,
       });
 
@@ -642,6 +703,10 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       deliveryType,
     });
 
+    pricing.subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
+    pricing.vatAmount = Number((pricing.subtotal * pricing.vatRate).toFixed(2));
+    pricing.total = Number((pricing.subtotal + pricing.vatAmount + pricing.deliveryFee).toFixed(2));
+
     const confirmedAt = new Date();
 
     const order = await CustomOrder.create({
@@ -672,6 +737,13 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       paymentMethod,
       addPocket,
       addBottomWideFold,
+      addons: dbAddons.map(a => ({
+        addonId: a._id,
+        name: a.name,
+        nameAr: a.nameAr,
+        price: a.price,
+        thumbnailImage: a.thumbnailImage
+      })),
       ...paymentDetails,
     });
 
@@ -706,7 +778,7 @@ orderRoutes.get("/custom/mine", isAuth, async (req, res) => {
       .populate("tailorShopId", "name nameAr slug")
       .populate("items.tailorShopId", "name nameAr slug")
       .select(
-        "_id createdAt status fabricSource designSnapshot fabricSnapshot fabricMeters pricing tailorShopId userId items",
+        "_id createdAt status fabricSource designSnapshot fabricSnapshot fabricMeters pricing tailorShopId userId items addons",
       );
 
     const formatted = orders.map((order) => {
@@ -727,6 +799,7 @@ orderRoutes.get("/custom/mine", isAuth, async (req, res) => {
         tailorShop:
           primaryItem?.tailorShop ??
           formatTailorShopSummary(order.tailorShopId),
+        addons: order.addons || [],
       };
     });
 

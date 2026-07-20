@@ -248,7 +248,7 @@ customerRouter.get("/family-members", isAuth, async (req, res) => {
     const userId = new mongoose.Types.ObjectId(req.user._id);
     const customer = await Customer.findOne({ userId });
     if (!customer) {
-      return res.status(404).json({ error: "Customer profile not found" });
+      return res.json({ items: [] });
     }
     res.json({ items: customer.savedUsers || [] });
   } catch (err) {
@@ -528,7 +528,10 @@ customerRouter.get(
     const customer = await Customer.findOne({ userId }, { measurements: 1 });
 
     if (!customer) {
-      return res.status(404).json({ error: "Customer profile not found" });
+      return res.json({
+        success: true,
+        measurements: null,
+      });
     }
 
     res.json({

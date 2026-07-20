@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { Link, useRouter } from "@/i18n/navigation";
@@ -22,6 +22,7 @@ import {
 import { formatCurrency } from "@/lib/format";
 import { formatDesignCategory } from "@/lib/tailors";
 import ConfiguratorStepHeader from "@/components/custom-order/ConfiguratorStepHeader";
+import { resolveMediaUrl } from "@/lib/media";
 
 type DeliveryType = "pickup" | "delivery";
 
@@ -38,7 +39,7 @@ export default function OrderReviewStep() {
   const params = useParams();
   const locale = params.locale === "ar" ? "ar" : "en";
 
-  const { draft, isHydrated, deliveryType, setDeliveryType } = useCustomOrder();
+  const { draft, isHydrated, deliveryType, setDeliveryType, toggleAddon } = useCustomOrder();
   const usingOwnFabric = useOwnFabric(draft);
 
   const [pricing, setPricing] = useState<CustomOrderPricingBreakdown | null>(
@@ -48,6 +49,33 @@ export default function OrderReviewStep() {
   const [pricingError, setPricingError] = useState<string | null>(null);
   const [shippingFee, setShippingFee] = useState<number | null>(null);
   const [vatRate, setVatRate] = useState<number | null>(null);
+
+  const [addons, setAddons] = useState<any[]>([]);
+  const [loadingAddons, setLoadingAddons] = useState(false);
+  const [showAllAddons, setShowAllAddons] = useState(false);
+
+  useEffect(() => {
+    const fetchAddons = async () => {
+      try {
+        setLoadingAddons(true);
+        const data = await api.get<{ success: boolean; items: any[] }>("/api/addons");
+        if (data && data.success) {
+          setAddons(data.items || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch addons on review page:", err);
+      } finally {
+        setLoadingAddons(false);
+      }
+    };
+    fetchAddons();
+  }, []);
+
+  const selectedAddonsCost = useMemo(() => {
+    return addons
+      .filter((a) => draft.addonIds?.includes(a._id))
+      .reduce((sum, item) => sum + item.price, 0);
+  }, [addons, draft.addonIds]);
 
   const previewPayload = useMemo(
     () => (isHydrated ? buildCustomOrderPreviewPayload(draft) : null),
@@ -90,6 +118,7 @@ export default function OrderReviewStep() {
         const payload = {
           ...previewPayload,
           deliveryType,
+          addonIds: draft.addonIds || [],
         };
 
         const data = await api.post<{
@@ -113,7 +142,7 @@ export default function OrderReviewStep() {
     };
 
     fetchPreview();
-  }, [isHydrated, previewPayload, deliveryType, t, shippingFee, vatRate]);
+  }, [isHydrated, previewPayload, deliveryType, t, shippingFee, vatRate, draft.addonIds]);
 
   const canContinue = isReviewStepComplete(draft, pricing !== null);
 
@@ -304,6 +333,71 @@ export default function OrderReviewStep() {
               </dd>
             </div>
           </dl>
+
+          {/* Add-Ons Section */}
+          {addons.length > 0 && (
+            <div className="pt-6 border-t border-(--color-border) mt-6">
+              <h3 className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-black mb-4">
+                {locale === "ar" ? "إضافات اختيارية" : "Optional Add-Ons"}
+              </h3>
+              {loadingAddons ? (
+                <p className="text-xs text-gray-400">Loading...</p>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    {(showAllAddons ? addons : addons.slice(0, 5)).map((addon) => {
+                      const isSelected = draft.addonIds?.includes(addon._id);
+                      const name = locale === "ar" ? addon.nameAr || addon.name : addon.name;
+                      return (
+                        <div key={addon._id} className="flex items-center justify-between gap-4 p-3 bg-white border border-(--color-border) hover:border-black/20 transition">
+                          <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gray-50 border border-gray-100 overflow-hidden relative shrink-0">
+                              <img
+                                src={resolveMediaUrl(addon.thumbnailImage) || "/placeholder.jpg"}
+                                alt={name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div>
+                              <span className="font-medium text-black text-sm block leading-tight">
+                                {name}
+                              </span>
+                              <span className="text-[11px] text-gray-500 mt-1 block">
+                                {addon.price.toFixed(2)} AED
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => toggleAddon(addon._id)}
+                            className={`px-3 py-1.5 text-[10px] tracking-[0.16em] uppercase transition hover:cursor-pointer ${
+                              isSelected
+                                ? "bg-black text-white hover:bg-black/80"
+                                : "bg-[#F0EBE3] text-black hover:bg-black/10"
+                            }`}
+                          >
+                            {isSelected ? (locale === "ar" ? "تمت الإضافة" : "Added") : (locale === "ar" ? "إضافة" : "Add")}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {addons.length > 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllAddons(!showAllAddons)}
+                      className="w-full text-center py-2 text-[10px] font-ui uppercase tracking-[0.2em] text-(--color-grey-muted) hover:text-black transition mt-2 hover:cursor-pointer"
+                    >
+                      {showAllAddons
+                        ? (locale === "ar" ? "عرض أقل" : "Show Less")
+                        : (locale === "ar" ? `عرض المزيد (+${addons.length - 5})` : `Show More (+${addons.length - 5})`)}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Right column - Pricing with toggle */}
@@ -363,6 +457,17 @@ export default function OrderReviewStep() {
                       {formatCurrency(pricing.tailoringFee, locale)}
                     </span>
                   </div>
+
+                  {selectedAddonsCost > 0 && (
+                    <div className="flex justify-between gap-4">
+                      <span className="text-(--color-grey-muted)">
+                        {locale === "ar" ? "الإضافات" : "Add-Ons"}
+                      </span>
+                      <span className="text-black shrink-0">
+                        {formatCurrency(selectedAddonsCost, locale)}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Delivery/Pickup Toggle */}
                   <div className="py-3 border-t border-(--color-border) first:border-t-0">
