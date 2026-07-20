@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Link } from "@/i18n/navigation";
-import { api } from "@/lib/api/client";
+import { useNotificationUnreadCount } from "@/hooks/useNotifications";
+import AdminNotificationBell from "@/components/admin/notifications/AdminNotificationBell";
 
 import {
   LayoutDashboard,
@@ -34,7 +35,10 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const { count: unreadNotificationCount } = useNotificationUnreadCount(
+    "admin",
+    Boolean(user && user.role === "admin"),
+  );
 
   // Extract locale from pathname (e.g., "/en/admin" -> "en")
   const locale = pathname.split("/")[1] || "en";
@@ -68,33 +72,6 @@ export default function AdminLayout({
       }
     }
   }, [user, isLoading, router, locale]);
-
-  useEffect(() => {
-    const loadCount = async () => {
-      try {
-        if (!user || user.role !== "admin") return;
-
-        const data = await api.get<{
-          success: boolean;
-          count: number;
-        }>("/api/admin/notifications/unread-count");
-
-        if (data?.success && typeof data.count === "number") {
-          setUnreadNotificationCount(data.count);
-        }
-      } catch {
-        // ignore badge errors
-      }
-    };
-
-    loadCount();
-
-    // If the user visits notifications page, refresh badge count.
-    // This keeps sidebar unread count in sync after marking as read.
-    if (pathname?.includes(`/${locale}/admin/notifications`)) {
-      loadCount();
-    }
-  }, [user, pathname, locale]);
 
   // ===================== LOADING STATE =====================
 
@@ -246,7 +223,12 @@ export default function AdminLayout({
         </button>
 
         {/* Add top padding on mobile so content isn't hidden behind toggle */}
-        <div className="lg:pt-0 pt-12">{children}</div>
+        <div className="lg:pt-0 pt-12">
+          <div className="mb-6 flex items-center justify-end gap-3">
+            <AdminNotificationBell />
+          </div>
+          {children}
+        </div>
       </main>
     </div>
   );

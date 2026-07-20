@@ -60,6 +60,7 @@ const CONDITION_OPTIONS = [
 
 type CustomOrdersTabProps = {
   locale: Locale;
+  initialOrderId?: string | null;
 };
 
 type Address = {
@@ -79,7 +80,10 @@ type CustomerProfile = {
   addresses?: Address[];
 };
 
-export default function CustomOrdersTab({ locale }: CustomOrdersTabProps) {
+export default function CustomOrdersTab({
+  locale,
+  initialOrderId = null,
+}: CustomOrdersTabProps) {
   const t = useTranslations("OrdersPage.custom");
 
   const [orders, setOrders] = useState<CustomOrderListItem[]>([]);
@@ -164,6 +168,14 @@ export default function CustomOrdersTab({ locale }: CustomOrdersTabProps) {
     },
     [detailById, t],
   );
+
+  useEffect(() => {
+    if (!initialOrderId || loading) return;
+    const match = orders.find((o) => o.id === initialOrderId);
+    if (!match) return;
+    setExpandedId(initialOrderId);
+    void loadDetail(initialOrderId);
+  }, [initialOrderId, loading, orders, loadDetail]);
 
   const handleToggleTimeline = async (orderId: string) => {
     if (expandedId === orderId) {

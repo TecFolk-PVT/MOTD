@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import CustomOrdersTab from "@/components/orders/CustomOrdersTab";
@@ -10,13 +10,29 @@ type OrdersTab = "custom" | "retail";
 
 type OrdersViewProps = {
   embedded?: boolean;
+  initialOrderId?: string | null;
+  initialOrderType?: "custom" | "retail" | null;
 };
 
-export default function OrdersView({ embedded = false }: OrdersViewProps) {
+export default function OrdersView({
+  embedded = false,
+  initialOrderId = null,
+  initialOrderType = null,
+}: OrdersViewProps) {
   const t = useTranslations("OrdersPage");
   const params = useParams();
   const locale = params.locale === "ar" ? "ar" : "en";
-  const [activeTab, setActiveTab] = useState<OrdersTab>("custom");
+  const [activeTab, setActiveTab] = useState<OrdersTab>(
+    initialOrderType === "retail" ? "retail" : "custom",
+  );
+
+  useEffect(() => {
+    if (initialOrderType === "retail") {
+      setActiveTab("retail");
+    } else if (initialOrderType === "custom") {
+      setActiveTab("custom");
+    }
+  }, [initialOrderType]);
 
   return (
     <div
@@ -74,8 +90,12 @@ export default function OrdersView({ embedded = false }: OrdersViewProps) {
       </div>
 
       <div className="min-h-60 sm:min-h-72 lg:min-h-80">
-        {activeTab === "custom" && <CustomOrdersTab locale={locale} />}
-        {activeTab === "retail" && <RetailOrdersTab locale={locale} />}
+        {activeTab === "custom" && (
+          <CustomOrdersTab locale={locale} initialOrderId={initialOrderId} />
+        )}
+        {activeTab === "retail" && (
+          <RetailOrdersTab locale={locale} initialOrderId={initialOrderId} />
+        )}
       </div>
     </div>
   );
