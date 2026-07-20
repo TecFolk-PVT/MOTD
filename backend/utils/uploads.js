@@ -11,6 +11,7 @@ const UPLOAD_FOLDERS = [
   "tailor-shop",
   "fabrics",
   "customer",
+  "addons",
 ];
 
 /** Local dev uses backend/uploads; Vercel without Blob uses /tmp (ephemeral). */
@@ -27,6 +28,7 @@ export const TAILOR_DESIGN_UPLOAD_DIR = path.join(
 export const TAILOR_SHOP_UPLOAD_DIR = path.join(UPLOADS_ROOT, "tailor-shop");
 export const FABRIC_UPLOAD_DIR = path.join(UPLOADS_ROOT, "fabrics");
 export const CUSTOMER_UPLOAD_DIR = path.join(UPLOADS_ROOT, "customer");
+export const ADDONS_UPLOAD_DIR = path.join(UPLOADS_ROOT, "addons");
 
 export function isBlobStorageEnabled() {
   if (process.env.BLOB_READ_WRITE_TOKEN) {
@@ -68,6 +70,7 @@ export function ensureUploadDirs() {
   fs.mkdirSync(TAILOR_SHOP_UPLOAD_DIR, { recursive: true });
   fs.mkdirSync(FABRIC_UPLOAD_DIR, { recursive: true });
   fs.mkdirSync(CUSTOMER_UPLOAD_DIR, { recursive: true });
+  fs.mkdirSync(ADDONS_UPLOAD_DIR, { recursive: true });
 }
 
 export function toPublicUploadPath(folder, filename) {

@@ -21,6 +21,11 @@ import {
 } from "../middleware/uploadFabricImages.js";
 import Customer from "../models/customer.js";
 import { createAdminNotificationForNewUser } from "../services/adminNotificationService.js";
+import AddOn from "../models/AddOn.js";
+import {
+  uploadSingleAddOnImageMiddleware,
+  processAddOnImage,
+} from "../middleware/uploadAddOnImages.js";
 
 const adminRouter = express.Router();
 const BCRYPT_ROUNDS = 10;
@@ -61,6 +66,22 @@ adminRouter.post(
     }
 
     const url = await processReadyMadeImage(req.file);
+    res.status(201).send({ success: true, url });
+  }),
+);
+
+// POST /api/admin/uploads/addons
+// Upload + compress add-on image; returns public path
+adminRouter.post(
+  "/uploads/addons",
+  uploadSingleAddOnImageMiddleware,
+  expressAsyncHandler(async (req, res) => {
+    if (!req.file) {
+      res.status(400).send({ message: "No image file provided" });
+      return;
+    }
+
+    const url = await processAddOnImage(req.file);
     res.status(201).send({ success: true, url });
   }),
 );
@@ -1686,6 +1707,152 @@ adminRouter.patch(
     res.send({
       message: `Customer ${user.isActive ? "activated" : "deactivated"} successfully`,
       isActive: user.isActive,
+    });
+  }),
+);
+
+// ==========================================
+// C-12: Admin Add-Ons CRUD
+// ==========================================
+
+// GET /api/admin/addons
+adminRouter.get(
+  "/addons",
+  expressAsyncHandler(async (req, res) => {
+    const addons = await AddOn.find({}).sort({ createdAt: -1 });
+    res.send(addons);
+  }),
+);
+
+// GET /api/admin/addons/:id
+adminRouter.get(
+  "/addons/:id",
+  expressAsyncHandler(async (req, res) => {
+    const addon = await AddOn.findById(req.params.id);
+    if (addon) {
+      res.send(addon);
+    } else {
+      res.status(404).send({ message: "Addon not found" });
+    }
+  }),
+);
+
+// POST /api/admin/addons
+adminRouter.post(
+  "/addons",
+  expressAsyncHandler(async (req, res) => {
+    const {
+      name,
+      nameAr,
+      slug,
+      description,
+      descriptionAr,
+      price,
+      stock,
+      thumbnailImage,
+      images,
+      tag,
+      tagAr,
+      isActive,
+    } = req.body;
+
+    const generatedSlug = slug
+      ? slug.toLowerCase().replace(/\s+/g, "-")
+      : name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+    const addon = new AddOn({
+      name,
+      nameAr,
+      slug: generatedSlug,
+      description,
+      descriptionAr,
+      price,
+      stock,
+      thumbnailImage,
+      images,
+      tag,
+      tagAr,
+      isActive: isActive !== undefined ? isActive : true,
+    });
+
+    const savedAddon = await addon.save();
+    res.status(201).send(savedAddon);
+  }),
+);
+
+// PUT /api/admin/addons/:id
+adminRouter.put(
+  "/addons/:id",
+  expressAsyncHandler(async (req, res) => {
+    const addon = await AddOn.findById(req.params.id);
+    if (!addon) {
+      res.status(404).send({ message: "Addon not found" });
+      return;
+    }
+
+    const {
+      name,
+      nameAr,
+      slug,
+      description,
+      descriptionAr,
+      price,
+      stock,
+      thumbnailImage,
+      images,
+      tag,
+      tagAr,
+      isActive,
+    } = req.body;
+
+    addon.name = name ?? addon.name;
+    addon.nameAr = nameAr ?? addon.nameAr;
+    if (slug) {
+      addon.slug = slug.toLowerCase().replace(/\s+/g, "-");
+    }
+    addon.description = description ?? addon.description;
+    addon.descriptionAr = descriptionAr ?? addon.descriptionAr;
+    addon.price = price ?? addon.price;
+    addon.stock = stock ?? addon.stock;
+    addon.thumbnailImage = thumbnailImage ?? addon.thumbnailImage;
+    addon.images = images ?? addon.images;
+    addon.tag = tag ?? addon.tag;
+    addon.tagAr = tagAr ?? addon.tagAr;
+    addon.isActive = isActive !== undefined ? isActive : addon.isActive;
+
+    const updatedAddon = await addon.save();
+    res.send(updatedAddon);
+  }),
+);
+
+// DELETE /api/admin/addons/:id
+adminRouter.delete(
+  "/addons/:id",
+  expressAsyncHandler(async (req, res) => {
+    const addon = await AddOn.findById(req.params.id);
+    if (addon) {
+      await addon.deleteOne();
+      res.send({ message: "Addon deleted successfully" });
+    } else {
+      res.status(404).send({ message: "Addon not found" });
+    }
+  }),
+);
+
+// PATCH /api/admin/addons/:id/toggle-active
+adminRouter.patch(
+  "/addons/:id/toggle-active",
+  expressAsyncHandler(async (req, res) => {
+    const addon = await AddOn.findById(req.params.id);
+    if (!addon) {
+      res.status(404).send({ message: "Addon not found" });
+      return;
+    }
+    addon.isActive = !addon.isActive;
+    await addon.save();
+    res.send({
+      message: `Addon ${addon.isActive ? "activated" : "deactivated"} successfully`,
+      isActive: addon.isActive,
     });
   }),
 );

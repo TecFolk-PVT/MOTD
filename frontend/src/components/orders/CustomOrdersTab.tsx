@@ -510,6 +510,24 @@ export default function CustomOrdersTab({ locale }: CustomOrdersTabProps) {
                                 renderItemRow(item, index, order.fabricSource),
                               )}
                             </ul>
+                            {order.addons && order.addons.length > 0 && (
+                              <div className="px-3 sm:px-4 py-2 border-t border-gray-200">
+                                <p className="text-[9px] uppercase tracking-[0.18em] text-gray-400 mb-1">
+                                  {locale === "ar" ? "الإضافات المختارة" : "Selected Add-Ons"}
+                                </p>
+                                <ul className="space-y-1">
+                                  {order.addons.map((addon: any, idx: number) => {
+                                    const name = locale === "ar" ? addon.nameAr || addon.name : addon.name;
+                                    return (
+                                      <li key={idx} className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-600">{name}</span>
+                                        <span className="text-black font-semibold">{formatCurrency(addon.price, locale)}</span>
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              </div>
+                            )}
                           </motion.div>
                         )}
                       </AnimatePresence>

@@ -121,6 +121,7 @@ export interface CustomOrderDraft {
   lineItems: CustomOrderLineItem[];
   measurements: CustomOrderMeasurements;
   deliveryAddress: Partial<CustomOrderDeliveryAddress>;
+  addonIds: string[];
 }
 
 export interface CustomOrderPreviewItemPayload {
@@ -179,6 +180,7 @@ export function createEmptyCustomOrderDraft(
     lineItems: [],
     measurements: { ...EMPTY_MEASUREMENTS },
     deliveryAddress: {},
+    addonIds: [],
   };
 }
 
@@ -493,6 +495,7 @@ export function normalizeCustomOrderDraft(value: unknown): CustomOrderDraft {
     lineItems: migrated.lineItems,
     measurements: normalizeMeasurements(draft.measurements),
     deliveryAddress: normalizeDeliveryAddress(draft.deliveryAddress),
+    addonIds: Array.isArray(draft.addonIds) ? (draft.addonIds as string[]) : [],
   };
 }
 

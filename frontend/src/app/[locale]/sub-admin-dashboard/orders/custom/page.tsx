@@ -38,6 +38,13 @@ interface Order {
     total: number;
     currency: string;
   };
+  addons?: Array<{
+    addonId: string;
+    name: string;
+    nameAr: string;
+    price: number;
+    thumbnailImage: string;
+  }>;
 }
 
 const TOAST_BASE = {
@@ -436,6 +443,24 @@ export default function AdminCustomOrdersPage() {
                       <p className="text-xs text-gray-500 mt-0.5">
                         {t("fabricLabel", { name: fabricName })}
                       </p>
+                      {order.addons && order.addons.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-gray-100">
+                          <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-medium">
+                            {locale === "ar" ? "الإضافات المختارة" : "Selected Add-Ons"}
+                          </p>
+                          <div className="space-y-1">
+                            {order.addons.map((addon, idx) => {
+                              const name = locale === "ar" ? addon.nameAr || addon.name : addon.name;
+                              return (
+                                <div key={idx} className="flex justify-between items-center text-xs">
+                                  <span className="text-gray-500 text-[11px]">{name}</span>
+                                  <span className="text-black font-semibold text-[11px] font-mono">+{addon.price.toFixed(2)}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div>

@@ -21,6 +21,7 @@ import {
   UserRoundPen,
   Bell,
   DollarSign,
+  Sparkles,
 } from "lucide-react";
 import white_logo from "../../../../public/PNG/White/MOTD_Wordmark_White.png";
 
@@ -116,6 +117,7 @@ export default function AdminLayout({
     { label: "Ready-Made", href: "/admin/ready-made", icon: Shirt },
     { label: "Fabrics", href: "/admin/fabrics", icon: Scissors },
     { label: "Tailors", href: "/admin/tailors", icon: Users },
+    { label: "Add-Ons", href: "/admin/addons", icon: Sparkles },
     { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
     { label: "Fabric Stores", href: "/admin/partners", icon: Store },
     { label: "Sub Admin", href: "/admin/sub-admin", icon: UserRoundPen },
