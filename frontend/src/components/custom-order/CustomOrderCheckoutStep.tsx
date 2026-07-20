@@ -119,6 +119,21 @@ export default function CustomOrderCheckoutStep() {
   const [tailorShop, setTailorShop] = useState<TailorShop | null>(null);
   const [shopLoading, setShopLoading] = useState(true);
 
+  const [addons, setAddons] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchAddons = async () => {
+      try {
+        const data = await api.get<{ success: boolean; items: any[] }>("/api/addons");
+        if (data && data.success) {
+          setAddons(data.items || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch addons in checkout:", err);
+      }
+    };
+    fetchAddons();
+  }, []);
+
   const previewPayload = useMemo(
     () => (isHydrated ? buildCustomOrderPreviewPayload(draft) : null),
     [draft, isHydrated],
@@ -236,6 +251,7 @@ export default function CustomOrderCheckoutStep() {
         const payload = {
           ...previewPayload,
           deliveryType,
+          addonIds: draft.addonIds || [],
         };
 
         const data = await api.post<{
@@ -260,7 +276,7 @@ export default function CustomOrderCheckoutStep() {
     };
 
     fetchPreview();
-  }, [isHydrated, previewPayload, deliveryType, t]);
+  }, [isHydrated, previewPayload, deliveryType, t, draft.addonIds]);
 
   const getDisplayName = (name?: string, nameAr?: string) =>
     locale === "ar" ? nameAr || name : name;
@@ -345,6 +361,7 @@ export default function CustomOrderCheckoutStep() {
       addBottomWideFold,
       deliveryType,
       deliveryAddress: deliveryType === "delivery" ? deliveryAddress : null,
+      addonIds: draft.addonIds || [],
     };
   };
 
@@ -547,7 +564,28 @@ export default function CustomOrderCheckoutStep() {
                   ))}
                 </dl>
 
-                <div className="pt-4 border-t border-(--color-border) flex justify-between items-center gap-4">
+                 {draft.addonIds && draft.addonIds.length > 0 && (
+                   <div className="pt-4 border-t border-(--color-border) mb-4">
+                     <h3 className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.24em] text-(--color-grey-muted) mb-3">
+                       {locale === "ar" ? "الإضافات المختارة" : "Selected Add-Ons"}
+                     </h3>
+                     <ul className="space-y-2">
+                       {addons
+                         .filter((a) => draft.addonIds.includes(a._id))
+                         .map((addon) => {
+                           const name = locale === "ar" ? addon.nameAr || addon.name : addon.name;
+                           return (
+                             <li key={addon._id} className="flex justify-between items-center text-sm text-black">
+                               <span className="[font-family:var(--font-body)] text-xs text-gray-700">{name}</span>
+                               <span className="font-semibold text-xs">{addon.price.toFixed(2)} AED</span>
+                             </li>
+                           );
+                         })}
+                     </ul>
+                   </div>
+                 )}
+
+                 <div className="pt-4 border-t border-(--color-border) flex justify-between items-center gap-4">
                   <span className="[font-family:var(--font-ui)] text-[11px] uppercase tracking-[0.2em] text-black">
                     {t("total")}
                   </span>

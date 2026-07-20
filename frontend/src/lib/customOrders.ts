@@ -58,6 +58,13 @@ export interface CustomOrderListItem {
   items: CustomOrderLineItemSummary[];
   design: CustomOrderDesignSummary | null;
   tailorShop: CustomOrderTailorSummary | null;
+  addons?: Array<{
+    addonId: string;
+    name: string;
+    nameAr: string;
+    price: number;
+    thumbnailImage: string;
+  }>;
 }
 
 export interface CustomOrderStatusHistoryEntry {
@@ -80,6 +87,13 @@ export interface CustomOrderDetail {
     currency: string;
   };
   tailorShopId?: CustomOrderTailorSummary | string;
+  addons?: Array<{
+    addonId: string;
+    name: string;
+    nameAr: string;
+    price: number;
+    thumbnailImage: string;
+  }>;
 }
 
 // lib/customOrders.ts

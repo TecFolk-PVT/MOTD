@@ -2,6 +2,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { TrendingSection } from "@/components/home/TrendingDesigns";
 import { PremiumFabrics } from "@/components/home/PremiumFabrics";
 import { ReadyToWearSection } from "@/components/readyWear/ReadyToWear";
+import { AddOnsSection } from "@/components/home/AddOnsSection";
 import { TailorsSection } from "@/components/home/TailorsSection";
 import { MeasurementGuide } from "@/components/home/MeasurementGuide";
 import { Testimonials } from "@/components/home/Testimonials";
@@ -40,6 +41,13 @@ export default function HomePage() {
       </FadeInSection>
 
       <SectionDivider variant={3} />
+
+      {/* 5.5. Add Ons Section */}
+      <FadeInSection>
+        <AddOnsSection />
+      </FadeInSection>
+
+      <SectionDivider variant={1} />
 
       {/* 6. Meet the Tailors */}
       <FadeInSection>
