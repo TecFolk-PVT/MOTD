@@ -2,14 +2,20 @@ import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import mongoose from "mongoose";
 import AdminNotification from "../models/AdminNotification.js";
-import CustomOrder from "../models/CustomOrder.js";
 import { isAuth } from "../middleware/auth.js";
+import {
+  buildCustomerNotificationFilter,
+  countUnread,
+  customerOwnsNotification,
+  enrichCustomerNotifications,
+  getCustomerOrderIds,
+  listNotifications,
+  softDeleteNotification,
+} from "../services/notificationService.js";
 
 const customerNotificationRouter = express.Router();
 
 // GET /api/customer/notifications
-// Returns notifications that belong to the authenticated customer.
-// Current system stores both admin and customer-facing return notifications in AdminNotification.
 customerNotificationRouter.get(
   "/notifications",
   isAuth,
@@ -20,28 +26,35 @@ customerNotificationRouter.get(
       return;
     }
 
-    // Select custom orders owned by this customer that have return/refund related statuses.
-    // This prevents showing notifications for other users.
-    const orders = await CustomOrder.find({
-      userId,
-      status: { $in: ["return_requested", "refund_processed"] },
-    }).select("_id");
-
-    const orderIds = orders.map((o) => o._id);
-
-    // Fallback: if no owned return orders exist, still allow displaying notifications
-    // that directly reference orderId (e.g. if status hasn't updated yet).
-    // This keeps customer flow resilient.
-    const directReturnNotifications = await AdminNotification.find({
-      orderId: { $in: orderIds },
-    })
-      .sort({ createdAt: -1 })
-      .limit(100);
+    const orderIds = await getCustomerOrderIds(userId);
+    const filter = buildCustomerNotificationFilter(userId, orderIds, req.query);
+    const { notifications, pagination } = await listNotifications(filter, req.query);
+    const enriched = await enrichCustomerNotifications(notifications);
 
     res.send({
       success: true,
-      notifications: directReturnNotifications,
+      notifications: enriched,
+      pagination,
     });
+  }),
+);
+
+// GET /api/customer/notifications/unread-count
+customerNotificationRouter.get(
+  "/notifications/unread-count",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const userId = req.user?._id;
+    if (!userId) {
+      res.status(401).send({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const orderIds = await getCustomerOrderIds(userId);
+    const filter = buildCustomerNotificationFilter(userId, orderIds);
+    const count = await countUnread(filter);
+
+    res.send({ success: true, count });
   }),
 );
 
@@ -60,7 +73,6 @@ customerNotificationRouter.post(
       return;
     }
 
-    // Verify notification belongs to this user by checking associated order.
     const notification = await AdminNotification.findById(id);
     if (!notification) {
       res
@@ -69,14 +81,9 @@ customerNotificationRouter.post(
       return;
     }
 
-    if (notification.orderId) {
-      const order = await CustomOrder.findById(notification.orderId).select(
-        "userId",
-      );
-      if (!order || order.userId.toString() !== userId.toString()) {
-        res.status(403).send({ success: false, message: "Forbidden" });
-        return;
-      }
+    if (!(await customerOwnsNotification(notification, userId))) {
+      res.status(403).send({ success: false, message: "Forbidden" });
+      return;
     }
 
     const updated = await AdminNotification.findByIdAndUpdate(
@@ -86,6 +93,39 @@ customerNotificationRouter.post(
     );
 
     res.send({ success: true, notification: updated });
+  }),
+);
+
+// POST /api/customer/notifications/mark-all-read
+customerNotificationRouter.post(
+  "/notifications/mark-all-read",
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    const userId = req.user?._id;
+    if (!userId) {
+      res.status(401).send({ success: false, message: "Unauthorized" });
+      return;
+    }
+
+    const orderIds = await getCustomerOrderIds(userId);
+
+    const result = await AdminNotification.updateMany(
+      {
+        audience: "customer",
+        read: false,
+        deletedAt: null,
+        $or: [{ recipientUserId: userId }, { orderId: { $in: orderIds } }],
+      },
+      { $set: { read: true, readAt: new Date() } },
+    );
+
+    res.send({
+      success: true,
+      updatedCount:
+        typeof result?.modifiedCount === "number"
+          ? result.modifiedCount
+          : result?.nModified,
+    });
   }),
 );
 
@@ -112,18 +152,12 @@ customerNotificationRouter.delete(
       return;
     }
 
-    // Verify notification belongs to this user by checking associated order.
-    if (notification.orderId) {
-      const order = await CustomOrder.findById(notification.orderId).select(
-        "userId",
-      );
-      if (!order || order.userId.toString() !== userId.toString()) {
-        res.status(403).send({ success: false, message: "Forbidden" });
-        return;
-      }
+    if (!(await customerOwnsNotification(notification, userId))) {
+      res.status(403).send({ success: false, message: "Forbidden" });
+      return;
     }
 
-    await AdminNotification.findByIdAndDelete(id);
+    await softDeleteNotification({ _id: id, deletedAt: null });
 
     res.send({ success: true, deletedId: id });
   }),

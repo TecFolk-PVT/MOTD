@@ -13,8 +13,21 @@ import Design from "../models/Design.js";
 import Fabric from "../models/Fabric.js";
 import TailorShop from "../models/TailorShop.js";
 import { isAuth } from "../middleware/auth.js";
-import AdminNotification from "../models/AdminNotification.js";
 import AddOn from "../models/AddOn.js";
+import {
+  notifyCustomOrderPlacedAdmin,
+  notifyCustomOrderPlacedCustomer,
+  notifyRetailOrderPlacedAdmin,
+  notifyRetailOrderPlacedCustomer,
+  notifyCustomReturnRequested,
+  notifyCustomReturnReceivedByCustomer,
+  notifyCustomReturnApproved,
+  notifyCustomReturnRejected,
+  notifyCustomRefundProcessed,
+  notifyCustomStatusChange,
+} from "../services/notificationService.js";
+
+import AdminNotification from "../models/AdminNotification.js";
 
 import {
   getCustomOrderPricing,
@@ -643,14 +656,8 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
 
       const message = `${customerName} has placed order for ${itemNameText} for AED ${Number(order.pricing?.total ?? 0).toFixed(2)}`;
 
-      await AdminNotification.create({
-        type: "custom_order_placed",
-        title: "New Custom order",
-        message,
-        orderId: order._id,
-        createdBy: req.user._id,
-        read: false,
-      });
+      await notifyCustomOrderPlacedAdmin(order, req.user._id, message);
+      await notifyCustomOrderPlacedCustomer(order, req.user._id);
 
       return res.status(201).json({
         success: true,
@@ -746,6 +753,13 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       })),
       ...paymentDetails,
     });
+
+    const customerName = req.user?.name || "Customer";
+    const designName = order.designSnapshot?.name || "Custom item";
+    const message = `${customerName} has placed order for ${designName} for AED ${Number(order.pricing?.total ?? 0).toFixed(2)}`;
+
+    await notifyCustomOrderPlacedAdmin(order, req.user._id, message);
+    await notifyCustomOrderPlacedCustomer(order, req.user._id);
 
     res.status(201).json({
       success: true,
@@ -956,14 +970,8 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
       prepared.totalPrice,
     ).toFixed(2)}`;
 
-    await AdminNotification.create({
-      type: "retail_order_placed",
-      title: "New Ready-made order",
-      message,
-      orderId: order._id,
-      createdBy: req.user._id,
-      read: false,
-    });
+    await notifyRetailOrderPlacedAdmin(order, req.user._id, message);
+    await notifyRetailOrderPlacedCustomer(order, req.user._id);
 
     res.status(201).json({
       success: true,
@@ -1160,15 +1168,10 @@ orderRoutes.post("/custom/:id/return-request", isAuth, async (req, res) => {
 
     await order.save();
 
-    // Notify admins that a return was requested
-    await AdminNotification.create({
-      type: "custom_return_requested",
-      title: "Return requested",
-      message: `Customer requested a return for order ${order._id}`,
-      orderId: order._id,
-      createdBy: req.user._id,
-      read: false,
-    });
+    await Promise.all([
+      notifyCustomReturnRequested(order, req.user._id),
+      notifyCustomReturnReceivedByCustomer(order, req.user._id),
+    ]);
 
     return res.json({ success: true, order });
   } catch (error) {
@@ -1226,14 +1229,7 @@ orderRoutes.post("/custom/:id/return-approve", isAuth, async (req, res) => {
     ];
     await order.save();
 
-    await AdminNotification.create({
-      type: "custom_return_approved",
-      title: "Return Approved",
-      message: `Your return request for order ${order._id} has been approved. Refund will be processed shortly.`,
-      orderId: order._id,
-      createdBy: req.user._id,
-      read: false,
-    });
+    await notifyCustomReturnApproved(order, req.user._id);
 
     res.json({ success: true, order });
   } catch (error) {
@@ -1292,14 +1288,7 @@ orderRoutes.post("/custom/:id/refund-process", isAuth, async (req, res) => {
     ];
     await order.save();
 
-    await AdminNotification.create({
-      type: "custom_refund_processed",
-      title: "Refund Processed",
-      message: `Your refund for order ${order._id} has been processed.`,
-      orderId: order._id,
-      createdBy: req.user._id,
-      read: false,
-    });
+    await notifyCustomRefundProcessed(order, req.user._id);
 
     res.json({ success: true, order });
   } catch (error) {
@@ -1362,14 +1351,7 @@ orderRoutes.post("/custom/:id/mark-received", isAuth, async (req, res) => {
     await order.save();
 
     // Notify customer about delivery completion
-    await AdminNotification.create({
-      type: "custom_status_delivered",
-      title: "Order Delivered",
-      message: `Your custom order ${order._id} has been delivered.`,
-      orderId: order._id,
-      createdBy: req.user._id,
-      read: false,
-    });
+    await notifyCustomStatusChange(order, "delivered", req.user._id);
 
     return res.json({ success: true, order });
   } catch (error) {
@@ -1411,11 +1393,11 @@ orderRoutes.post("/custom/:id/return-reject", isAuth, async (req, res) => {
       });
     }
 
-    order.status = "rejected";
+    order.status = "return_rejected";
     order.statusHistory = [
       ...(order.statusHistory || []),
       {
-        status: "rejected",
+        status: "return_rejected",
         note: "Return request rejected by admin",
         changedAt: new Date(),
         changedBy: req.user._id,
@@ -1423,23 +1405,7 @@ orderRoutes.post("/custom/:id/return-reject", isAuth, async (req, res) => {
     ];
     await order.save();
 
-    // Notify customer about rejection
-    await AdminNotification.create({
-      type: "custom_status_return_rejected",
-      title: "Return Rejected",
-      message: `Your return request for order ${order._id} has been rejected.`,
-      orderId: order._id,
-      createdBy: req.user._id,
-      read: false,
-    });
-    await AdminNotification.create({
-      type: "custom_return_rejected",
-      title: "Return request rejected",
-      message: `Your return request for order ${order._id} has been rejected.`,
-      orderId: order._id,
-      createdBy: req.user._id,
-      read: false,
-    });
+    await notifyCustomReturnRejected(order, req.user._id);
 
     res.json({ success: true, order });
   } catch (error) {

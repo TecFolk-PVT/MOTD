@@ -16,9 +16,13 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 
 type RetailOrdersTabProps = {
   locale: Locale;
+  initialOrderId?: string | null;
 };
 
-export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
+export default function RetailOrdersTab({
+  locale,
+  initialOrderId = null,
+}: RetailOrdersTabProps) {
   const t = useTranslations("OrdersPage.retail");
   const [orders, setOrders] = useState<RetailOrderListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +51,14 @@ export default function RetailOrdersTab({ locale }: RetailOrdersTabProps) {
     };
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    if (!initialOrderId || loading) return;
+    const match = orders.find((o) => o.id === initialOrderId);
+    if (match) {
+      setExpandedId(initialOrderId);
+    }
+  }, [initialOrderId, loading, orders]);
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id);

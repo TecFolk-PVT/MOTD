@@ -27,6 +27,11 @@ import {
   processAddOnImage,
 } from "../middleware/uploadAddOnImages.js";
 
+import {
+  notifyCustomStatusChange,
+  notifyRetailStatusChange,
+} from "../services/notificationService.js";
+
 const adminRouter = express.Router();
 const BCRYPT_ROUNDS = 10;
 
@@ -1120,6 +1125,10 @@ adminRouter.patch(
       order.status = status || order.status;
       const updatedOrder = await order.save();
 
+      if (status) {
+        await notifyRetailStatusChange(updatedOrder, status, req.user?._id);
+      }
+
       res.send({
         message: `Order status successfully updated to ${updatedOrder.status}`,
         order: updatedOrder,
@@ -1182,6 +1191,11 @@ adminRouter.patch(
       }
 
       const updatedOrder = await order.save();
+
+      if (status) {
+        await notifyCustomStatusChange(updatedOrder, status, req.user?._id);
+      }
+
       res.send({
         message: `Custom order logistics shifted to: ${updatedOrder.status}`,
         order: updatedOrder,

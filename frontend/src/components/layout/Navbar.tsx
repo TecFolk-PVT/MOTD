@@ -9,6 +9,8 @@ import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { getTranslation } from "@/lib/getTranslation";
 import { useParams } from "next/navigation";
+import { useNotificationUnreadCount } from "@/hooks/useNotifications";
+import CustomerNotificationBell from "@/components/account/CustomerNotificationBell";
 
 const NAV_LINKS = [
   { key: "designs", href: "/designs/designShop" },
@@ -103,6 +105,12 @@ export function Navbar() {
     return "/account";
   };
   const accountHref = getAccountHref();
+  const isCustomerAccount = Boolean(user && accountHref === "/account");
+  const { count: customerNotificationCount } = useNotificationUnreadCount(
+    "customer",
+    isCustomerAccount,
+    30000,
+  );
 
   // Toggle menu with animation
   const toggleMenu = useCallback(() => {
@@ -261,6 +269,9 @@ export function Navbar() {
             </div>
           </Link>
 
+          {/* Customer notifications */}
+          {isCustomerAccount && <CustomerNotificationBell />}
+
           {/* User Icon */}
           {accountHref ? (
             <Link
@@ -332,7 +343,11 @@ export function Navbar() {
           </ul>
 
           {/* Mobile bottom icons grid */}
-          <div className="grid grid-cols-3 gap-2 border-t border-(--color-border) pt-4 xs:pt-5">
+          <div
+            className={`grid gap-2 border-t border-(--color-border) pt-4 xs:pt-5 ${
+              isCustomerAccount ? "grid-cols-4" : "grid-cols-3"
+            }`}
+          >
             {accountHref ? (
               <Link
                 href={accountHref}
@@ -354,6 +369,36 @@ export function Navbar() {
                   {t.navbar.actions.account}
                 </span>
               </span>
+            )}
+
+            {isCustomerAccount && (
+              <Link
+                href="/account?tab=notifications"
+                className="flex flex-col items-center gap-1 group hover:opacity-50 transition relative lg:hidden"
+                aria-label="Notifications"
+                onClick={closeMenu}
+              >
+                <div className="relative">
+                  <svg
+                    className="w-4.5 h-4.5 xs:w-[20px] xs:h-[20px] sm:w-5.5 sm:h-5.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  >
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  {customerNotificationCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-4 h-4 xs:w-5 xs:h-5 bg-black text-white text-[8px] xs:text-[10px] font-medium rounded-full flex items-center justify-center shadow-sm">
+                      {customerNotificationCount > 99
+                        ? "99+"
+                        : customerNotificationCount}
+                    </span>
+                  )}
+                </div>
+                <span className={bottomLabelClass}>Alerts</span>
+              </Link>
             )}
 
             <Link
