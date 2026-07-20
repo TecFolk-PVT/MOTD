@@ -28,6 +28,7 @@ import ChangePasswordForm from "@/components/account/ChangePasswordForm";
 import BrandLoader from "@/components/shared/BrandLoader";
 import MeasurementsForm from "./measurements/page";
 import CustomerNotificationPage from "./notification/page";
+import { useNotificationUnreadCount } from "@/hooks/useNotifications";
 
 const NAV_ITEMS = [
   { id: "profile", label: "Profile", icon: User },
@@ -53,6 +54,7 @@ type AccountSidebarProps = {
   onLogout: () => void;
   collapsed: boolean;
   onToggle: () => void;
+  unreadNotificationCount?: number;
 };
 
 function AccountSidebar({
@@ -61,6 +63,7 @@ function AccountSidebar({
   onLogout,
   collapsed,
   onToggle,
+  unreadNotificationCount = 0,
 }: AccountSidebarProps) {
   return (
     <>
@@ -100,7 +103,7 @@ function AccountSidebar({
               key={item.id}
               type="button"
               onClick={() => onTabChange(item.id)}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-['TT_Norms_Pro'] transition-colors cursor-pointer
+              className={`relative w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-['TT_Norms_Pro'] transition-colors cursor-pointer
                 ${collapsed ? "justify-center px-2" : ""}
                 ${
                   isActive
@@ -113,6 +116,17 @@ function AccountSidebar({
                 className={`${collapsed ? "w-5 h-5" : "w-4 h-4"} shrink-0`}
               />
               {!collapsed && <span className="truncate">{item.label}</span>}
+              {item.id === "notifications" && unreadNotificationCount > 0 && (
+                <span
+                  className={`min-w-5 h-5 px-1 rounded-full text-[11px] font-semibold flex items-center justify-center ${
+                    isActive
+                      ? "bg-black text-white"
+                      : "bg-white text-black"
+                  } ${collapsed ? "absolute -top-1 -right-1" : "ml-auto"}`}
+                >
+                  {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+                </span>
+              )}
             </button>
           );
         })}
@@ -171,6 +185,10 @@ function AccountPageContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [viewMode, setViewMode] = useState<"profile" | "edit">("profile");
+  const { count: unreadNotificationCount } = useNotificationUnreadCount(
+    "customer",
+    Boolean(user),
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem("sidebarCollapsed");
@@ -254,6 +272,7 @@ function AccountPageContent() {
           onLogout={handleLogout}
           collapsed={sidebarCollapsed}
           onToggle={toggleSidebar}
+          unreadNotificationCount={unreadNotificationCount}
         />
       </aside>
 
@@ -299,6 +318,7 @@ function AccountPageContent() {
                 onLogout={handleLogout}
                 collapsed={false}
                 onToggle={() => {}}
+                unreadNotificationCount={unreadNotificationCount}
               />
             </motion.aside>
           </>
@@ -349,7 +369,17 @@ function AccountPageContent() {
                   transition={{ duration: 0.25 }}
                   className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm"
                 >
-                  <OrdersView embedded />
+                  <OrdersView
+                    embedded
+                    initialOrderId={searchParams.get("orderId")}
+                    initialOrderType={
+                      searchParams.get("orderType") === "retail"
+                        ? "retail"
+                        : searchParams.get("orderType") === "custom"
+                          ? "custom"
+                          : null
+                    }
+                  />
                 </motion.div>
               )}
 

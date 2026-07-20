@@ -577,7 +577,7 @@ userRouter.post(
     // Create admin dashboard notification for new user signup
     // Supports all partner/user roles (customer, tailor, fabric_store).
     await createAdminNotificationForNewUser({
-      type: `${createdUser.role}_registered`,
+      type: `user_${createdUser.role}_registered`,
       title: "New user registered",
       message: `${createdUser.name} (${createdUser.email}) has registered as ${createdUser.role.replace(
         "_",
