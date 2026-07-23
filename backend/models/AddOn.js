@@ -68,6 +68,12 @@ const addOnSchema = new mongoose.Schema(
       ref: "FabricShop",
       required: false,
     },
+    ownerName: {
+      type: String,
+      default: "MOTD Admin",
+      required: true,
+      trim: true,
+    },
   },
   {
     timestamps: true,
