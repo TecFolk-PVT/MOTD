@@ -98,6 +98,7 @@ export default function FabricOrdersPage() {
   const t = useTranslations("FabricPortal.orders");
   const tStatus = useTranslations("OrdersPage.custom.statuses");
 
+  const [activeTab, setActiveTab] = useState<"custom" | "retail">("custom");
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -120,10 +121,15 @@ export default function FabricOrdersPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get<{ success: boolean; items: Order[] }>(
-        "/api/fabric/orders",
-      );
-      setOrders(res.items || []);
+      if (activeTab === "custom") {
+        const res = await api.get<{ success: boolean; items: Order[] }>(
+          "/api/fabric/orders",
+        );
+        setOrders(res.items || []);
+      } else {
+        const res = await api.get<any[]>("/api/fabric/orders/retail");
+        setOrders(res || []);
+      }
     } catch (err) {
       setError(getApiErrorMessage(err, t("loadError")));
       toast.error(t("loadError"), ERROR_TOAST);
@@ -134,7 +140,7 @@ export default function FabricOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [activeTab]);
 
   const toggleExpand = (orderId: string) => {
     setExpandedOrders((prev) => ({
@@ -274,6 +280,40 @@ export default function FabricOrdersPage() {
         </button>
       </div>
 
+      {/* Tabs Selector */}
+      <div className="flex gap-4 border-b border-gray-200">
+        <button
+          type="button"
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors hover:cursor-pointer [font-family:var(--font-ui)] ${
+            activeTab === "custom"
+              ? "border-black text-black"
+              : "border-transparent text-gray-500 hover:text-black"
+          }`}
+          onClick={() => {
+            setActiveTab("custom");
+            setFilterStatus("");
+            setFilterCustomer("");
+          }}
+        >
+          {locale === "ar" ? "تفصيل مخصص" : "Custom Orders"}
+        </button>
+        <button
+          type="button"
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors hover:cursor-pointer [font-family:var(--font-ui)] ${
+            activeTab === "retail"
+              ? "border-black text-black"
+              : "border-transparent text-gray-500 hover:text-black"
+          }`}
+          onClick={() => {
+            setActiveTab("retail");
+            setFilterStatus("");
+            setFilterCustomer("");
+          }}
+        >
+          {locale === "ar" ? "ملابس جاهزة" : "Ready Made Orders"}
+        </button>
+      </div>
+
       {/* Filters Section */}
       <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
@@ -308,9 +348,9 @@ export default function FabricOrdersPage() {
             <option value="">
               {locale === "ar" ? "كل الحالات" : "All Statuses"}
             </option>
-            {CUSTOM_ORDER_STATUSES.map((status) => (
+            {(activeTab === "custom" ? CUSTOM_ORDER_STATUSES : ["pending", "confirmed", "shipped", "delivered", "cancelled"]).map((status) => (
               <option key={status} value={status}>
-                {tStatus(status)}
+                {statusLabel(status)}
               </option>
             ))}
           </select>
@@ -346,6 +386,103 @@ export default function FabricOrdersPage() {
               order.fabricSnapshot?.name ||
               (locale === "ar" ? "قماش خاص" : "Self Fabric");
             const isExpanded = !!expandedOrders[order._id];
+
+            if (activeTab === "retail") {
+              const retailOrder = order as any;
+              return (
+                <div
+                  key={retailOrder._id}
+                  className="border border-gray-100 rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-5">
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">
+                        {t("customer")}
+                      </p>
+                      <p className="font-medium text-sm text-black flex items-center gap-1.5 [font-family:var(--font-body)]">
+                        <User className="w-3.5 h-3.5 text-gray-400" />
+                        {customerName}
+                      </p>
+                      {customerPhone && (
+                        <p className="text-xs text-black font-semibold mt-1 flex items-center gap-1.5 bg-[#FFFDF9] border border-amber-100 px-2 py-0.5 rounded w-max [font-family:var(--font-body)]">
+                          <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          {customerPhone}
+                        </p>
+                      )}
+                      {customerEmail && (
+                        <p className="text-xs text-gray-550 mt-1 flex items-center gap-1.5 [font-family:var(--font-body)]">
+                          <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                          {customerEmail}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <p className="text-xs text-gray-400 uppercase tracking-wider mb-2 [font-family:var(--font-ui)]">
+                        {locale === "ar" ? "المنتجات المطلوبة" : "Ordered Items"}
+                      </p>
+                      <div className="flex flex-col gap-3">
+                        {retailOrder.orderItems?.map((item: any, idx: number) => (
+                          <div key={idx} className="flex items-center gap-3 bg-gray-50/50 p-2 rounded-xl border border-gray-100/50">
+                            {item.image && (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-10 h-10 object-cover rounded-lg border border-gray-200 shrink-0"
+                              />
+                            )}
+                            <div>
+                              <p className="text-xs font-semibold text-black [font-family:var(--font-body)]">{item.name}</p>
+                              <p className="text-[10px] text-gray-400 mt-0.5 [font-family:var(--font-body)]">
+                                {locale === "ar" ? "المقاس: " : "Size: "}{item.size} | {locale === "ar" ? "الكمية: " : "Qty: "}{item.quantity} | {formatCurrency(item.price)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">
+                        {t("date")}
+                      </p>
+                      <p className="text-sm text-black [font-family:var(--font-body)]">
+                        {formatOrderDate(retailOrder.createdAt, locale)}
+                      </p>
+                      <div className="mt-4">
+                        <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">
+                          {t("status")}
+                        </p>
+                        <StatusBadge
+                          status={retailOrder.status}
+                          label={statusLabel(retailOrder.status)}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 [font-family:var(--font-ui)]">
+                        {locale === "ar" ? "الإجمالي" : "Total Price"}
+                      </p>
+                      <p className="font-semibold text-black text-base [font-family:var(--font-body)]">
+                        {formatCurrency(
+                          retailOrder.totalPrice || 0,
+                          retailOrder.currency || "AED",
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Footer bar showing Order ID */}
+                  <div className="p-4 border-t border-gray-100 bg-gray-50/70 text-xs text-gray-500">
+                    {locale === "ar" ? "الرقم التعريفي للطلب:" : "Order ID:"}{" "}
+                    <span className="font-mono text-black font-medium">
+                      #{retailOrder._id.slice(-8).toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              );
+            }
 
             return (
               <div

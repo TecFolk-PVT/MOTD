@@ -7,6 +7,7 @@ import FormField from "@/components/admin/FormField";
 import ImageUpload from "@/components/admin/ImageUpload";
 import { FABRIC_TAGS } from "@/lib/createFabricAdmin";
 import toast from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 
 interface AddOnFormData {
   name: string;
@@ -23,6 +24,8 @@ interface AddOnFormData {
 }
 
 export default function FabricNewAddOnPage() {
+  const { user } = useAuth();
+  const userName = user?.name || "";
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,6 +96,7 @@ export default function FabricNewAddOnPage() {
       const payload = {
         ...formData,
         images: cleanGallery,
+        ownerName: userName,
       };
 
       await api.post("/api/fabric/addons", payload);
@@ -126,6 +130,17 @@ export default function FabricNewAddOnPage() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* USER (OWNER) */}
+          <FormField label="User">
+            <input
+              type="text"
+              disabled
+              readOnly
+              value={userName}
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-500 bg-gray-50 cursor-not-allowed"
+            />
+          </FormField>
+
           <FormField label="Product Name (English)" required>
             <input
               type="text"

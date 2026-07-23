@@ -100,7 +100,12 @@ adminRouter.post(
 adminRouter.get(
   "/ready-made",
   expressAsyncHandler(async (req, res) => {
-    const products = await ReadyMadeProduct.find({}).sort({ createdAt: -1 });
+    const products = await ReadyMadeProduct.find({
+      $or: [
+        { ownerName: "MOTD Admin" },
+        { ownerName: { $exists: false } }
+      ]
+    }).sort({ createdAt: -1 });
     res.send(products);
   }),
 );
@@ -202,6 +207,7 @@ adminRouter.post(
       finalSellingPriceAED,
       availableFabricStock,
       isActive: isActive !== undefined ? isActive : true,
+      ownerName: req.body.ownerName || "MOTD Admin",
     });
 
     const createdProduct = await newProduct.save();
@@ -269,6 +275,7 @@ adminRouter.put(
       req.body.finalSellingPriceAED ?? product.finalSellingPriceAED;
     product.availableFabricStock =
       req.body.availableFabricStock ?? product.availableFabricStock;
+    product.ownerName = req.body.ownerName ?? product.ownerName;
 
     // --- Active ---
     product.isActive = req.body.isActive ?? product.isActive;
@@ -1098,6 +1105,15 @@ adminRouter.get(
       }
     }
 
+    const adminProducts = await ReadyMadeProduct.find({
+      $or: [
+        { ownerName: "MOTD Admin" },
+        { ownerName: { $exists: false } }
+      ]
+    }).select("_id");
+    const adminProductIds = adminProducts.map((p) => p._id);
+    filter["orderItems.productId"] = { $in: adminProductIds };
+
     const orders = await RetailOrder.find(filter)
       .populate("userId", "name email phone")
       .populate("orderItems.productId", "thumbnailImage images")
@@ -1762,7 +1778,12 @@ adminRouter.patch(
 adminRouter.get(
   "/addons",
   expressAsyncHandler(async (req, res) => {
-    const addons = await AddOn.find({}).sort({ createdAt: -1 });
+    const addons = await AddOn.find({
+      $or: [
+        { ownerName: "MOTD Admin" },
+        { ownerName: { $exists: false } }
+      ]
+    }).sort({ createdAt: -1 });
     res.send(addons);
   }),
 );
@@ -1816,6 +1837,7 @@ adminRouter.post(
       tag,
       tagAr,
       isActive: isActive !== undefined ? isActive : true,
+      ownerName: req.body.ownerName || "MOTD Admin",
     });
 
     const savedAddon = await addon.save();
@@ -1862,6 +1884,7 @@ adminRouter.put(
     addon.tag = tag ?? addon.tag;
     addon.tagAr = tagAr ?? addon.tagAr;
     addon.isActive = isActive !== undefined ? isActive : addon.isActive;
+    addon.ownerName = req.body.ownerName ?? addon.ownerName;
 
     const updatedAddon = await addon.save();
     res.send(updatedAddon);
