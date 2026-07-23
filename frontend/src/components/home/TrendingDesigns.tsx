@@ -11,18 +11,24 @@ import {
   resolveDesignImage,
   getDesignDisplayFields,
   formatDesignBasePrice,
-  formatDesignCategory,
 } from "@/lib/tailors";
-import { DESIGN_CATEGORIES } from "@/lib/tailorDesigns";
+import {
+  fetchDesignCategories,
+  type DesignCategoryOption,
+} from "@/lib/tailorDesigns";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "hand-embroidered": "#8B6B4D",
-  "crystal-embellished": "#1A2A3A",
-  "non-crystal": "#5A6B5A",
-  talli: "#B8860B",
-  khous: "#4A3A2A",
-  beaded: "#6B2A5A",
-};
+const CATEGORY_COLOR_PALETTE = [
+  "#8B6B4D",
+  "#1A2A3A",
+  "#5A6B5A",
+  "#B8860B",
+  "#4A3A2A",
+  "#6B2A5A",
+  "#2A5A6B",
+  "#6B4A2A",
+  "#4A6B2A",
+  "#6B2A2A",
+];
 import { Share2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 
@@ -71,6 +77,21 @@ export function TrendingSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<FilterValue>("all");
+  const [categoryOptions, setCategoryOptions] = useState<
+    DesignCategoryOption[]
+  >([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const cats = await fetchDesignCategories();
+        setCategoryOptions(cats);
+      } catch {
+        // silently fail
+      }
+    };
+    load();
+  }, []);
 
   useEffect(() => {
     const fetchDesigns = async () => {
@@ -105,14 +126,14 @@ export function TrendingSection() {
         labelAr: "جميع التصاميم",
         value: "all",
       },
-      ...DESIGN_CATEGORIES.map((cat) => ({
-        key: cat,
-        labelEn: cat.charAt(0).toUpperCase() + cat.slice(1),
-        labelAr: formatDesignCategory(cat, localParams as any),
-        value: cat,
+      ...categoryOptions.map((cat) => ({
+        key: cat._id,
+        labelEn: cat.nameAr ? `${cat.name} (${cat.nameAr})` : cat.name,
+        labelAr: cat.nameAr ? `${cat.nameAr} (${cat.name})` : cat.name,
+        value: cat._id,
       })),
     ],
-    [localParams],
+    [categoryOptions],
   );
 
   const filteredDesigns = useMemo(
@@ -435,7 +456,14 @@ export function TrendingSection() {
                         <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
                           <span
                             className="text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold"
-                            style={{ backgroundColor: CATEGORY_COLORS[design.category] || '#000000' }}
+                            style={{
+                              backgroundColor:
+                                CATEGORY_COLOR_PALETTE[
+                                  categoryOptions.findIndex(
+                                    (c) => c._id === design.category,
+                                  )
+                                ] || "#000000",
+                            }}
                           >
                             {category}
                           </span>

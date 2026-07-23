@@ -11,20 +11,27 @@ import FadeInSection from "@/components/shared/fadeInSection";
 import {
   getDesignDisplayFields,
   resolveDesignImage,
-  formatDesignCategory,
   type TailorDesignListItem,
 } from "@/lib/tailors";
+import {
+  fetchDesignCategories,
+  type DesignCategoryOption,
+} from "@/lib/tailorDesigns";
 
 import { formatDesignBasePrice } from "@/lib/tailors";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  "hand-embroidered": "#8B6B4D",
-  "crystal-embellished": "#1A2A3A",
-  "non-crystal": "#5A6B5A",
-  talli: "#B8860B",
-  khous: "#4A3A2A",
-  beaded: "#6B2A5A",
-};
+const CATEGORY_COLOR_PALETTE = [
+  "#8B6B4D",
+  "#1A2A3A",
+  "#5A6B5A",
+  "#B8860B",
+  "#4A3A2A",
+  "#6B2A5A",
+  "#2A5A6B",
+  "#6B4A2A",
+  "#4A6B2A",
+  "#6B2A2A",
+];
 
 const SearchOffIcon = () => (
   <svg
@@ -379,6 +386,7 @@ export default function DesignShopCatalogPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
+  const [categories, setCategories] = useState<DesignCategoryOption[]>([]);
 
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
@@ -437,19 +445,26 @@ export default function DesignShopCatalogPage() {
     fetchDesigns();
   }, []);
 
-  const categoryOptions = useMemo(() => {
-    const counts = new Map<string, number>();
-    designs.forEach((item) => {
-      const active = item.category;
-      if (active) counts.set(active, (counts.get(active) || 0) + 1);
-    });
+  // Fetch categories from DB
+  useEffect(() => {
+    fetchDesignCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
 
-    return Array.from(counts.entries()).map(([cat, count]) => ({
-      id: cat,
-      label: formatDesignCategory(cat, locale as any),
-      count,
-    }));
-  }, [designs, locale]);
+  const categoryOptions = useMemo(() => {
+    return categories.map((cat, index) => {
+      const designCount = designs.filter(
+        (d) => d.category === cat._id || d.category === cat.name,
+      ).length;
+      return {
+        id: cat._id,
+        label: isAr ? cat.nameAr || cat.name : cat.name,
+        color: CATEGORY_COLOR_PALETTE[index % CATEGORY_COLOR_PALETTE.length],
+        count: designCount,
+      };
+    });
+  }, [categories, designs, isAr]);
 
   let filteredDesigns = designs.filter((item) => {
     if (filters.categories.length > 0) {
@@ -561,7 +576,7 @@ export default function DesignShopCatalogPage() {
               <span
                 className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{
-                  backgroundColor: CATEGORY_COLORS[cat.id] || "#000000",
+                  backgroundColor: cat.color,
                 }}
               />
               <span className="flex-1 text-[11px] tracking-[0.14em] uppercase text-black group-hover:opacity-60 transition-opacity">
@@ -850,8 +865,13 @@ export default function DesignShopCatalogPage() {
                                 className="absolute top-4 left-4 z-10 px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold shadow-sm text-white"
                                 style={{
                                   backgroundColor:
-                                    CATEGORY_COLORS[design.category] ||
-                                    "#000000",
+                                    CATEGORY_COLOR_PALETTE[
+                                      categories.findIndex(
+                                        (c) =>
+                                          c._id === design.category ||
+                                          c.name === design.category,
+                                      ) % CATEGORY_COLOR_PALETTE.length
+                                    ] || "#000000",
                                 }}
                               >
                                 {category}

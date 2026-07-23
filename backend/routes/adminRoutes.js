@@ -22,6 +22,8 @@ import {
 import Customer from "../models/customer.js";
 import { createAdminNotificationForNewUser } from "../services/adminNotificationService.js";
 import AddOn from "../models/AddOn.js";
+import Category from "../models/Category.js";
+import Material from "../models/Material.js";
 import {
   uploadSingleAddOnImageMiddleware,
   processAddOnImage,
@@ -101,10 +103,7 @@ adminRouter.get(
   "/ready-made",
   expressAsyncHandler(async (req, res) => {
     const products = await ReadyMadeProduct.find({
-      $or: [
-        { ownerName: "MOTD Admin" },
-        { ownerName: { $exists: false } }
-      ]
+      $or: [{ ownerName: "MOTD Admin" }, { ownerName: { $exists: false } }],
     }).sort({ createdAt: -1 });
     res.send(products);
   }),
@@ -422,7 +421,6 @@ adminRouter.post(
       user: partnerPublicFields(user),
       shop,
     });
-
   }),
 );
 
@@ -1106,10 +1104,7 @@ adminRouter.get(
     }
 
     const adminProducts = await ReadyMadeProduct.find({
-      $or: [
-        { ownerName: "MOTD Admin" },
-        { ownerName: { $exists: false } }
-      ]
+      $or: [{ ownerName: "MOTD Admin" }, { ownerName: { $exists: false } }],
     }).select("_id");
     const adminProductIds = adminProducts.map((p) => p._id);
     filter["orderItems.productId"] = { $in: adminProductIds };
@@ -1167,7 +1162,10 @@ adminRouter.get(
     const orders = await CustomOrder.find({})
       .populate("userId", "name email phone")
       .populate("tailorShopId", "name nameAr location city logo coverImage")
-      .populate("items.tailorShopId", "name nameAr location city logo coverImage")
+      .populate(
+        "items.tailorShopId",
+        "name nameAr location city logo coverImage",
+      )
       .populate("designId", "images")
       .populate("items.designId", "images")
       .populate("fabricId", "images")
@@ -1296,7 +1294,9 @@ adminRouter.get(
   expressAsyncHandler(async (req, res) => {
     const timeframeRaw = req.query.timeframe;
     const timeframe =
-      timeframeRaw === "week" || timeframeRaw === "month" || timeframeRaw === "year"
+      timeframeRaw === "week" ||
+      timeframeRaw === "month" ||
+      timeframeRaw === "year"
         ? timeframeRaw
         : "month";
 
@@ -1395,7 +1395,10 @@ adminRouter.get(
         { $match: { createdAt: { $gte: startRange, $lte: endRange } } },
         {
           $group: {
-            _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" },
+            },
             orderCount: { $sum: 1 },
             revenue: { $sum: "$totalPrice" },
           },
@@ -1405,7 +1408,10 @@ adminRouter.get(
         { $match: { createdAt: { $gte: startRange, $lte: endRange } } },
         {
           $group: {
-            _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+            _id: {
+              year: { $year: "$createdAt" },
+              month: { $month: "$createdAt" },
+            },
             orderCount: { $sum: 1 },
             revenue: { $sum: "$pricing.total" },
           },
@@ -1779,10 +1785,7 @@ adminRouter.get(
   "/addons",
   expressAsyncHandler(async (req, res) => {
     const addons = await AddOn.find({
-      $or: [
-        { ownerName: "MOTD Admin" },
-        { ownerName: { $exists: false } }
-      ]
+      $or: [{ ownerName: "MOTD Admin" }, { ownerName: { $exists: false } }],
     }).sort({ createdAt: -1 });
     res.send(addons);
   }),
@@ -1822,7 +1825,10 @@ adminRouter.post(
 
     const generatedSlug = slug
       ? slug.toLowerCase().replace(/\s+/g, "-")
-      : name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+      : name
+          .toLowerCase()
+          .replace(/\s+/g, "-")
+          .replace(/[^a-z0-9-]/g, "");
 
     const addon = new AddOn({
       name,
@@ -1920,6 +1926,266 @@ adminRouter.patch(
       message: `Addon ${addon.isActive ? "activated" : "deactivated"} successfully`,
       isActive: addon.isActive,
     });
+  }),
+);
+
+// ==========================================
+// C-21: Admin Categories CRUD
+// ==========================================
+
+// GET /api/admin/categories?domain=designs
+// List categories filtered by domain
+adminRouter.get(
+  "/categories",
+  expressAsyncHandler(async (req, res) => {
+    const { domain } = req.query;
+    const filter = domain ? { domain } : {};
+    const categories = await Category.find(filter).sort({
+      name: 1,
+    });
+    res.send(categories);
+  }),
+);
+
+// GET /api/admin/categories/:id
+// Get a single category by ID
+adminRouter.get(
+  "/categories/:id",
+  expressAsyncHandler(async (req, res) => {
+    const category = await Category.findById(req.params.id);
+    if (!category) {
+      res.status(404).send({ message: "Category not found" });
+      return;
+    }
+    res.send(category);
+  }),
+);
+
+// POST /api/admin/categories
+// Create a new category
+adminRouter.post(
+  "/categories",
+  expressAsyncHandler(async (req, res) => {
+    const {
+      name,
+      nameAr,
+      domain,
+      description,
+      descriptionAr,
+      isActive,
+    } = req.body;
+
+    if (!name?.trim()) {
+      res.status(400).send({ message: "Category name (English) is required" });
+      return;
+    }
+
+    const validDomains = ["designs", "fabrics", "ready-made", "add-ons"];
+    if (!domain || !validDomains.includes(domain)) {
+      res.status(400).send({
+        message: `Domain must be one of: ${validDomains.join(", ")}`,
+      });
+      return;
+    }
+
+    const category = new Category({
+      name: name.trim(),
+      nameAr: nameAr?.trim() || "",
+      domain,
+      description: description?.trim() || "",
+      descriptionAr: descriptionAr?.trim() || "",
+      isActive: isActive !== undefined ? isActive : true,
+    });
+
+    const saved = await category.save();
+    res.status(201).send(saved);
+  }),
+);
+
+// PUT /api/admin/categories/:id
+// Update an existing category
+adminRouter.put(
+  "/categories/:id",
+  expressAsyncHandler(async (req, res) => {
+    const category = await Category.findById(req.params.id);
+    if (!category) {
+      res.status(404).send({ message: "Category not found" });
+      return;
+    }
+
+    const {
+      name,
+      nameAr,
+      domain,
+      description,
+      descriptionAr,
+      isActive,
+    } = req.body;
+
+    if (name !== undefined) category.name = name.trim();
+    if (nameAr !== undefined) category.nameAr = nameAr.trim();
+    if (domain !== undefined) {
+      const validDomains = ["designs", "fabrics", "ready-made", "add-ons"];
+      if (!validDomains.includes(domain)) {
+        res.status(400).send({
+          message: `Domain must be one of: ${validDomains.join(", ")}`,
+        });
+        return;
+      }
+      category.domain = domain;
+    }
+    if (description !== undefined) category.description = description.trim();
+    if (descriptionAr !== undefined)
+      category.descriptionAr = descriptionAr.trim();
+    if (isActive !== undefined) category.isActive = isActive;
+
+    const updated = await category.save();
+    res.send(updated);
+  }),
+);
+
+// DELETE /api/admin/categories/:id
+// Delete a category
+adminRouter.delete(
+  "/categories/:id",
+  expressAsyncHandler(async (req, res) => {
+    const category = await Category.findById(req.params.id);
+    if (!category) {
+      res.status(404).send({ message: "Category not found" });
+      return;
+    }
+    await category.deleteOne();
+    res.send({ message: "Category deleted successfully" });
+  }),
+);
+
+// ==========================================
+// C-22: Admin Materials CRUD
+// Separate from categories — materials are
+// fabric types / materials (cotton, silk, etc.)
+// ==========================================
+
+// GET /api/admin/materials?domain=fabrics
+// List materials filtered by domain
+adminRouter.get(
+  "/materials",
+  expressAsyncHandler(async (req, res) => {
+    const { domain } = req.query;
+    const filter = domain ? { domain } : {};
+    const materials = await Material.find(filter).sort({ name: 1 });
+    res.send(materials);
+  }),
+);
+
+// GET /api/admin/materials/:id
+// Get a single material by ID
+adminRouter.get(
+  "/materials/:id",
+  expressAsyncHandler(async (req, res) => {
+    const material = await Material.findById(req.params.id);
+    if (!material) {
+      res.status(404).send({ message: "Material not found" });
+      return;
+    }
+    res.send(material);
+  }),
+);
+
+// POST /api/admin/materials
+// Create a new material
+adminRouter.post(
+  "/materials",
+  expressAsyncHandler(async (req, res) => {
+    const {
+      name,
+      nameAr,
+      domain,
+      description,
+      descriptionAr,
+      isActive,
+    } = req.body;
+
+    if (!name?.trim()) {
+      res.status(400).send({ message: "Material name (English) is required" });
+      return;
+    }
+
+    const validDomains = ["designs", "fabrics", "ready-made", "add-ons"];
+    if (!domain || !validDomains.includes(domain)) {
+      res.status(400).send({
+        message: `Domain must be one of: ${validDomains.join(", ")}`,
+      });
+      return;
+    }
+
+    const material = new Material({
+      name: name.trim(),
+      nameAr: nameAr?.trim() || "",
+      domain,
+      description: description?.trim() || "",
+      descriptionAr: descriptionAr?.trim() || "",
+      isActive: isActive !== undefined ? isActive : true,
+    });
+
+    const saved = await material.save();
+    res.status(201).send(saved);
+  }),
+);
+
+// PUT /api/admin/materials/:id
+// Update an existing material
+adminRouter.put(
+  "/materials/:id",
+  expressAsyncHandler(async (req, res) => {
+    const material = await Material.findById(req.params.id);
+    if (!material) {
+      res.status(404).send({ message: "Material not found" });
+      return;
+    }
+
+    const {
+      name,
+      nameAr,
+      domain,
+      description,
+      descriptionAr,
+      isActive,
+    } = req.body;
+
+    if (name !== undefined) material.name = name.trim();
+    if (nameAr !== undefined) material.nameAr = nameAr.trim();
+    if (domain !== undefined) {
+      const validDomains = ["designs", "fabrics", "ready-made", "add-ons"];
+      if (!validDomains.includes(domain)) {
+        res.status(400).send({
+          message: `Domain must be one of: ${validDomains.join(", ")}`,
+        });
+        return;
+      }
+      material.domain = domain;
+    }
+    if (description !== undefined) material.description = description.trim();
+    if (descriptionAr !== undefined)
+      material.descriptionAr = descriptionAr.trim();
+    if (isActive !== undefined) material.isActive = isActive;
+
+    const updated = await material.save();
+    res.send(updated);
+  }),
+);
+
+// DELETE /api/admin/materials/:id
+// Delete a material
+adminRouter.delete(
+  "/materials/:id",
+  expressAsyncHandler(async (req, res) => {
+    const material = await Material.findById(req.params.id);
+    if (!material) {
+      res.status(404).send({ message: "Material not found" });
+      return;
+    }
+    await material.deleteOne();
+    res.send({ message: "Material deleted successfully" });
   }),
 );
 

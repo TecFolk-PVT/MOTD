@@ -11,7 +11,7 @@ import {
   getFabricDisplayFields,
   resolveFabricImage,
 } from "@/lib/fabrics";
-import { Share2 } from "lucide-react";
+import { Share2, Loader2 } from "lucide-react";
 
 const colorOptions = [
   { name: "Aqua", value: "aqua", bg: "#00FFFF" },
@@ -618,7 +618,9 @@ export default function FabricsCatalogPage() {
 
   const [mounted, setMounted] = useState(false);
   const [fabrics, setFabrics] = useState<FabricListItem[]>([]);
+  const [materials, setMaterials] = useState<{ name: string; nameAr: string }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [materialsLoading, setMaterialsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -663,18 +665,61 @@ export default function FabricsCatalogPage() {
     fetchFabrics();
   }, []);
 
+  // Fetch materials from DB
+  useEffect(() => {
+    const fetchMaterials = async () => {
+      try {
+        setMaterialsLoading(true);
+        const data = await api.get<{ success: boolean; data: { name: string; nameAr: string }[] }>("/api/fabrics/materials");
+        if (data?.success && Array.isArray(data.data)) {
+          setMaterials(data.data);
+        }
+      } catch {
+        // fallback: derive from fabrics data
+      } finally {
+        setMaterialsLoading(false);
+      }
+    };
+    fetchMaterials();
+  }, []);
+
+  // Build category options from DB materials, with counts from actual fabric data
   const categoryOptions = useMemo(() => {
-    const counts = new Map<string, number>();
+    const materialCounts = new Map<string, number>();
     fabrics.forEach((item) => {
-      const material = item.material || "Other";
-      counts.set(material, (counts.get(material) || 0) + 1);
+      const mat = item.material || "Other";
+      materialCounts.set(mat, (materialCounts.get(mat) || 0) + 1);
     });
-    return Array.from(counts.entries()).map(([category, count]) => ({
-      id: category,
-      label: category.toUpperCase(),
-      count,
+
+    // Use DB materials list as the source of truth, then add any extras from fabric data
+    const allMaterials = new Map<string, { label: string; count: number }>();
+
+    // First add DB materials
+    materials.forEach((m) => {
+      const key = m.name.toLowerCase();
+      allMaterials.set(key, {
+        label: (isAr && m.nameAr ? m.nameAr : m.name).toUpperCase(),
+        count: materialCounts.get(m.name) || 0,
+      });
+    });
+
+    // Add any materials found in fabrics that aren't in DB (legacy)
+    materialCounts.forEach((count, material) => {
+      const key = material.toLowerCase();
+      if (!allMaterials.has(key)) {
+        allMaterials.set(key, {
+          label: material.toUpperCase(),
+          count,
+        });
+      }
+    });
+
+    return Array.from(allMaterials.entries()).map(([id, val]) => ({
+      id,
+      label: val.label,
+      count: val.count,
     }));
-  }, [fabrics]);
+  }, [fabrics, materials, isAr]);
 
   const matchesColorFilter = (
     fabricColors: string[] | string | undefined,
