@@ -16,11 +16,11 @@ const materialSchema = new mongoose.Schema(
     },
     domain: {
       type: String,
-      required: [true, "Domain is required"],
       enum: {
-        values: ["designs", "fabrics", "ready-made", "add-ons"],
+        values: ["designs", "fabrics", "ready-made", "add-ons", "general"],
         message: "{VALUE} is not a valid domain",
       },
+      default: "general",
     },
     description: {
       type: String,

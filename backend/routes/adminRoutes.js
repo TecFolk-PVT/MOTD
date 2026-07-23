@@ -24,6 +24,9 @@ import { createAdminNotificationForNewUser } from "../services/adminNotification
 import AddOn from "../models/AddOn.js";
 import Category from "../models/Category.js";
 import Material from "../models/Material.js";
+import Pattern from "../models/Pattern.js";
+import Season from "../models/Season.js";
+import Tag from "../models/Tag.js";
 import {
   uploadSingleAddOnImageMiddleware,
   processAddOnImage,
@@ -1966,21 +1969,21 @@ adminRouter.get(
 adminRouter.post(
   "/categories",
   expressAsyncHandler(async (req, res) => {
-    const {
-      name,
-      nameAr,
-      domain,
-      description,
-      descriptionAr,
-      isActive,
-    } = req.body;
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
 
     if (!name?.trim()) {
       res.status(400).send({ message: "Category name (English) is required" });
       return;
     }
 
-    const validDomains = ["designs", "fabrics", "ready-made", "add-ons"];
+    const validDomains = [
+      "designs",
+      "fabrics",
+      "ready-made",
+      "add-ons",
+      "general",
+    ];
     if (!domain || !validDomains.includes(domain)) {
       res.status(400).send({
         message: `Domain must be one of: ${validDomains.join(", ")}`,
@@ -2013,19 +2016,19 @@ adminRouter.put(
       return;
     }
 
-    const {
-      name,
-      nameAr,
-      domain,
-      description,
-      descriptionAr,
-      isActive,
-    } = req.body;
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
 
     if (name !== undefined) category.name = name.trim();
     if (nameAr !== undefined) category.nameAr = nameAr.trim();
     if (domain !== undefined) {
-      const validDomains = ["designs", "fabrics", "ready-made", "add-ons"];
+      const validDomains = [
+        "designs",
+        "fabrics",
+        "ready-made",
+        "add-ons",
+        "general",
+      ];
       if (!validDomains.includes(domain)) {
         res.status(400).send({
           message: `Domain must be one of: ${validDomains.join(", ")}`,
@@ -2096,21 +2099,21 @@ adminRouter.get(
 adminRouter.post(
   "/materials",
   expressAsyncHandler(async (req, res) => {
-    const {
-      name,
-      nameAr,
-      domain,
-      description,
-      descriptionAr,
-      isActive,
-    } = req.body;
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
 
     if (!name?.trim()) {
       res.status(400).send({ message: "Material name (English) is required" });
       return;
     }
 
-    const validDomains = ["designs", "fabrics", "ready-made", "add-ons"];
+    const validDomains = [
+      "designs",
+      "fabrics",
+      "ready-made",
+      "add-ons",
+      "general",
+    ];
     if (!domain || !validDomains.includes(domain)) {
       res.status(400).send({
         message: `Domain must be one of: ${validDomains.join(", ")}`,
@@ -2143,19 +2146,19 @@ adminRouter.put(
       return;
     }
 
-    const {
-      name,
-      nameAr,
-      domain,
-      description,
-      descriptionAr,
-      isActive,
-    } = req.body;
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
 
     if (name !== undefined) material.name = name.trim();
     if (nameAr !== undefined) material.nameAr = nameAr.trim();
     if (domain !== undefined) {
-      const validDomains = ["designs", "fabrics", "ready-made", "add-ons"];
+      const validDomains = [
+        "designs",
+        "fabrics",
+        "ready-made",
+        "add-ons",
+        "general",
+      ];
       if (!validDomains.includes(domain)) {
         res.status(400).send({
           message: `Domain must be one of: ${validDomains.join(", ")}`,
@@ -2186,6 +2189,395 @@ adminRouter.delete(
     }
     await material.deleteOne();
     res.send({ message: "Material deleted successfully" });
+  }),
+);
+
+// ==========================================
+// C-23: Admin Patterns CRUD
+// Separate from categories — patterns are
+// design patterns / styles (floral, geometric, etc.)
+// ==========================================
+
+// GET /api/admin/patterns
+// List patterns
+adminRouter.get(
+  "/patterns",
+  expressAsyncHandler(async (req, res) => {
+    const { domain } = req.query;
+    const filter = domain ? { domain } : {};
+    const patterns = await Pattern.find(filter).sort({ name: 1 });
+    res.send(patterns);
+  }),
+);
+
+// GET /api/admin/patterns/:id
+// Get a single pattern by ID
+adminRouter.get(
+  "/patterns/:id",
+  expressAsyncHandler(async (req, res) => {
+    const pattern = await Pattern.findById(req.params.id);
+    if (!pattern) {
+      res.status(404).send({ message: "Pattern not found" });
+      return;
+    }
+    res.send(pattern);
+  }),
+);
+
+// POST /api/admin/patterns
+// Create a new pattern
+adminRouter.post(
+  "/patterns",
+  expressAsyncHandler(async (req, res) => {
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
+
+    if (!name?.trim()) {
+      res.status(400).send({ message: "Pattern name (English) is required" });
+      return;
+    }
+
+    const validDomains = [
+      "designs",
+      "fabrics",
+      "ready-made",
+      "add-ons",
+      "general",
+    ];
+    if (!domain || !validDomains.includes(domain)) {
+      res.status(400).send({
+        message: `Domain must be one of: ${validDomains.join(", ")}`,
+      });
+      return;
+    }
+
+    const pattern = new Pattern({
+      name: name.trim(),
+      nameAr: nameAr?.trim() || "",
+      domain,
+      description: description?.trim() || "",
+      descriptionAr: descriptionAr?.trim() || "",
+      isActive: isActive !== undefined ? isActive : true,
+    });
+
+    const saved = await pattern.save();
+    res.status(201).send(saved);
+  }),
+);
+
+// PUT /api/admin/patterns/:id
+// Update an existing pattern
+adminRouter.put(
+  "/patterns/:id",
+  expressAsyncHandler(async (req, res) => {
+    const pattern = await Pattern.findById(req.params.id);
+    if (!pattern) {
+      res.status(404).send({ message: "Pattern not found" });
+      return;
+    }
+
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
+
+    if (name !== undefined) pattern.name = name.trim();
+    if (nameAr !== undefined) pattern.nameAr = nameAr.trim();
+    if (domain !== undefined) {
+      const validDomains = [
+        "designs",
+        "fabrics",
+        "ready-made",
+        "add-ons",
+        "general",
+      ];
+      if (!validDomains.includes(domain)) {
+        res.status(400).send({
+          message: `Domain must be one of: ${validDomains.join(", ")}`,
+        });
+        return;
+      }
+      pattern.domain = domain;
+    }
+    if (description !== undefined) pattern.description = description.trim();
+    if (descriptionAr !== undefined)
+      pattern.descriptionAr = descriptionAr.trim();
+    if (isActive !== undefined) pattern.isActive = isActive;
+
+    const updated = await pattern.save();
+    res.send(updated);
+  }),
+);
+
+// DELETE /api/admin/patterns/:id
+// Delete a pattern
+adminRouter.delete(
+  "/patterns/:id",
+  expressAsyncHandler(async (req, res) => {
+    const pattern = await Pattern.findById(req.params.id);
+    if (!pattern) {
+      res.status(404).send({ message: "Pattern not found" });
+      return;
+    }
+    await pattern.deleteOne();
+    res.send({ message: "Pattern deleted successfully" });
+  }),
+);
+
+// ==========================================
+// C-24: Admin Seasons CRUD
+// Separate from categories — seasons are
+// seasonal collections (Spring, Summer, Ramadan, etc.)
+// ==========================================
+
+// GET /api/admin/seasons
+// List seasons
+adminRouter.get(
+  "/seasons",
+  expressAsyncHandler(async (req, res) => {
+    const { domain } = req.query;
+    const filter = domain ? { domain } : {};
+    const seasons = await Season.find(filter).sort({ name: 1 });
+    res.send(seasons);
+  }),
+);
+
+// GET /api/admin/seasons/:id
+// Get a single season by ID
+adminRouter.get(
+  "/seasons/:id",
+  expressAsyncHandler(async (req, res) => {
+    const season = await Season.findById(req.params.id);
+    if (!season) {
+      res.status(404).send({ message: "Season not found" });
+      return;
+    }
+    res.send(season);
+  }),
+);
+
+// POST /api/admin/seasons
+// Create a new season
+adminRouter.post(
+  "/seasons",
+  expressAsyncHandler(async (req, res) => {
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
+
+    if (!name?.trim()) {
+      res.status(400).send({ message: "Season name (English) is required" });
+      return;
+    }
+
+    const validDomains = [
+      "designs",
+      "fabrics",
+      "ready-made",
+      "add-ons",
+      "general",
+    ];
+    if (!domain || !validDomains.includes(domain)) {
+      res.status(400).send({
+        message: `Domain must be one of: ${validDomains.join(", ")}`,
+      });
+      return;
+    }
+
+    const season = new Season({
+      name: name.trim(),
+      nameAr: nameAr?.trim() || "",
+      domain,
+      description: description?.trim() || "",
+      descriptionAr: descriptionAr?.trim() || "",
+      isActive: isActive !== undefined ? isActive : true,
+    });
+
+    const saved = await season.save();
+    res.status(201).send(saved);
+  }),
+);
+
+// PUT /api/admin/seasons/:id
+// Update an existing season
+adminRouter.put(
+  "/seasons/:id",
+  expressAsyncHandler(async (req, res) => {
+    const season = await Season.findById(req.params.id);
+    if (!season) {
+      res.status(404).send({ message: "Season not found" });
+      return;
+    }
+
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
+
+    if (name !== undefined) season.name = name.trim();
+    if (nameAr !== undefined) season.nameAr = nameAr.trim();
+    if (domain !== undefined) {
+      const validDomains = [
+        "designs",
+        "fabrics",
+        "ready-made",
+        "add-ons",
+        "general",
+      ];
+      if (!validDomains.includes(domain)) {
+        res.status(400).send({
+          message: `Domain must be one of: ${validDomains.join(", ")}`,
+        });
+        return;
+      }
+      season.domain = domain;
+    }
+    if (description !== undefined) season.description = description.trim();
+    if (descriptionAr !== undefined)
+      season.descriptionAr = descriptionAr.trim();
+    if (isActive !== undefined) season.isActive = isActive;
+
+    const updated = await season.save();
+    res.send(updated);
+  }),
+);
+
+// DELETE /api/admin/seasons/:id
+// Delete a season
+adminRouter.delete(
+  "/seasons/:id",
+  expressAsyncHandler(async (req, res) => {
+    const season = await Season.findById(req.params.id);
+    if (!season) {
+      res.status(404).send({ message: "Season not found" });
+      return;
+    }
+    await season.deleteOne();
+    res.send({ message: "Season deleted successfully" });
+  }),
+);
+
+// ==========================================
+// C-25: Admin Tags CRUD
+// Separate from categories — tags are
+// labels used to tag products across domains
+// ==========================================
+
+// GET /api/admin/tags
+// List tags
+adminRouter.get(
+  "/tags",
+  expressAsyncHandler(async (req, res) => {
+    const { domain } = req.query;
+    const filter = domain ? { domain } : {};
+    const tags = await Tag.find(filter).sort({ name: 1 });
+    res.send(tags);
+  }),
+);
+
+// GET /api/admin/tags/:id
+// Get a single tag by ID
+adminRouter.get(
+  "/tags/:id",
+  expressAsyncHandler(async (req, res) => {
+    const tag = await Tag.findById(req.params.id);
+    if (!tag) {
+      res.status(404).send({ message: "Tag not found" });
+      return;
+    }
+    res.send(tag);
+  }),
+);
+
+// POST /api/admin/tags
+// Create a new tag
+adminRouter.post(
+  "/tags",
+  expressAsyncHandler(async (req, res) => {
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
+
+    if (!name?.trim()) {
+      res.status(400).send({ message: "Tag name (English) is required" });
+      return;
+    }
+
+    const validDomains = [
+      "designs",
+      "fabrics",
+      "ready-made",
+      "add-ons",
+      "general",
+    ];
+    if (!domain || !validDomains.includes(domain)) {
+      res.status(400).send({
+        message: `Domain must be one of: ${validDomains.join(", ")}`,
+      });
+      return;
+    }
+
+    const tag = new Tag({
+      name: name.trim(),
+      nameAr: nameAr?.trim() || "",
+      domain,
+      description: description?.trim() || "",
+      descriptionAr: descriptionAr?.trim() || "",
+      isActive: isActive !== undefined ? isActive : true,
+    });
+
+    const saved = await tag.save();
+    res.status(201).send(saved);
+  }),
+);
+
+// PUT /api/admin/tags/:id
+// Update an existing tag
+adminRouter.put(
+  "/tags/:id",
+  expressAsyncHandler(async (req, res) => {
+    const tag = await Tag.findById(req.params.id);
+    if (!tag) {
+      res.status(404).send({ message: "Tag not found" });
+      return;
+    }
+
+    const { name, nameAr, domain, description, descriptionAr, isActive } =
+      req.body;
+
+    if (name !== undefined) tag.name = name.trim();
+    if (nameAr !== undefined) tag.nameAr = nameAr.trim();
+    if (domain !== undefined) {
+      const validDomains = [
+        "designs",
+        "fabrics",
+        "ready-made",
+        "add-ons",
+        "general",
+      ];
+      if (!validDomains.includes(domain)) {
+        res.status(400).send({
+          message: `Domain must be one of: ${validDomains.join(", ")}`,
+        });
+        return;
+      }
+      tag.domain = domain;
+    }
+    if (description !== undefined) tag.description = description.trim();
+    if (descriptionAr !== undefined) tag.descriptionAr = descriptionAr.trim();
+    if (isActive !== undefined) tag.isActive = isActive;
+
+    const updated = await tag.save();
+    res.send(updated);
+  }),
+);
+
+// DELETE /api/admin/tags/:id
+// Delete a tag
+adminRouter.delete(
+  "/tags/:id",
+  expressAsyncHandler(async (req, res) => {
+    const tag = await Tag.findById(req.params.id);
+    if (!tag) {
+      res.status(404).send({ message: "Tag not found" });
+      return;
+    }
+    await tag.deleteOne();
+    res.send({ message: "Tag deleted successfully" });
   }),
 );
 

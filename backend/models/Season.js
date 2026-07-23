@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
-const categorySchema = new mongoose.Schema(
+const seasonSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Category name (English) is required"],
+      required: [true, "Season name (English) is required"],
       trim: true,
       maxlength: [100, "Name cannot exceed 100 characters"],
     },
@@ -47,9 +47,9 @@ const categorySchema = new mongoose.Schema(
 );
 
 // Compound index for efficient queries by domain
-categorySchema.index({ domain: 1, sortOrder: 1 });
-categorySchema.index({ domain: 1, isActive: 1 });
+seasonSchema.index({ domain: 1, name: 1 });
+seasonSchema.index({ domain: 1, isActive: 1 });
 
-const Category = mongoose.model("Category", categorySchema);
+const Season = mongoose.model("Season", seasonSchema);
 
-export default Category;
+export default Season;

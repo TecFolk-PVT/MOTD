@@ -22,12 +22,14 @@ import {
   UserRoundPlus,
   UserRoundPen,
   Bell,
-  DollarSign,
   Sparkles,
   ChevronDown,
   ChevronRight,
   Tag,
   Layers,
+  Palette,
+  Leaf,
+  Tags
 } from "lucide-react";
 import white_logo from "../../../../public/PNG/White/MOTD_Wordmark_White.png";
 
@@ -42,7 +44,9 @@ export default function AdminLayout({
   const params = useParams();
   const locale = (params.locale as string) || "en";
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [settingsExpanded, setSettingsExpanded] = useState(false);
+  const [settingsExpanded, setSettingsExpanded] = useState(
+    pathname.startsWith(`/${locale}/admin/settings`),
+  );
   const { count: unreadNotificationCount } = useNotificationUnreadCount(
     "admin",
     Boolean(user && user.role === "admin"),
@@ -110,6 +114,9 @@ export default function AdminLayout({
     { label: "General", href: "/admin/settings/general", icon: Settings },
     { label: "Categories", href: "/admin/settings/categories", icon: Tag },
     { label: "Materials", href: "/admin/settings/materials", icon: Layers },
+    { label: "Patterns", href: "/admin/settings/patterns", icon: Palette },
+    { label: "Seasons", href: "/admin/settings/seasons", icon: Leaf },
+    { label: "Tags", href: "/admin/settings/tags", icon: Tags },
   ];
 
   const isSettingsActive = pathname.startsWith(`/${locale}/admin/settings`);

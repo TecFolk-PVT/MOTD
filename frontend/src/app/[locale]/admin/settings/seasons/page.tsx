@@ -11,11 +11,12 @@ import {
   Search,
   X,
   Check,
+  Sun,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
 
-interface Material {
+interface Season {
   _id: string;
   name: string;
   nameAr?: string;
@@ -26,16 +27,16 @@ interface Material {
   updatedAt?: string;
 }
 
-export default function AdminSettingsMaterialsPage() {
-  const [materials, setMaterials] = useState<Material[]>([]);
+export default function AdminSettingsSeasonsPage() {
+  const [seasons, setSeasons] = useState<Season[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [editingSeason, setEditingSeason] = useState<Season | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [materialToDelete, setMaterialToDelete] = useState<string | null>(null);
+  const [seasonToDelete, setSeasonToDelete] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const [formName, setFormName] = useState("");
@@ -44,34 +45,34 @@ export default function AdminSettingsMaterialsPage() {
   const [formDescriptionAr, setFormDescriptionAr] = useState("");
   const [formIsActive, setFormIsActive] = useState(true);
 
-  const fetchMaterials = async () => {
+  const fetchSeasons = async () => {
     try {
       setLoading(true);
-      const data = await api.get<Material[]>("/api/admin/materials");
-      setMaterials(Array.isArray(data) ? data : []);
+      const data = await api.get<Season[]>("/api/admin/seasons");
+      setSeasons(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, "Failed to load materials"));
-      setMaterials([]);
+      toast.error(getApiErrorMessage(err, "Failed to load seasons"));
+      setSeasons([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMaterials();
+    fetchSeasons();
   }, []);
 
-  const filteredMaterials = materials.filter((m) => {
+  const filteredSeasons = seasons.filter((s) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
-      m.name?.toLowerCase().includes(q) ||
-      m.description?.toLowerCase().includes(q)
+      s.name?.toLowerCase().includes(q) ||
+      s.description?.toLowerCase().includes(q)
     );
   });
 
   const openAddModal = () => {
-    setEditingMaterial(null);
+    setEditingSeason(null);
     setFormName("");
     setFormNameAr("");
     setFormDescription("");
@@ -80,13 +81,13 @@ export default function AdminSettingsMaterialsPage() {
     setShowModal(true);
   };
 
-  const openEditModal = (mat: Material) => {
-    setEditingMaterial(mat);
-    setFormName(mat.name);
-    setFormNameAr(mat.nameAr || "");
-    setFormDescription(mat.description || "");
-    setFormDescriptionAr(mat.descriptionAr || "");
-    setFormIsActive(mat.isActive);
+  const openEditModal = (season: Season) => {
+    setEditingSeason(season);
+    setFormName(season.name);
+    setFormNameAr(season.nameAr || "");
+    setFormDescription(season.description || "");
+    setFormDescriptionAr(season.descriptionAr || "");
+    setFormIsActive(season.isActive);
     setShowModal(true);
   };
 
@@ -102,70 +103,68 @@ export default function AdminSettingsMaterialsPage() {
       isActive: formIsActive,
     };
     try {
-      if (editingMaterial) {
-        await api.put(`/api/admin/materials/${editingMaterial._id}`, payload);
-        toast.success("Material updated");
+      if (editingSeason) {
+        await api.put(`/api/admin/seasons/${editingSeason._id}`, payload);
+        toast.success("Season updated");
       } else {
-        await api.post("/api/admin/materials", payload);
-        toast.success("Material created");
+        await api.post("/api/admin/seasons", payload);
+        toast.success("Season created");
       }
       setShowModal(false);
-      fetchMaterials();
+      fetchSeasons();
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, "Failed to save material"));
+      toast.error(getApiErrorMessage(err, "Failed to save season"));
     } finally {
       setSubmitting(false);
     }
   };
 
   const promptDelete = (id: string) => {
-    setMaterialToDelete(id);
+    setSeasonToDelete(id);
     setShowDeleteConfirm(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!materialToDelete) return;
-    setDeletingId(materialToDelete);
+    if (!seasonToDelete) return;
+    setDeletingId(seasonToDelete);
     setShowDeleteConfirm(false);
     try {
-      await api.delete(`/api/admin/materials/${materialToDelete}`);
-      toast.success("Material deleted");
-      fetchMaterials();
+      await api.delete(`/api/admin/seasons/${seasonToDelete}`);
+      toast.success("Season deleted");
+      fetchSeasons();
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, "Failed to delete material"));
+      toast.error(getApiErrorMessage(err, "Failed to delete season"));
     } finally {
       setDeletingId(null);
-      setMaterialToDelete(null);
+      setSeasonToDelete(null);
     }
   };
 
   const handleCancelDelete = () => {
     setShowDeleteConfirm(false);
-    setMaterialToDelete(null);
+    setSeasonToDelete(null);
   };
 
-  const toggleActive = async (mat: Material) => {
-    const newIsActive = !mat.isActive;
-    // Optimistically update local state first — no flash / blink
-    setMaterials((prev) =>
-      prev.map((m) =>
-        m._id === mat._id ? { ...m, isActive: newIsActive } : m,
+  const toggleActive = async (season: Season) => {
+    const newIsActive = !season.isActive;
+    setSeasons((prev) =>
+      prev.map((s) =>
+        s._id === season._id ? { ...s, isActive: newIsActive } : s,
       ),
     );
-    setTogglingId(mat._id);
+    setTogglingId(season._id);
     try {
-      await api.put(`/api/admin/materials/${mat._id}`, {
+      await api.put(`/api/admin/seasons/${season._id}`, {
         isActive: newIsActive,
       });
-      toast.success(`Material ${newIsActive ? "activated" : "deactivated"}`);
+      toast.success(`Season ${newIsActive ? "activated" : "deactivated"}`);
     } catch (err: unknown) {
-      // Revert on failure
-      setMaterials((prev) =>
-        prev.map((m) =>
-          m._id === mat._id ? { ...m, isActive: !newIsActive } : m,
+      setSeasons((prev) =>
+        prev.map((s) =>
+          s._id === season._id ? { ...s, isActive: !newIsActive } : s,
         ),
       );
-      toast.error(getApiErrorMessage(err, "Failed to update material"));
+      toast.error(getApiErrorMessage(err, "Failed to update season"));
     } finally {
       setTogglingId(null);
     }
@@ -191,26 +190,14 @@ export default function AdminSettingsMaterialsPage() {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-gray-900 to-gray-700 flex items-center justify-center shadow-lg">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 0 2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128m0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"
-                />
-              </svg>
+              <Sun className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
-                Materials
+                Seasons
               </h1>
               <p className="text-gray-500 text-sm">
-                Manage fabric materials and types used across your platform
+                Manage seasonal collections across your platform
               </p>
             </div>
           </div>
@@ -223,7 +210,7 @@ export default function AdminSettingsMaterialsPage() {
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-gray-900 to-gray-800 text-white text-sm font-medium shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-gray-900/30 transition-all hover:cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          New Material
+          Add Season
         </motion.button>
       </div>
 
@@ -234,7 +221,7 @@ export default function AdminSettingsMaterialsPage() {
           type="search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search materials by name or description..."
+          placeholder="Search seasons by name or description..."
           className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow shadow-sm"
         />
         {searchQuery && (
@@ -248,6 +235,15 @@ export default function AdminSettingsMaterialsPage() {
         )}
       </div>
 
+      {/* Count badge */}
+      {!loading && seasons.length > 0 && (
+        <div className="text-xs text-gray-400 font-medium tracking-wide uppercase">
+          {filteredSeasons.length === seasons.length
+            ? `${seasons.length} season${seasons.length === 1 ? "" : "s"} total`
+            : `${filteredSeasons.length} of ${seasons.length} season${seasons.length === 1 ? "" : "s"}`}
+        </div>
+      )}
+
       {/* Loading */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
@@ -255,33 +251,21 @@ export default function AdminSettingsMaterialsPage() {
             <div className="w-12 h-12 border-2 border-gray-200 rounded-full" />
             <div className="absolute inset-0 w-12 h-12 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-sm text-gray-500 mt-4">Loading materials...</p>
+          <p className="text-sm text-gray-500 mt-4">Loading seasons...</p>
         </div>
-      ) : filteredMaterials.length === 0 ? (
+      ) : filteredSeasons.length === 0 ? (
         /* Empty state */
         <div className="flex flex-col items-center justify-center text-center py-20">
           <div className="w-20 h-20 bg-linear-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
-            <svg
-              className="w-8 h-8 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 0 2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128m0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"
-              />
-            </svg>
+            <Sun className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-1">
-            {searchQuery ? "No matching materials" : "No materials yet"}
+            {searchQuery ? "No matching seasons" : "No seasons yet"}
           </h3>
           <p className="text-sm text-gray-500 max-w-sm mb-6">
             {searchQuery
               ? "Try a different search term or clear the filter."
-              : "Create your first material to start organizing fabric types."}
+              : "Create your first season to start organizing your collections."}
           </p>
           {!searchQuery && (
             <motion.button
@@ -292,17 +276,17 @@ export default function AdminSettingsMaterialsPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-gray-900 to-gray-800 text-white text-sm font-medium shadow-lg shadow-gray-900/20 hover:shadow-xl transition-all hover:cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              Create Material
+              Create Season
             </motion.button>
           )}
         </div>
       ) : (
-        /* Materials grid */
+        /* Seasons list */
         <div className="grid gap-3">
           <AnimatePresence mode="popLayout">
-            {filteredMaterials.map((mat, index) => (
+            {filteredSeasons.map((season, index) => (
               <motion.div
-                key={mat._id}
+                key={season._id}
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -314,48 +298,48 @@ export default function AdminSettingsMaterialsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3 flex-wrap">
                       <h3 className="text-base font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
-                        {mat.name}
+                        {season.name}
                       </h3>
-                      {mat.nameAr && (
+                      {season.nameAr && (
                         <span
                           dir="rtl"
                           className="text-sm text-gray-400 font-normal"
                         >
-                          {mat.nameAr}
+                          {season.nameAr}
                         </span>
                       )}
                       <motion.button
                         type="button"
-                        onClick={() => toggleActive(mat)}
-                        disabled={togglingId === mat._id}
+                        onClick={() => toggleActive(season)}
+                        disabled={togglingId === season._id}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        title={`Click to ${mat.isActive ? "deactivate" : "activate"}`}
+                        title={`Click to ${season.isActive ? "deactivate" : "activate"}`}
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all ${
-                          mat.isActive
+                          season.isActive
                             ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 hover:bg-red-50 hover:text-red-600 hover:ring-red-300"
                             : "bg-gray-50 text-gray-400 ring-1 ring-gray-300/20 hover:bg-gray-100 hover:text-gray-500"
                         }`}
                       >
-                        {togglingId === mat._id ? (
+                        {togglingId === season._id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : mat.isActive ? (
+                        ) : season.isActive ? (
                           <Check className="w-3 h-3" />
                         ) : (
                           <X className="w-3 h-3" />
                         )}
-                        {mat.isActive ? "Active" : "Inactive"}
+                        {season.isActive ? "Active" : "Inactive"}
                       </motion.button>
                     </div>
-                    {mat.description && (
+                    {season.description && (
                       <p className="text-sm text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">
-                        {mat.description}
+                        {season.description}
                       </p>
                     )}
                     <div className="flex items-center gap-3 mt-2">
-                      {mat.createdAt && (
+                      {season.createdAt && (
                         <span className="text-xs text-gray-400">
-                          Created {formatDate(mat.createdAt)}
+                          Created {formatDate(season.createdAt)}
                         </span>
                       )}
                     </div>
@@ -363,24 +347,24 @@ export default function AdminSettingsMaterialsPage() {
                   <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <motion.button
                       type="button"
-                      onClick={() => openEditModal(mat)}
+                      onClick={() => openEditModal(season)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-all hover:cursor-pointer"
-                      aria-label="Edit material"
+                      aria-label="Edit season"
                     >
                       <Pencil className="w-4 h-4" />
                     </motion.button>
                     <motion.button
                       type="button"
-                      disabled={deletingId === mat._id}
-                      onClick={() => promptDelete(mat._id)}
+                      disabled={deletingId === season._id}
+                      onClick={() => promptDelete(season._id)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="p-2 rounded-xl border border-gray-200 hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all hover:cursor-pointer disabled:opacity-50"
-                      aria-label="Delete material"
+                      aria-label="Delete season"
                     >
-                      {deletingId === mat._id ? (
+                      {deletingId === season._id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <Trash2 className="w-4 h-4" />
@@ -416,12 +400,12 @@ export default function AdminSettingsMaterialsPage() {
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">
-                      {editingMaterial ? "Edit Material" : "New Material"}
+                      {editingSeason ? "Edit Season" : "New Season"}
                     </h2>
                     <p className="text-sm text-gray-500 mt-0.5">
-                      {editingMaterial
-                        ? "Update the material details below."
-                        : "Fill in the details to create a new material."}
+                      {editingSeason
+                        ? "Update the season details below."
+                        : "Fill in the details to create a new season."}
                     </p>
                   </div>
                   <button
@@ -444,7 +428,7 @@ export default function AdminSettingsMaterialsPage() {
                         required
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
-                        placeholder="e.g. Cotton"
+                        placeholder="e.g. Spring Collection"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
                     </div>
@@ -458,7 +442,7 @@ export default function AdminSettingsMaterialsPage() {
                         value={formNameAr}
                         onChange={(e) => setFormNameAr(e.target.value)}
                         dir="rtl"
-                        placeholder="مثال: قطن"
+                        placeholder="مثال: مجموعة الربيع"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
                     </div>
@@ -493,15 +477,13 @@ export default function AdminSettingsMaterialsPage() {
                   </div>
 
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        id="isActive"
-                        checked={formIsActive}
-                        onChange={(e) => setFormIsActive(e.target.checked)}
-                        className="peer w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                      />
-                    </div>
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={formIsActive}
+                      onChange={(e) => setFormIsActive(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    />
                     <label
                       htmlFor="isActive"
                       className="text-sm text-gray-700 cursor-pointer select-none"
@@ -533,9 +515,9 @@ export default function AdminSettingsMaterialsPage() {
                       )}
                       {submitting
                         ? "Saving..."
-                        : editingMaterial
-                          ? "Update Material"
-                          : "Create Material"}
+                        : editingSeason
+                          ? "Update Season"
+                          : "Create Season"}
                     </motion.button>
                   </div>
                 </form>
@@ -547,8 +529,8 @@ export default function AdminSettingsMaterialsPage() {
 
       <ConfirmationModal
         isOpen={showDeleteConfirm}
-        title="Delete Material"
-        message="Are you sure you want to delete this material? This action cannot be undone. Products using this material may be affected."
+        title="Delete Season"
+        message="Are you sure you want to delete this season? This action cannot be undone. Products associated with this season may be affected."
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleConfirmDelete}

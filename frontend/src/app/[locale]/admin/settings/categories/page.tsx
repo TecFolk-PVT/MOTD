@@ -9,21 +9,17 @@ import {
   Trash2,
   Loader2,
   Search,
-  Palette,
-  Shirt,
-  Scissors,
-  Sparkles,
+  X,
+  Check,
+  FolderTree,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
-
-type Domain = "designs" | "fabrics" | "ready-made" | "add-ons";
 
 interface Category {
   _id: string;
   name: string;
   nameAr?: string;
-  domain: Domain;
   description?: string;
   descriptionAr?: string;
   isActive: boolean;
@@ -31,19 +27,7 @@ interface Category {
   updatedAt?: string;
 }
 
-const DOMAIN_TABS: {
-  id: Domain;
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-}[] = [
-  { id: "designs", icon: Palette, label: "Designs" },
-  { id: "fabrics", icon: Scissors, label: "Fabrics" },
-  { id: "ready-made", icon: Shirt, label: "Ready Made" },
-  { id: "add-ons", icon: Sparkles, label: "Add Ons" },
-];
-
 export default function AdminSettingsCategoriesPage() {
-  const [activeDomain, setActiveDomain] = useState<Domain>("designs");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -53,6 +37,7 @@ export default function AdminSettingsCategoriesPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const [formName, setFormName] = useState("");
   const [formNameAr, setFormNameAr] = useState("");
@@ -63,9 +48,8 @@ export default function AdminSettingsCategoriesPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      const data = await api.get<Category[]>(
-        `/api/admin/categories?domain=${activeDomain}`,
-      );
+      // Fetch all categories — no domain filter
+      const data = await api.get<Category[]>("/api/admin/categories");
       setCategories(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
       toast.error(getApiErrorMessage(err, "Failed to load categories"));
@@ -77,7 +61,7 @@ export default function AdminSettingsCategoriesPage() {
 
   useEffect(() => {
     fetchCategories();
-  }, [activeDomain]);
+  }, []);
 
   const filteredCategories = categories.filter((c) => {
     if (!searchQuery.trim()) return true;
@@ -114,7 +98,7 @@ export default function AdminSettingsCategoriesPage() {
     const payload = {
       name: formName,
       nameAr: formNameAr,
-      domain: activeDomain,
+      domain: "general",
       description: formDescription,
       descriptionAr: formDescriptionAr,
       isActive: formIsActive,
@@ -162,6 +146,33 @@ export default function AdminSettingsCategoriesPage() {
     setCategoryToDelete(null);
   };
 
+  const toggleActive = async (cat: Category) => {
+    const newIsActive = !cat.isActive;
+    // Optimistic update
+    setCategories((prev) =>
+      prev.map((c) =>
+        c._id === cat._id ? { ...c, isActive: newIsActive } : c,
+      ),
+    );
+    setTogglingId(cat._id);
+    try {
+      await api.put(`/api/admin/categories/${cat._id}`, {
+        isActive: newIsActive,
+      });
+      toast.success(`Category ${newIsActive ? "activated" : "deactivated"}`);
+    } catch (err: unknown) {
+      // Revert on failure
+      setCategories((prev) =>
+        prev.map((c) =>
+          c._id === cat._id ? { ...c, isActive: !newIsActive } : c,
+        ),
+      );
+      toast.error(getApiErrorMessage(err, "Failed to update category"));
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
   const formatDate = (d?: string) => {
     if (!d) return "";
     try {
@@ -175,259 +186,342 @@ export default function AdminSettingsCategoriesPage() {
     }
   };
 
-  const renderEmptyIcon = () => {
-    const tab = DOMAIN_TABS.find((tab) => tab.id === activeDomain);
-    const Icon = tab?.icon || Plus;
-    return <Icon className="w-8 h-8 text-gray-400" />;
-  };
-
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-light text-black tracking-tight">
-            Categories
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage categories by domain
-          </p>
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-gray-900 to-gray-700 flex items-center justify-center shadow-lg">
+              <FolderTree className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
+                Categories
+              </h1>
+              <p className="text-gray-500 text-sm">
+                Manage all product categories across your platform
+              </p>
+            </div>
+          </div>
         </div>
-        <button
+        <motion.button
           type="button"
           onClick={openAddModal}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 transition hover:cursor-pointer"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-gray-900 to-gray-800 text-white text-sm font-medium shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-gray-900/30 transition-all hover:cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           Add Category
-        </button>
+        </motion.button>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {DOMAIN_TABS.map((tab) => {
-          const Icon = tab.icon;
-          const isActiveTab = activeDomain === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveDomain(tab.id)}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition hover:cursor-pointer ${
-                isActiveTab
-                  ? "bg-gray-900 text-white shadow-md"
-                  : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="relative max-w-xs">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <input
           type="search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search categories..."
-          className="w-full pl-9 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400"
+          placeholder="Search categories by name or description..."
+          className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow shadow-sm"
         />
-      </div>
-
-      {loading ? (
-        <div className="flex items-center gap-2 text-gray-500 py-8">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          Loading...
-        </div>
-      ) : filteredCategories.length === 0 ? (
-        <div className="flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-gray-100 py-16 shadow-sm">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            {renderEmptyIcon()}
-          </div>
-          <p className="text-gray-500 max-w-md">No categories found</p>
-          <p className="text-gray-400 text-sm mt-1">Add your first category</p>
+        {searchQuery && (
           <button
             type="button"
-            onClick={openAddModal}
-            className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 transition hover:cursor-pointer"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition hover:cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            Add Category
+            <X className="w-4 h-4" />
           </button>
-        </div>
-      ) : (
-        <div className="grid gap-3">
-          {filteredCategories.map((cat) => (
-            <div
-              key={cat._id}
-              className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm hover:shadow-md transition-all"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base font-medium text-black">
-                      {cat.name}
-                    </h3>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        cat.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
-                      {cat.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-                  {cat.description && (
-                    <p className="text-sm text-gray-500 mt-1 line-clamp-1">
-                      {cat.description}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => openEditModal(cat)}
-                    className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-black transition hover:cursor-pointer"
-                    aria-label="Edit category"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  <button
-                    type="button"
-                    disabled={deletingId === cat._id}
-                    onClick={() => promptDelete(cat._id)}
-                    className="p-2 rounded-lg border border-gray-200 hover:bg-red-50 text-gray-500 hover:text-red-600 transition hover:cursor-pointer disabled:opacity-50"
-                    aria-label="Delete category"
-                  >
-                    {deletingId === cat._id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
+        )}
+      </div>
+
+      {/* Count badge */}
+      {!loading && categories.length > 0 && (
+        <div className="text-xs text-gray-400 font-medium tracking-wide uppercase">
+          {filteredCategories.length === categories.length
+            ? `${categories.length} categor${categories.length === 1 ? "y" : "ies"} total`
+            : `${filteredCategories.length} of ${categories.length} categor${categories.length === 1 ? "y" : "ies"}`}
         </div>
       )}
 
+      {/* Loading */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="relative">
+            <div className="w-12 h-12 border-2 border-gray-200 rounded-full" />
+            <div className="absolute inset-0 w-12 h-12 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
+          </div>
+          <p className="text-sm text-gray-500 mt-4">Loading categories...</p>
+        </div>
+      ) : filteredCategories.length === 0 ? (
+        /* Empty state */
+        <div className="flex flex-col items-center justify-center text-center py-20">
+          <div className="w-20 h-20 bg-linear-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
+            <FolderTree className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-1">
+            {searchQuery ? "No matching categories" : "No categories yet"}
+          </h3>
+          <p className="text-sm text-gray-500 max-w-sm mb-6">
+            {searchQuery
+              ? "Try a different search term or clear the filter."
+              : "Create your first category to start organizing your products."}
+          </p>
+          {!searchQuery && (
+            <motion.button
+              type="button"
+              onClick={openAddModal}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-gray-900 to-gray-800 text-white text-sm font-medium shadow-lg shadow-gray-900/20 hover:shadow-xl transition-all hover:cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Create Category
+            </motion.button>
+          )}
+        </div>
+      ) : (
+        /* Categories list */
+        <div className="grid gap-3">
+          <AnimatePresence mode="popLayout">
+            {filteredCategories.map((cat, index) => (
+              <motion.div
+                key={cat._id}
+                layout
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2, delay: index * 0.03 }}
+                className="group bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md hover:border-gray-200 transition-all"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <h3 className="text-base font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
+                        {cat.name}
+                      </h3>
+                      {cat.nameAr && (
+                        <span
+                          dir="rtl"
+                          className="text-sm text-gray-400 font-normal"
+                        >
+                          {cat.nameAr}
+                        </span>
+                      )}
+                      <motion.button
+                        type="button"
+                        onClick={() => toggleActive(cat)}
+                        disabled={togglingId === cat._id}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        title={`Click to ${cat.isActive ? "deactivate" : "activate"}`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all ${
+                          cat.isActive
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 hover:bg-red-50 hover:text-red-600 hover:ring-red-300"
+                            : "bg-gray-50 text-gray-400 ring-1 ring-gray-300/20 hover:bg-gray-100 hover:text-gray-500"
+                        }`}
+                      >
+                        {togglingId === cat._id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : cat.isActive ? (
+                          <Check className="w-3 h-3" />
+                        ) : (
+                          <X className="w-3 h-3" />
+                        )}
+                        {cat.isActive ? "Active" : "Inactive"}
+                      </motion.button>
+                    </div>
+                    {cat.description && (
+                      <p className="text-sm text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">
+                        {cat.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-3 mt-2">
+                      {cat.createdAt && (
+                        <span className="text-xs text-gray-400">
+                          Created {formatDate(cat.createdAt)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <motion.button
+                      type="button"
+                      onClick={() => openEditModal(cat)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-all hover:cursor-pointer"
+                      aria-label="Edit category"
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      disabled={deletingId === cat._id}
+                      onClick={() => promptDelete(cat._id)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="p-2 rounded-xl border border-gray-200 hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all hover:cursor-pointer disabled:opacity-50"
+                      aria-label="Delete category"
+                    >
+                      {deletingId === cat._id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-4 h-4" />
+                      )}
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Create / Edit Modal */}
       <AnimatePresence>
         {showModal && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
             onClick={() => setShowModal(false)}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              transition={{ type: "spring", duration: 0.3, bounce: 0.2 }}
+              className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="p-6">
-                <h2 className="text-xl font-medium text-black mb-6">
-                  {editingCategory ? "Edit Category" : "Add Category"}
-                </h2>
+              <div className="p-6 sm:p-8">
+                <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      {editingCategory ? "Edit Category" : "New Category"}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      {editingCategory
+                        ? "Update the category details below."
+                        : "Fill in the details to create a new category."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowModal(false)}
+                    className="p-2 rounded-xl hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition hover:cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
                 <form onSubmit={handleSubmit} className="space-y-5">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formName}
-                      onChange={(e) => setFormName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-black"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Name <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formName}
+                        onChange={(e) => setFormName(e.target.value)}
+                        placeholder="e.g. Evening Gowns"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Name (Arabic) <span className="text-red-400">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={formNameAr}
+                        onChange={(e) => setFormNameAr(e.target.value)}
+                        dir="rtl"
+                        placeholder="مثال: فساتين سهرة"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description
-                    </label>
-                    <textarea
-                      value={formDescription}
-                      onChange={(e) => setFormDescription(e.target.value)}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-black resize-none"
-                    />
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Description
+                      </label>
+                      <textarea
+                        value={formDescription}
+                        onChange={(e) => setFormDescription(e.target.value)}
+                        rows={3}
+                        placeholder="Brief description in English..."
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow resize-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                        Description (Arabic)
+                      </label>
+                      <textarea
+                        value={formDescriptionAr}
+                        onChange={(e) => setFormDescriptionAr(e.target.value)}
+                        rows={3}
+                        dir="rtl"
+                        placeholder="وصف باللغة العربية..."
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow resize-none"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Name (Arabic) *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formNameAr}
-                      onChange={(e) => setFormNameAr(e.target.value)}
-                      dir="rtl"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-black"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Description (Arabic)
-                    </label>
-                    <textarea
-                      value={formDescriptionAr}
-                      onChange={(e) => setFormDescriptionAr(e.target.value)}
-                      rows={2}
-                      dir="rtl"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-black resize-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Domain
-                    </label>
-                    <input
-                      type="text"
-                      value={
-                        DOMAIN_TABS.find((d) => d.id === activeDomain)?.label ||
-                        ""
-                      }
-                      readOnly
-                      className="w-full px-3 py-2 border border-gray-200 bg-gray-50 text-gray-500 rounded-lg text-sm cursor-not-allowed"
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
+
+                  <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
                     <input
                       type="checkbox"
                       id="isActive"
                       checked={formIsActive}
                       onChange={(e) => setFormIsActive(e.target.checked)}
-                      className="rounded border-gray-300"
+                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
                     />
-                    <label htmlFor="isActive" className="text-sm text-gray-700">
-                      Active
+                    <label
+                      htmlFor="isActive"
+                      className="text-sm text-gray-700 cursor-pointer select-none"
+                    >
+                      <span className="font-medium">Active</span>
+                      <span className="text-gray-400 ml-1">
+                        — visible and usable across the platform
+                      </span>
                     </label>
                   </div>
+
                   <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
                     <button
                       type="button"
                       onClick={() => setShowModal(false)}
-                      className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition hover:cursor-pointer"
+                      className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition hover:cursor-pointer"
                     >
                       Cancel
                     </button>
-                    <button
+                    <motion.button
                       type="submit"
                       disabled={submitting}
-                      className="px-4 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 transition disabled:opacity-50 hover:cursor-pointer inline-flex items-center gap-2"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="px-5 py-2.5 rounded-xl bg-linear-to-r from-gray-900 to-gray-800 text-white text-sm font-medium shadow-lg shadow-gray-900/20 hover:shadow-xl transition-all disabled:opacity-50 hover:cursor-pointer inline-flex items-center gap-2"
                     >
                       {submitting && (
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       )}
-                      {submitting ? "Saving..." : "Save"}
-                    </button>
+                      {submitting
+                        ? "Saving..."
+                        : editingCategory
+                          ? "Update Category"
+                          : "Create Category"}
+                    </motion.button>
                   </div>
                 </form>
               </div>
@@ -439,7 +533,7 @@ export default function AdminSettingsCategoriesPage() {
       <ConfirmationModal
         isOpen={showDeleteConfirm}
         title="Delete Category"
-        message="Are you sure you want to delete this category? This action cannot be undone."
+        message="Are you sure you want to delete this category? This action cannot be undone. Products associated with this category may be affected."
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleConfirmDelete}

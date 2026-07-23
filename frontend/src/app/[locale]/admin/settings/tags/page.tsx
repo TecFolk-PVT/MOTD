@@ -11,11 +11,12 @@ import {
   Search,
   X,
   Check,
+  Tags,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
 
-interface Material {
+interface Tag {
   _id: string;
   name: string;
   nameAr?: string;
@@ -26,16 +27,16 @@ interface Material {
   updatedAt?: string;
 }
 
-export default function AdminSettingsMaterialsPage() {
-  const [materials, setMaterials] = useState<Material[]>([]);
+export default function AdminSettingsTagsPage() {
+  const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [materialToDelete, setMaterialToDelete] = useState<string | null>(null);
+  const [tagToDelete, setTagToDelete] = useState<string | null>(null);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const [formName, setFormName] = useState("");
@@ -44,34 +45,34 @@ export default function AdminSettingsMaterialsPage() {
   const [formDescriptionAr, setFormDescriptionAr] = useState("");
   const [formIsActive, setFormIsActive] = useState(true);
 
-  const fetchMaterials = async () => {
+  const fetchTags = async () => {
     try {
       setLoading(true);
-      const data = await api.get<Material[]>("/api/admin/materials");
-      setMaterials(Array.isArray(data) ? data : []);
+      const data = await api.get<Tag[]>("/api/admin/tags");
+      setTags(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, "Failed to load materials"));
-      setMaterials([]);
+      toast.error(getApiErrorMessage(err, "Failed to load tags"));
+      setTags([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchMaterials();
+    fetchTags();
   }, []);
 
-  const filteredMaterials = materials.filter((m) => {
+  const filteredTags = tags.filter((t) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
-      m.name?.toLowerCase().includes(q) ||
-      m.description?.toLowerCase().includes(q)
+      t.name?.toLowerCase().includes(q) ||
+      t.description?.toLowerCase().includes(q)
     );
   });
 
   const openAddModal = () => {
-    setEditingMaterial(null);
+    setEditingTag(null);
     setFormName("");
     setFormNameAr("");
     setFormDescription("");
@@ -80,13 +81,13 @@ export default function AdminSettingsMaterialsPage() {
     setShowModal(true);
   };
 
-  const openEditModal = (mat: Material) => {
-    setEditingMaterial(mat);
-    setFormName(mat.name);
-    setFormNameAr(mat.nameAr || "");
-    setFormDescription(mat.description || "");
-    setFormDescriptionAr(mat.descriptionAr || "");
-    setFormIsActive(mat.isActive);
+  const openEditModal = (tag: Tag) => {
+    setEditingTag(tag);
+    setFormName(tag.name);
+    setFormNameAr(tag.nameAr || "");
+    setFormDescription(tag.description || "");
+    setFormDescriptionAr(tag.descriptionAr || "");
+    setFormIsActive(tag.isActive);
     setShowModal(true);
   };
 
@@ -102,70 +103,68 @@ export default function AdminSettingsMaterialsPage() {
       isActive: formIsActive,
     };
     try {
-      if (editingMaterial) {
-        await api.put(`/api/admin/materials/${editingMaterial._id}`, payload);
-        toast.success("Material updated");
+      if (editingTag) {
+        await api.put(`/api/admin/tags/${editingTag._id}`, payload);
+        toast.success("Tag updated");
       } else {
-        await api.post("/api/admin/materials", payload);
-        toast.success("Material created");
+        await api.post("/api/admin/tags", payload);
+        toast.success("Tag created");
       }
       setShowModal(false);
-      fetchMaterials();
+      fetchTags();
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, "Failed to save material"));
+      toast.error(getApiErrorMessage(err, "Failed to save tag"));
     } finally {
       setSubmitting(false);
     }
   };
 
   const promptDelete = (id: string) => {
-    setMaterialToDelete(id);
+    setTagToDelete(id);
     setShowDeleteConfirm(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!materialToDelete) return;
-    setDeletingId(materialToDelete);
+    if (!tagToDelete) return;
+    setDeletingId(tagToDelete);
     setShowDeleteConfirm(false);
     try {
-      await api.delete(`/api/admin/materials/${materialToDelete}`);
-      toast.success("Material deleted");
-      fetchMaterials();
+      await api.delete(`/api/admin/tags/${tagToDelete}`);
+      toast.success("Tag deleted");
+      fetchTags();
     } catch (err: unknown) {
-      toast.error(getApiErrorMessage(err, "Failed to delete material"));
+      toast.error(getApiErrorMessage(err, "Failed to delete tag"));
     } finally {
       setDeletingId(null);
-      setMaterialToDelete(null);
+      setTagToDelete(null);
     }
   };
 
   const handleCancelDelete = () => {
     setShowDeleteConfirm(false);
-    setMaterialToDelete(null);
+    setTagToDelete(null);
   };
 
-  const toggleActive = async (mat: Material) => {
-    const newIsActive = !mat.isActive;
-    // Optimistically update local state first — no flash / blink
-    setMaterials((prev) =>
-      prev.map((m) =>
-        m._id === mat._id ? { ...m, isActive: newIsActive } : m,
+  const toggleActive = async (tag: Tag) => {
+    const newIsActive = !tag.isActive;
+    setTags((prev) =>
+      prev.map((t) =>
+        t._id === tag._id ? { ...t, isActive: newIsActive } : t,
       ),
     );
-    setTogglingId(mat._id);
+    setTogglingId(tag._id);
     try {
-      await api.put(`/api/admin/materials/${mat._id}`, {
+      await api.put(`/api/admin/tags/${tag._id}`, {
         isActive: newIsActive,
       });
-      toast.success(`Material ${newIsActive ? "activated" : "deactivated"}`);
+      toast.success(`Tag ${newIsActive ? "activated" : "deactivated"}`);
     } catch (err: unknown) {
-      // Revert on failure
-      setMaterials((prev) =>
-        prev.map((m) =>
-          m._id === mat._id ? { ...m, isActive: !newIsActive } : m,
+      setTags((prev) =>
+        prev.map((t) =>
+          t._id === tag._id ? { ...t, isActive: !newIsActive } : t,
         ),
       );
-      toast.error(getApiErrorMessage(err, "Failed to update material"));
+      toast.error(getApiErrorMessage(err, "Failed to update tag"));
     } finally {
       setTogglingId(null);
     }
@@ -191,26 +190,14 @@ export default function AdminSettingsMaterialsPage() {
         <div>
           <div className="flex items-center gap-3 mb-1">
             <div className="w-10 h-10 rounded-xl bg-linear-to-br from-gray-900 to-gray-700 flex items-center justify-center shadow-lg">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.5}
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 0 2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128m0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"
-                />
-              </svg>
+              <Tags className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
-                Materials
+                Tags
               </h1>
               <p className="text-gray-500 text-sm">
-                Manage fabric materials and types used across your platform
+                Manage tags used to label products across your platform
               </p>
             </div>
           </div>
@@ -223,7 +210,7 @@ export default function AdminSettingsMaterialsPage() {
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-gray-900 to-gray-800 text-white text-sm font-medium shadow-lg shadow-gray-900/20 hover:shadow-xl hover:shadow-gray-900/30 transition-all hover:cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          New Material
+          Add Tag
         </motion.button>
       </div>
 
@@ -234,7 +221,7 @@ export default function AdminSettingsMaterialsPage() {
           type="search"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search materials by name or description..."
+          placeholder="Search tags by name or description..."
           className="w-full pl-11 pr-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow shadow-sm"
         />
         {searchQuery && (
@@ -248,6 +235,15 @@ export default function AdminSettingsMaterialsPage() {
         )}
       </div>
 
+      {/* Count badge */}
+      {!loading && tags.length > 0 && (
+        <div className="text-xs text-gray-400 font-medium tracking-wide uppercase">
+          {filteredTags.length === tags.length
+            ? `${tags.length} tag${tags.length === 1 ? "" : "s"} total`
+            : `${filteredTags.length} of ${tags.length} tag${tags.length === 1 ? "" : "s"}`}
+        </div>
+      )}
+
       {/* Loading */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
@@ -255,33 +251,21 @@ export default function AdminSettingsMaterialsPage() {
             <div className="w-12 h-12 border-2 border-gray-200 rounded-full" />
             <div className="absolute inset-0 w-12 h-12 border-2 border-gray-900 border-t-transparent rounded-full animate-spin" />
           </div>
-          <p className="text-sm text-gray-500 mt-4">Loading materials...</p>
+          <p className="text-sm text-gray-500 mt-4">Loading tags...</p>
         </div>
-      ) : filteredMaterials.length === 0 ? (
+      ) : filteredTags.length === 0 ? (
         /* Empty state */
         <div className="flex flex-col items-center justify-center text-center py-20">
           <div className="w-20 h-20 bg-linear-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
-            <svg
-              className="w-8 h-8 text-gray-400"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9.53 16.122a3 3 0 0 0-5.78 1.128 2.25 2.25 0 0 0 2.4 2.245 4.5 4.5 0 0 0 8.4-2.245c0-.399-.078-.78-.22-1.128m0 0a15.998 15.998 0 0 0 3.388-1.62m-5.043-.025a15.994 15.994 0 0 1 1.622-3.395m3.42 3.42a15.995 15.995 0 0 0 4.764-4.648l3.876-5.814a1.151 1.151 0 0 0-1.597-1.597L14.146 6.32a15.996 15.996 0 0 0-4.649 4.763m3.42 3.42a6.776 6.776 0 0 0-3.42-3.42"
-              />
-            </svg>
+            <Tags className="w-8 h-8 text-gray-400" />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-1">
-            {searchQuery ? "No matching materials" : "No materials yet"}
+            {searchQuery ? "No matching tags" : "No tags yet"}
           </h3>
           <p className="text-sm text-gray-500 max-w-sm mb-6">
             {searchQuery
               ? "Try a different search term or clear the filter."
-              : "Create your first material to start organizing fabric types."}
+              : "Create your first tag to start labeling products."}
           </p>
           {!searchQuery && (
             <motion.button
@@ -292,17 +276,17 @@ export default function AdminSettingsMaterialsPage() {
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-linear-to-r from-gray-900 to-gray-800 text-white text-sm font-medium shadow-lg shadow-gray-900/20 hover:shadow-xl transition-all hover:cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              Create Material
+              Create Tag
             </motion.button>
           )}
         </div>
       ) : (
-        /* Materials grid */
+        /* Tags list */
         <div className="grid gap-3">
           <AnimatePresence mode="popLayout">
-            {filteredMaterials.map((mat, index) => (
+            {filteredTags.map((tag, index) => (
               <motion.div
-                key={mat._id}
+                key={tag._id}
                 layout
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -314,48 +298,48 @@ export default function AdminSettingsMaterialsPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-3 flex-wrap">
                       <h3 className="text-base font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
-                        {mat.name}
+                        {tag.name}
                       </h3>
-                      {mat.nameAr && (
+                      {tag.nameAr && (
                         <span
                           dir="rtl"
                           className="text-sm text-gray-400 font-normal"
                         >
-                          {mat.nameAr}
+                          {tag.nameAr}
                         </span>
                       )}
                       <motion.button
                         type="button"
-                        onClick={() => toggleActive(mat)}
-                        disabled={togglingId === mat._id}
+                        onClick={() => toggleActive(tag)}
+                        disabled={togglingId === tag._id}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        title={`Click to ${mat.isActive ? "deactivate" : "activate"}`}
+                        title={`Click to ${tag.isActive ? "deactivate" : "activate"}`}
                         className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all ${
-                          mat.isActive
+                          tag.isActive
                             ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 hover:bg-red-50 hover:text-red-600 hover:ring-red-300"
                             : "bg-gray-50 text-gray-400 ring-1 ring-gray-300/20 hover:bg-gray-100 hover:text-gray-500"
                         }`}
                       >
-                        {togglingId === mat._id ? (
+                        {togglingId === tag._id ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : mat.isActive ? (
+                        ) : tag.isActive ? (
                           <Check className="w-3 h-3" />
                         ) : (
                           <X className="w-3 h-3" />
                         )}
-                        {mat.isActive ? "Active" : "Inactive"}
+                        {tag.isActive ? "Active" : "Inactive"}
                       </motion.button>
                     </div>
-                    {mat.description && (
+                    {tag.description && (
                       <p className="text-sm text-gray-500 mt-1.5 line-clamp-2 leading-relaxed">
-                        {mat.description}
+                        {tag.description}
                       </p>
                     )}
                     <div className="flex items-center gap-3 mt-2">
-                      {mat.createdAt && (
+                      {tag.createdAt && (
                         <span className="text-xs text-gray-400">
-                          Created {formatDate(mat.createdAt)}
+                          Created {formatDate(tag.createdAt)}
                         </span>
                       )}
                     </div>
@@ -363,24 +347,24 @@ export default function AdminSettingsMaterialsPage() {
                   <div className="flex items-center gap-1.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <motion.button
                       type="button"
-                      onClick={() => openEditModal(mat)}
+                      onClick={() => openEditModal(tag)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="p-2 rounded-xl border border-gray-200 hover:bg-gray-50 text-gray-400 hover:text-gray-700 transition-all hover:cursor-pointer"
-                      aria-label="Edit material"
+                      aria-label="Edit tag"
                     >
                       <Pencil className="w-4 h-4" />
                     </motion.button>
                     <motion.button
                       type="button"
-                      disabled={deletingId === mat._id}
-                      onClick={() => promptDelete(mat._id)}
+                      disabled={deletingId === tag._id}
+                      onClick={() => promptDelete(tag._id)}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="p-2 rounded-xl border border-gray-200 hover:bg-red-50 text-gray-400 hover:text-red-600 transition-all hover:cursor-pointer disabled:opacity-50"
-                      aria-label="Delete material"
+                      aria-label="Delete tag"
                     >
-                      {deletingId === mat._id ? (
+                      {deletingId === tag._id ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <Trash2 className="w-4 h-4" />
@@ -416,12 +400,12 @@ export default function AdminSettingsMaterialsPage() {
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">
-                      {editingMaterial ? "Edit Material" : "New Material"}
+                      {editingTag ? "Edit Tag" : "New Tag"}
                     </h2>
                     <p className="text-sm text-gray-500 mt-0.5">
-                      {editingMaterial
-                        ? "Update the material details below."
-                        : "Fill in the details to create a new material."}
+                      {editingTag
+                        ? "Update the tag details below."
+                        : "Fill in the details to create a new tag."}
                     </p>
                   </div>
                   <button
@@ -444,7 +428,7 @@ export default function AdminSettingsMaterialsPage() {
                         required
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
-                        placeholder="e.g. Cotton"
+                        placeholder="e.g. New Arrival"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
                     </div>
@@ -458,7 +442,7 @@ export default function AdminSettingsMaterialsPage() {
                         value={formNameAr}
                         onChange={(e) => setFormNameAr(e.target.value)}
                         dir="rtl"
-                        placeholder="مثال: قطن"
+                        placeholder="مثال: الوصلات الجديدة"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
                     </div>
@@ -493,15 +477,13 @@ export default function AdminSettingsMaterialsPage() {
                   </div>
 
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        id="isActive"
-                        checked={formIsActive}
-                        onChange={(e) => setFormIsActive(e.target.checked)}
-                        className="peer w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                      />
-                    </div>
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={formIsActive}
+                      onChange={(e) => setFormIsActive(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    />
                     <label
                       htmlFor="isActive"
                       className="text-sm text-gray-700 cursor-pointer select-none"
@@ -533,9 +515,9 @@ export default function AdminSettingsMaterialsPage() {
                       )}
                       {submitting
                         ? "Saving..."
-                        : editingMaterial
-                          ? "Update Material"
-                          : "Create Material"}
+                        : editingTag
+                          ? "Update Tag"
+                          : "Create Tag"}
                     </motion.button>
                   </div>
                 </form>
@@ -547,8 +529,8 @@ export default function AdminSettingsMaterialsPage() {
 
       <ConfirmationModal
         isOpen={showDeleteConfirm}
-        title="Delete Material"
-        message="Are you sure you want to delete this material? This action cannot be undone. Products using this material may be affected."
+        title="Delete Tag"
+        message="Are you sure you want to delete this tag? This action cannot be undone. Products using this tag may be affected."
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleConfirmDelete}
@@ -559,4 +541,3 @@ export default function AdminSettingsMaterialsPage() {
     </div>
   );
 }
-

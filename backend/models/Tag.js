@@ -1,10 +1,10 @@
 import mongoose from "mongoose";
 
-const categorySchema = new mongoose.Schema(
+const tagSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "Category name (English) is required"],
+      required: [true, "Tag name (English) is required"],
       trim: true,
       maxlength: [100, "Name cannot exceed 100 characters"],
     },
@@ -46,10 +46,8 @@ const categorySchema = new mongoose.Schema(
   },
 );
 
-// Compound index for efficient queries by domain
-categorySchema.index({ domain: 1, sortOrder: 1 });
-categorySchema.index({ domain: 1, isActive: 1 });
+tagSchema.index({ domain: 1, isActive: 1 });
 
-const Category = mongoose.model("Category", categorySchema);
+const Tag = mongoose.model("Tag", tagSchema);
 
-export default Category;
+export default Tag;
