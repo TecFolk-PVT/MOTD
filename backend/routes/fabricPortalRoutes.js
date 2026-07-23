@@ -5,6 +5,7 @@ import Fabric from "../models/Fabric.js";
 import CustomOrder from "../models/CustomOrder.js";
 import ReadyMadeProduct from "../models/ReadyMadeProduct.js";
 import AddOn from "../models/AddOn.js";
+import RetailOrder from "../models/RetailOrder.js";
 import {
   uploadSingleImageMiddleware,
   processTailorShopImage,
@@ -466,13 +467,22 @@ fabricPortalRouter.delete(
 fabricPortalRouter.get(
   "/orders",
   expressAsyncHandler(async (req, res) => {
-    // Primary match (new schema)
-    // - top-level: fabricStoreId
-    // - items array: items[].fabricStoreId
+    const shop = await findOwnShop(req.user._id);
+    const storeAddonIds = shop
+      ? await AddOn.find({
+          $or: [
+            { fabricShopId: shop._id },
+            { ownerName: shop.name }
+          ]
+        }).select("_id")
+      : [];
+    const storeAddonIdValues = storeAddonIds.map((a) => a._id);
+
     const primaryMatchOrdersQuery = {
       $or: [
         { fabricStoreId: req.user._id },
         { "items.fabricStoreId": req.user._id },
+        { "addons.addonId": { $in: storeAddonIdValues } }
       ],
     };
 
@@ -509,6 +519,36 @@ fabricPortalRouter.get(
       fabricShopId: req.user._id,
     });
   }),
+);
+
+// GET /api/fabric/orders/retail — get all retail orders containing products owned by this fabric store
+fabricPortalRouter.get(
+  "/orders/retail",
+  expressAsyncHandler(async (req, res) => {
+    const shop = await findOwnShop(req.user._id);
+    if (!shop) {
+      res.status(404).json({ success: false, message: "Fabric shop not found" });
+      return;
+    }
+
+    // Find all ready-made products owned by this fabric store
+    const storeProducts = await ReadyMadeProduct.find({
+      $or: [
+        { fabricShopId: shop._id },
+        { ownerName: shop.name }
+      ]
+    }).select("_id");
+    const storeProductIds = storeProducts.map((p) => p._id);
+
+    const orders = await RetailOrder.find({
+      "orderItems.productId": { $in: storeProductIds }
+    })
+      .populate("userId", "name email phone")
+      .populate("orderItems.productId", "thumbnailImage images")
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  })
 );
 
 // PATCH /api/fabric/orders/:id/status — fabric store updates the fabric handoff milestone
@@ -629,7 +669,12 @@ fabricPortalRouter.get(
       res.status(404).json({ success: false, message: "Fabric shop not found" });
       return;
     }
-    const products = await ReadyMadeProduct.find({ fabricShopId: shop._id }).sort({ createdAt: -1 });
+    const products = await ReadyMadeProduct.find({
+      $or: [
+        { fabricShopId: shop._id, ownerName: { $ne: "MOTD Admin" } },
+        { ownerName: shop.name }
+      ]
+    }).sort({ createdAt: -1 });
     res.json(products);
   })
 );
@@ -723,6 +768,7 @@ fabricPortalRouter.post(
       finalSellingPriceAED,
       availableFabricStock,
       isActive: isActive !== undefined ? isActive : true,
+      ownerName: req.body.ownerName || shop.name,
     });
 
     const createdProduct = await newProduct.save();
@@ -776,6 +822,7 @@ fabricPortalRouter.put(
     product.finalSellingPriceAED = req.body.finalSellingPriceAED ?? product.finalSellingPriceAED;
     product.availableFabricStock = req.body.availableFabricStock ?? product.availableFabricStock;
     product.isActive = req.body.isActive ?? product.isActive;
+    product.ownerName = req.body.ownerName ?? product.ownerName;
 
     product.size = req.body.size ?? product.size;
     product.style = req.body.style ?? product.style;
@@ -822,7 +869,12 @@ fabricPortalRouter.get(
       res.status(404).json({ success: false, message: "Fabric shop not found" });
       return;
     }
-    const addons = await AddOn.find({ fabricShopId: shop._id }).sort({ createdAt: -1 });
+    const addons = await AddOn.find({
+      $or: [
+        { fabricShopId: shop._id, ownerName: { $ne: "MOTD Admin" } },
+        { ownerName: shop.name }
+      ]
+    }).sort({ createdAt: -1 });
     res.json(addons);
   })
 );
@@ -892,6 +944,7 @@ fabricPortalRouter.post(
       tagAr,
       isActive: isActive !== undefined ? isActive : true,
       fabricShopId: shop._id,
+      ownerName: req.body.ownerName || shop.name,
     });
 
     const savedAddon = await addon.save();
@@ -942,6 +995,7 @@ fabricPortalRouter.put(
     addon.tag = tag ?? addon.tag;
     addon.tagAr = tagAr ?? addon.tagAr;
     addon.isActive = isActive !== undefined ? isActive : addon.isActive;
+    addon.ownerName = req.body.ownerName ?? addon.ownerName;
 
     const updatedAddon = await addon.save();
     res.json(updatedAddon);

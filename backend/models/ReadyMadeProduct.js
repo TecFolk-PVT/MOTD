@@ -155,6 +155,12 @@ const readyMadeProductSchema = new mongoose.Schema(
       default: true,
       required: true,
     },
+    ownerName: {
+      type: String,
+      default: "MOTD Admin",
+      required: true,
+      trim: true,
+    },
   },
   {
     timestamps: true,

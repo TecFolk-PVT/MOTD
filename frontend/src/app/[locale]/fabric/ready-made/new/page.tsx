@@ -12,6 +12,7 @@ import {
   type ReadyMadeFormData,
 } from "@/lib/readyMadeAdmin";
 import toast from "react-hot-toast";
+import { useAuth } from "@/context/AuthContext";
 
 // Predefined tag and color options
 const TAG_OPTIONS = [
@@ -136,6 +137,8 @@ const sanitizeName = (value: string) =>
   value.replace(/[^a-zA-Z\u0600-\u06FF\s\-']/g, "");
 
 export default function NewReadyMadePage() {
+  const { user } = useAuth();
+  const userName = user?.name || "";
   const colorsDetailsRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
   const params = useParams();
@@ -301,6 +304,7 @@ export default function NewReadyMadePage() {
       thumbnailImage: firstImage,
     });
     (payload as any).fabricWidth = fabricWidth;
+    (payload as any).ownerName = userName;
 
     try {
       await api.post("/api/fabric/ready-made", payload);
@@ -695,6 +699,19 @@ export default function NewReadyMadePage() {
                   </div>
                 )}
               </div>
+            </FormField>
+
+            {/* USER (OWNER) */}
+            <FormField
+              label="User"
+              name="ownerName"
+            >
+              <input
+                value={userName}
+                disabled
+                readOnly
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-gray-50 text-gray-500 cursor-not-allowed text-start"
+              />
             </FormField>
           </div>
 

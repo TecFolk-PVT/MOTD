@@ -53,7 +53,7 @@ export default function FabricPortalShell({
     { label: t("nav.dashboard"), href: "/fabric", icon: LayoutDashboard },
     { label: t("nav.shop"), href: "/fabric/shop", icon: Store },
     { label: t("nav.fabrics"), href: "/fabric/fabrics", icon: Scissors },
-    { label: t("nav.ready-made") || "Ready to Wear", href: "/fabric/ready-made", icon: Shirt },
+    { label: t("nav.ready-made") || "Ready Made", href: "/fabric/ready-made", icon: Shirt },
     { label: t("nav.addons") || "Add-Ons", href: "/fabric/addons", icon: Plus },
     { label: t("nav.orders"), href: "/fabric/orders", icon: ShoppingBag },
     {
