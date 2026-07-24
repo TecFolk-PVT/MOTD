@@ -1,7 +1,7 @@
 import express from "express";
 import expressAsyncHandler from "express-async-handler";
 import mongoose from "mongoose";
-import Design, { DESIGN_CATEGORIES } from "../models/Design.js";
+import Design from "../models/Design.js";
 import TailorShop from "../models/TailorShop.js";
 import { deleteTailorDesignUpload } from "../utils/uploads.js";
 
@@ -20,8 +20,6 @@ const DESIGN_FIELDS = [
   "tailoringFee",
   "estimatedMeters",
   "estimatedDays",
-  "ageMin",
-  "ageMax",
   "isActive",
 ];
 
@@ -40,8 +38,6 @@ const formatDesign = (design) => ({
   tailoringFee: design.tailoringFee,
   estimatedMeters: design.estimatedMeters,
   estimatedDays: design.estimatedDays,
-  ageMin: design.ageMin,
-  ageMax: design.ageMax,
   isActive: design.isActive,
   createdAt: design.createdAt,
   updatedAt: design.updatedAt,
@@ -69,6 +65,11 @@ const pickDesignFields = (body) => {
       data.images = Array.isArray(body.images)
         ? body.images.map((image) => String(image).trim()).filter(Boolean)
         : body.images;
+      continue;
+    }
+
+    if (field === "category") {
+      data.category = String(body.category).trim();
       continue;
     }
 
@@ -128,10 +129,6 @@ const validateDesignPayload = (data, { requireCore = false } = {}) => {
 
   if (data.slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(data.slug)) {
     return "slug must be lowercase letters, numbers, and hyphens only";
-  }
-
-  if (data.category && !DESIGN_CATEGORIES.includes(data.category)) {
-    return `category must be one of: ${DESIGN_CATEGORIES.join(", ")}`;
   }
 
   if (data.images !== undefined) {
@@ -194,7 +191,10 @@ const findOwnDesign = async (shopId, designId, res) => {
   return design;
 };
 
-const cleanupRemovedDesignImages = async (previousImages = [], nextImages = []) => {
+const cleanupRemovedDesignImages = async (
+  previousImages = [],
+  nextImages = [],
+) => {
   const nextSet = new Set(nextImages);
   for (const image of previousImages) {
     if (!nextSet.has(image)) {
@@ -316,7 +316,10 @@ tailorDesignRouter.put(
     Object.assign(design, data);
     const updatedDesign = await design.save();
 
-    await cleanupRemovedDesignImages(previousImages, updatedDesign.images || []);
+    await cleanupRemovedDesignImages(
+      previousImages,
+      updatedDesign.images || [],
+    );
 
     res.json({
       success: true,

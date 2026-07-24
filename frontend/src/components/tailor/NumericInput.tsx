@@ -25,7 +25,7 @@ export default function NumericInput({
     const [focused, setFocused] = useState(false);
 
     const formatValue = (num: number) => {
-        if (!Number.isFinite(num) || num === 0) return "";
+        if (!Number.isFinite(num)) return "";
         return String(num);
     };
 

@@ -14,7 +14,6 @@ import {
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 
-// Predefined tag and color options (same as create form)
 const TAG_OPTIONS = [
   { value: "new", en: "New", ar: "جديد" },
   { value: "bestseller", en: "Bestseller", ar: "الأكثر مبيعاً" },
@@ -163,27 +162,36 @@ export default function EditReadyMadePage() {
   const [colorsOpen, setColorsOpen] = useState(false);
   const colorsDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Dropdown options states
   const [fabricShops, setFabricShops] = useState<any[]>([]);
   const [allFabrics, setAllFabrics] = useState<any[]>([]);
   const [tailorShops, setTailorShops] = useState<any[]>([]);
   const [allDesigns, setAllDesigns] = useState<any[]>([]);
+  const [allTags, setAllTags] = useState<any[]>(TAG_OPTIONS);
 
-  // Load dropdown data
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const [shopsRes, fabricsRes, tailorsRes, designsRes] =
+        const [shopsRes, fabricsRes, tailorsRes, designsRes, tagsRes] =
           await Promise.all([
             api.get<any>("/api/admin/fabric-shops"),
             api.get<any[]>("/api/admin/fabrics"),
             api.get<any>("/api/admin/tailors"),
             api.get<any[]>("/api/admin/designs"),
+            api.get<any[]>("/api/admin/tags"),
           ]);
         setFabricShops(shopsRes.items || []);
         setAllFabrics(fabricsRes || []);
         setTailorShops(tailorsRes.items || []);
         setAllDesigns(designsRes || []);
+        if (Array.isArray(tagsRes) && tagsRes.length > 0) {
+          setAllTags(
+            tagsRes.map((t: any) => ({
+              value: t.name,
+              en: t.name,
+              ar: t.nameAr || t.name,
+            })),
+          );
+        }
       } catch (err) {
         toast.error("Failed to load store or catalog data for dropdowns");
       }
@@ -191,7 +199,6 @@ export default function EditReadyMadePage() {
     loadDropdownData();
   }, []);
 
-  // Filter fabrics by selected fabric store
   const filteredFabrics = useMemo(() => {
     if (!formData?.fabricShopId) return [];
     return allFabrics.filter((f) => {
@@ -205,7 +212,6 @@ export default function EditReadyMadePage() {
     });
   }, [allFabrics, formData?.fabricShopId]);
 
-  // Filter designs by selected tailor shop
   const filteredDesigns = useMemo(() => {
     if (!formData?.tailorShopId) return [];
     return allDesigns.filter((d) => {
@@ -217,7 +223,6 @@ export default function EditReadyMadePage() {
     });
   }, [allDesigns, formData?.tailorShopId]);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -233,7 +238,6 @@ export default function EditReadyMadePage() {
     };
   }, []);
 
-  // Fetch item
   useEffect(() => {
     const fetchItem = async () => {
       try {
@@ -282,7 +286,6 @@ export default function EditReadyMadePage() {
     fetchItem();
   }, [id]);
 
-  // Handlers
   const handleChange = (field: keyof ReadyMadeFormData, value: unknown) => {
     if (!formData) return;
     setFormData((prev) => (prev ? { ...prev, [field]: value } : null));
@@ -317,7 +320,6 @@ export default function EditReadyMadePage() {
     return value === 0 ? "" : String(value);
   };
 
-  // Image handlers
   const addImage = () => {
     if (!formData) return;
     if (formData.images.length < 5) {
@@ -338,7 +340,6 @@ export default function EditReadyMadePage() {
     handleChange("images", newImages);
   };
 
-  // Color toggle
   const toggleColor = (colorValue: string) => {
     if (!formData) return;
     const current = formData.colors;
@@ -350,7 +351,6 @@ export default function EditReadyMadePage() {
     handleChange("colors", updated);
   };
 
-  // Validation
   const validate = (): boolean => {
     if (!formData) return false;
     const errors: Record<string, string> = {};
@@ -377,7 +377,6 @@ export default function EditReadyMadePage() {
     return Object.keys(errors).length === 0;
   };
 
-  // Submit
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!formData) return;
@@ -415,7 +414,6 @@ export default function EditReadyMadePage() {
     }
   };
 
-  // Loading / error states
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto py-10 text-center">
@@ -501,34 +499,61 @@ export default function EditReadyMadePage() {
             />
           </FormField>
 
-          {/* CODE */}
-          <FormField label="Code (OPTIONAL)" name="code">
-            <input
-              value={formData.code}
-              onChange={(e) => handleChange("code", e.target.value)}
-              placeholder="0000"
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-            />
-          </FormField>
+          {/* CODE, STOCK, MIN AGE, MAX AGE - in one row */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <FormField label="Code (OPTIONAL)" name="code">
+              <input
+                value={formData.code}
+                onChange={(e) => handleChange("code", e.target.value)}
+                placeholder="0000"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
 
-          {/* STOCK */}
-          <FormField
-            label="Available Stock"
-            error={fieldErrors.availableFabricStock}
-            required
-          >
-            <input
-              type="number"
-              min="0"
-              step="1"
-              placeholder="05"
-              value={getNumberDisplay(formData.availableFabricStock)}
-              onChange={(e) =>
-                handleNumberChange("availableFabricStock", e.target.value)
-              }
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-            />
-          </FormField>
+            <FormField
+              label="Available Stock"
+              error={fieldErrors.availableFabricStock}
+              required
+            >
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="05"
+                value={getNumberDisplay(formData.availableFabricStock)}
+                onChange={(e) =>
+                  handleNumberChange("availableFabricStock", e.target.value)
+                }
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
+
+            <FormField label="Min Age">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                placeholder="0"
+                value={getNumberDisplay(formData.minAge)}
+                onChange={(e) => handleNumberChange("minAge", e.target.value)}
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
+
+            <FormField label="Max Age">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                placeholder="0"
+                value={getNumberDisplay(formData.maxAge)}
+                onChange={(e) => handleNumberChange("maxAge", e.target.value)}
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
+          </div>
 
           {/* FABRIC STORE */}
           <FormField
@@ -542,7 +567,7 @@ export default function EditReadyMadePage() {
               onChange={(e) => {
                 const shopId = e.target.value;
                 handleChange("fabricShopId", shopId);
-                handleChange("fabricId", ""); // Reset selected fabric
+                handleChange("fabricId", "");
               }}
               className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-[14px]"
             >
@@ -588,7 +613,7 @@ export default function EditReadyMadePage() {
               onChange={(e) => {
                 const shopId = e.target.value;
                 handleChange("tailorShopId", shopId);
-                handleChange("designId", ""); // Reset selected design
+                handleChange("designId", "");
               }}
               className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-[14px]"
             >
@@ -679,8 +704,8 @@ export default function EditReadyMadePage() {
             </div>
           </div>
 
-          {/* PRICES */}
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* PRICES - in one row */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <FormField
               label="Fabric Price AED"
               error={fieldErrors.fabricPriceAED}
@@ -734,7 +759,7 @@ export default function EditReadyMadePage() {
             </FormField>
           </div>
 
-          {/* TAG + Color in one line */}
+          {/* TAG + Color + User in one row */}
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField label="Tag (ENG)" name="tag">
               <select
@@ -743,7 +768,7 @@ export default function EditReadyMadePage() {
                 className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent"
               >
                 <option value="">Select tag</option>
-                {TAG_OPTIONS.map((opt) => (
+                {allTags.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.en}
                   </option>
@@ -758,7 +783,7 @@ export default function EditReadyMadePage() {
                 className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent"
               >
                 <option value="">اختر الوسم</option>
-                {TAG_OPTIONS.map((opt) => (
+                {allTags.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.ar}
                   </option>
@@ -831,11 +856,7 @@ export default function EditReadyMadePage() {
               </div>
             </FormField>
 
-            {/* USER (OWNER) */}
-            <FormField
-              label="User"
-              name="ownerName"
-            >
+            <FormField label="User" name="ownerName">
               <input
                 value={userName}
                 disabled
