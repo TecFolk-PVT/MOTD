@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 import { api, getApiErrorMessage } from "@/lib/api/client";
 import toast from "react-hot-toast";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Loader2,
-  Search,
-  X,
-  Check,
-} from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Search, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
 
@@ -25,6 +17,20 @@ interface Material {
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Helper: convert to lowercase slug format
+const toSlug = (str: string): string => {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+};
+
+// Helper: lowercase with spaces preserved for display
+const toLowerPreserveSpaces = (str: string): string => {
+  return str.toLowerCase().trim();
+};
 
 export default function AdminSettingsMaterialsPage() {
   const [materials, setMaterials] = useState<Material[]>([]);
@@ -94,8 +100,8 @@ export default function AdminSettingsMaterialsPage() {
     e.preventDefault();
     setSubmitting(true);
     const payload = {
-      name: formName,
-      nameAr: formNameAr,
+      name: toSlug(formName),
+      nameAr: toLowerPreserveSpaces(formNameAr),
       domain: "general",
       description: formDescription,
       descriptionAr: formDescriptionAr,
@@ -146,7 +152,6 @@ export default function AdminSettingsMaterialsPage() {
 
   const toggleActive = async (mat: Material) => {
     const newIsActive = !mat.isActive;
-    // Optimistically update local state first — no flash / blink
     setMaterials((prev) =>
       prev.map((m) =>
         m._id === mat._id ? { ...m, isActive: newIsActive } : m,
@@ -159,7 +164,6 @@ export default function AdminSettingsMaterialsPage() {
       });
       toast.success(`Material ${newIsActive ? "activated" : "deactivated"}`);
     } catch (err: unknown) {
-      // Revert on failure
       setMaterials((prev) =>
         prev.map((m) =>
           m._id === mat._id ? { ...m, isActive: !newIsActive } : m,
@@ -248,6 +252,15 @@ export default function AdminSettingsMaterialsPage() {
         )}
       </div>
 
+      {/* Count badge */}
+      {!loading && materials.length > 0 && (
+        <div className="text-xs text-gray-400 font-medium tracking-wide uppercase">
+          {filteredMaterials.length === materials.length
+            ? `${materials.length} material${materials.length === 1 ? "" : "s"} total`
+            : `${filteredMaterials.length} of ${materials.length} material${materials.length === 1 ? "" : "s"}`}
+        </div>
+      )}
+
       {/* Loading */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
@@ -258,7 +271,6 @@ export default function AdminSettingsMaterialsPage() {
           <p className="text-sm text-gray-500 mt-4">Loading materials...</p>
         </div>
       ) : filteredMaterials.length === 0 ? (
-        /* Empty state */
         <div className="flex flex-col items-center justify-center text-center py-20">
           <div className="w-20 h-20 bg-linear-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
             <svg
@@ -297,7 +309,6 @@ export default function AdminSettingsMaterialsPage() {
           )}
         </div>
       ) : (
-        /* Materials grid */
         <div className="grid gap-3">
           <AnimatePresence mode="popLayout">
             {filteredMaterials.map((mat, index) => (
@@ -444,9 +455,12 @@ export default function AdminSettingsMaterialsPage() {
                         required
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
-                        placeholder="e.g. Cotton"
+                        placeholder="e.g. cotton-silk (will become lowercase slug)"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Will be saved as: {formName ? toSlug(formName) : "..."}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -458,9 +472,12 @@ export default function AdminSettingsMaterialsPage() {
                         value={formNameAr}
                         onChange={(e) => setFormNameAr(e.target.value)}
                         dir="rtl"
-                        placeholder="مثال: قطن"
+                        placeholder="مثال: قطن حرير"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
+                      <p className="text-xs text-gray-400 mt-1 text-right">
+                        {formNameAr ? toLowerPreserveSpaces(formNameAr) : "..."}
+                      </p>
                     </div>
                   </div>
 
@@ -493,15 +510,13 @@ export default function AdminSettingsMaterialsPage() {
                   </div>
 
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        id="isActive"
-                        checked={formIsActive}
-                        onChange={(e) => setFormIsActive(e.target.checked)}
-                        className="peer w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                      />
-                    </div>
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={formIsActive}
+                      onChange={(e) => setFormIsActive(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    />
                     <label
                       htmlFor="isActive"
                       className="text-sm text-gray-700 cursor-pointer select-none"
@@ -559,4 +574,3 @@ export default function AdminSettingsMaterialsPage() {
     </div>
   );
 }
-

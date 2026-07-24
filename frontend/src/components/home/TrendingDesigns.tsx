@@ -12,25 +12,15 @@ import {
   getDesignDisplayFields,
   formatDesignBasePrice,
 } from "@/lib/tailors";
-import {
-  fetchDesignCategories,
-  type DesignCategoryOption,
-} from "@/lib/tailorDesigns";
-
-const CATEGORY_COLOR_PALETTE = [
-  "#8B6B4D",
-  "#1A2A3A",
-  "#5A6B5A",
-  "#B8860B",
-  "#4A3A2A",
-  "#6B2A5A",
-  "#2A5A6B",
-  "#6B4A2A",
-  "#4A6B2A",
-  "#6B2A2A",
-];
 import { Share2 } from "lucide-react";
 import { usePathname } from "next/navigation";
+
+interface FilterOption {
+  _id: string;
+  name: string;
+  nameAr?: string;
+  isActive?: boolean;
+}
 
 interface TailorDesignExtended {
   _id: string;
@@ -51,6 +41,19 @@ interface TailorDesignExtended {
   tailorNameAr?: string;
 }
 
+const CATEGORY_COLOR_PALETTE = [
+  "#8B6B4D",
+  "#1A2A3A",
+  "#5A6B5A",
+  "#B8860B",
+  "#4A3A2A",
+  "#6B2A5A",
+  "#2A5A6B",
+  "#6B4A2A",
+  "#4A6B2A",
+  "#6B2A2A",
+];
+
 type FilterValue = string;
 
 async function copyToClipboard(text: string) {
@@ -59,8 +62,6 @@ async function copyToClipboard(text: string) {
 }
 
 function buildShareUrl(basePath: string, href: string) {
-  // href is already a path like /designs/slug (no locale). basePath includes locale.
-  // Example: /en + /designs/abc => /en/designs/abc
   const trimmedBase = basePath.replace(/\/+$/, "");
   const trimmedHref = href.replace(/^\/+/, "");
   return `${trimmedBase}/${trimmedHref}`;
@@ -77,20 +78,34 @@ export function TrendingSection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<FilterValue>("all");
-  const [categoryOptions, setCategoryOptions] = useState<
-    DesignCategoryOption[]
-  >([]);
+  const [categories, setCategories] = useState<FilterOption[]>([]);
 
+  // Fetch categories from /api/filters/all
   useEffect(() => {
-    const load = async () => {
+    const fetchCategories = async () => {
       try {
-        const cats = await fetchDesignCategories();
-        setCategoryOptions(cats);
-      } catch {
-        // silently fail
+        const response = await api.get<{
+          success: boolean;
+          data: {
+            categories: FilterOption[];
+          };
+        }>("/api/filters/all");
+
+        if (response.success && response.data) {
+          setCategories(
+            Array.isArray(response.data.categories)
+              ? response.data.categories
+              : [],
+          );
+        } else {
+          setCategories([]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch categories:", err);
+        setCategories([]);
       }
     };
-    load();
+    fetchCategories();
   }, []);
 
   useEffect(() => {
@@ -126,22 +141,30 @@ export function TrendingSection() {
         labelAr: "جميع التصاميم",
         value: "all",
       },
-      ...categoryOptions.map((cat) => ({
+      ...categories.map((cat) => ({
         key: cat._id,
         labelEn: cat.nameAr ? `${cat.name} (${cat.nameAr})` : cat.name,
         labelAr: cat.nameAr ? `${cat.nameAr} (${cat.name})` : cat.name,
         value: cat._id,
       })),
     ],
-    [categoryOptions],
+    [categories],
   );
 
   const filteredDesigns = useMemo(
     () =>
       selectedFilter === "all"
         ? designs
-        : designs.filter((design) => design.category === selectedFilter),
-    [designs, selectedFilter],
+        : designs.filter((design) => {
+            // Check if design.category matches selected filter by _id or name
+            return (
+              design.category === selectedFilter ||
+              categories.some(
+                (c) => c._id === selectedFilter && c.name === design.category,
+              )
+            );
+          }),
+    [designs, selectedFilter, categories],
   );
 
   // Embla Carousel with RTL direction support
@@ -265,8 +288,6 @@ export function TrendingSection() {
   );
 
   const getLocaleBasePath = () => {
-    // pathname is like /en/something; locale base path is /en (or /ar)
-    // Fallback to "" if pathname is unavailable.
     const p = pathname || "";
     const parts = p.split("/").filter(Boolean);
     const maybeLocale = parts[0];
@@ -289,20 +310,17 @@ export function TrendingSection() {
       };
 
       try {
-        // Prefer native share (works well on mobile)
         if (typeof navigator !== "undefined" && "share" in navigator) {
           await navigator.share(shareData as any);
           return;
         }
       } catch {
-        // If user cancels native share, fall back to copy.
+        // fall back
       }
 
       try {
         await copyToClipboard(fullUrl);
       } catch {
-        // Last resort: open prompt
-        // eslint-disable-next-line no-alert
         window.prompt("Copy link:", fullUrl);
       }
     },
@@ -422,6 +440,19 @@ export function TrendingSection() {
 
                 const hrefPath = `/designs/${design.slug}`;
 
+                // Find category color
+                const categoryColor = (() => {
+                  const catIndex = categories.findIndex(
+                    (c) =>
+                      c._id === design.category || c.name === design.category,
+                  );
+                  return catIndex >= 0
+                    ? CATEGORY_COLOR_PALETTE[
+                        catIndex % CATEGORY_COLOR_PALETTE.length
+                      ]
+                    : "#000000";
+                })();
+
                 return (
                   <div
                     key={design._id}
@@ -456,14 +487,7 @@ export function TrendingSection() {
                         <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
                           <span
                             className="text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold"
-                            style={{
-                              backgroundColor:
-                                CATEGORY_COLOR_PALETTE[
-                                  categoryOptions.findIndex(
-                                    (c) => c._id === design.category,
-                                  )
-                                ] || "#000000",
-                            }}
+                            style={{ backgroundColor: categoryColor }}
                           >
                             {category}
                           </span>

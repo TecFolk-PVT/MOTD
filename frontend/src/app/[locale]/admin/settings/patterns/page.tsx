@@ -27,6 +27,20 @@ interface Pattern {
   updatedAt?: string;
 }
 
+// Helper: convert to lowercase slug format
+const toSlug = (str: string): string => {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+};
+
+// Helper: lowercase with spaces preserved for display
+const toLowerPreserveSpaces = (str: string): string => {
+  return str.toLowerCase().trim();
+};
+
 export default function AdminSettingsPatternsPage() {
   const [patterns, setPatterns] = useState<Pattern[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,8 +109,8 @@ export default function AdminSettingsPatternsPage() {
     e.preventDefault();
     setSubmitting(true);
     const payload = {
-      name: formName,
-      nameAr: formNameAr,
+      name: toSlug(formName),
+      nameAr: toLowerPreserveSpaces(formNameAr),
       domain: "general",
       description: formDescription,
       descriptionAr: formDescriptionAr,
@@ -147,7 +161,6 @@ export default function AdminSettingsPatternsPage() {
 
   const toggleActive = async (pat: Pattern) => {
     const newIsActive = !pat.isActive;
-    // Optimistically update local state — no blink
     setPatterns((prev) =>
       prev.map((p) =>
         p._id === pat._id ? { ...p, isActive: newIsActive } : p,
@@ -160,7 +173,6 @@ export default function AdminSettingsPatternsPage() {
       });
       toast.success(`Pattern ${newIsActive ? "activated" : "deactivated"}`);
     } catch (err: unknown) {
-      // Revert on failure
       setPatterns((prev) =>
         prev.map((p) =>
           p._id === pat._id ? { ...p, isActive: !newIsActive } : p,
@@ -237,6 +249,15 @@ export default function AdminSettingsPatternsPage() {
         )}
       </div>
 
+      {/* Count badge */}
+      {!loading && patterns.length > 0 && (
+        <div className="text-xs text-gray-400 font-medium tracking-wide uppercase">
+          {filteredPatterns.length === patterns.length
+            ? `${patterns.length} pattern${patterns.length === 1 ? "" : "s"} total`
+            : `${filteredPatterns.length} of ${patterns.length} pattern${patterns.length === 1 ? "" : "s"}`}
+        </div>
+      )}
+
       {/* Loading */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
@@ -247,7 +268,6 @@ export default function AdminSettingsPatternsPage() {
           <p className="text-sm text-gray-500 mt-4">Loading patterns...</p>
         </div>
       ) : filteredPatterns.length === 0 ? (
-        /* Empty state */
         <div className="flex flex-col items-center justify-center text-center py-20">
           <div className="w-20 h-20 bg-linear-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
             <Palette className="w-8 h-8 text-gray-400" />
@@ -274,7 +294,6 @@ export default function AdminSettingsPatternsPage() {
           )}
         </div>
       ) : (
-        /* Patterns grid */
         <div className="grid gap-3">
           <AnimatePresence mode="popLayout">
             {filteredPatterns.map((pat, index) => (
@@ -421,9 +440,12 @@ export default function AdminSettingsPatternsPage() {
                         required
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
-                        placeholder="e.g. Floral"
+                        placeholder="e.g. floral-geometric (will become lowercase slug)"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Will be saved as: {formName ? toSlug(formName) : "..."}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -435,9 +457,12 @@ export default function AdminSettingsPatternsPage() {
                         value={formNameAr}
                         onChange={(e) => setFormNameAr(e.target.value)}
                         dir="rtl"
-                        placeholder="مثال: زهري"
+                        placeholder="مثال: زهري هندسي"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
+                      <p className="text-xs text-gray-400 mt-1 text-right">
+                        {formNameAr ? toLowerPreserveSpaces(formNameAr) : "..."}
+                      </p>
                     </div>
                   </div>
 
@@ -470,15 +495,13 @@ export default function AdminSettingsPatternsPage() {
                   </div>
 
                   <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        id="isActive"
-                        checked={formIsActive}
-                        onChange={(e) => setFormIsActive(e.target.checked)}
-                        className="peer w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
-                      />
-                    </div>
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={formIsActive}
+                      onChange={(e) => setFormIsActive(e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+                    />
                     <label
                       htmlFor="isActive"
                       className="text-sm text-gray-700 cursor-pointer select-none"

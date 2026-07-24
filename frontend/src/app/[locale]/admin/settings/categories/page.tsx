@@ -27,6 +27,20 @@ interface Category {
   updatedAt?: string;
 }
 
+// Helper: convert to lowercase slug format
+const toSlug = (str: string): string => {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-") // spaces → hyphens
+    .replace(/[^a-z0-9-]/g, ""); // remove special chars
+};
+
+// Helper: lowercase with spaces preserved for display
+const toLowerPreserveSpaces = (str: string): string => {
+  return str.toLowerCase().trim();
+};
+
 export default function AdminSettingsCategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +62,6 @@ export default function AdminSettingsCategoriesPage() {
   const fetchCategories = async () => {
     try {
       setLoading(true);
-      // Fetch all categories — no domain filter
       const data = await api.get<Category[]>("/api/admin/categories");
       setCategories(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
@@ -95,14 +108,16 @@ export default function AdminSettingsCategoriesPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitting(true);
+
     const payload = {
-      name: formName,
-      nameAr: formNameAr,
+      name: toSlug(formName), // "Crystal" → "crystal"
+      nameAr: toLowerPreserveSpaces(formNameAr), // Arabic lowercase
       domain: "general",
       description: formDescription,
       descriptionAr: formDescriptionAr,
       isActive: formIsActive,
     };
+
     try {
       if (editingCategory) {
         await api.put(`/api/admin/categories/${editingCategory._id}`, payload);
@@ -148,7 +163,6 @@ export default function AdminSettingsCategoriesPage() {
 
   const toggleActive = async (cat: Category) => {
     const newIsActive = !cat.isActive;
-    // Optimistic update
     setCategories((prev) =>
       prev.map((c) =>
         c._id === cat._id ? { ...c, isActive: newIsActive } : c,
@@ -161,7 +175,6 @@ export default function AdminSettingsCategoriesPage() {
       });
       toast.success(`Category ${newIsActive ? "activated" : "deactivated"}`);
     } catch (err: unknown) {
-      // Revert on failure
       setCategories((prev) =>
         prev.map((c) =>
           c._id === cat._id ? { ...c, isActive: !newIsActive } : c,
@@ -257,7 +270,6 @@ export default function AdminSettingsCategoriesPage() {
           <p className="text-sm text-gray-500 mt-4">Loading categories...</p>
         </div>
       ) : filteredCategories.length === 0 ? (
-        /* Empty state */
         <div className="flex flex-col items-center justify-center text-center py-20">
           <div className="w-20 h-20 bg-linear-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
             <FolderTree className="w-8 h-8 text-gray-400" />
@@ -284,7 +296,6 @@ export default function AdminSettingsCategoriesPage() {
           )}
         </div>
       ) : (
-        /* Categories list */
         <div className="grid gap-3">
           <AnimatePresence mode="popLayout">
             {filteredCategories.map((cat, index) => (
@@ -431,9 +442,12 @@ export default function AdminSettingsCategoriesPage() {
                         required
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
-                        placeholder="e.g. Evening Gowns"
+                        placeholder="e.g. evening-gowns (will become lowercase slug)"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Will be saved as: {formName ? toSlug(formName) : "..."}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -448,6 +462,9 @@ export default function AdminSettingsCategoriesPage() {
                         placeholder="مثال: فساتين سهرة"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
+                      <p className="text-xs text-gray-400 mt-1 text-right">
+                        {formNameAr ? toLowerPreserveSpaces(formNameAr) : "..."}
+                      </p>
                     </div>
                   </div>
 

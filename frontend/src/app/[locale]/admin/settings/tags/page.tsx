@@ -27,6 +27,20 @@ interface Tag {
   updatedAt?: string;
 }
 
+// Helper: convert to lowercase slug format
+const toSlug = (str: string): string => {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+};
+
+// Helper: lowercase with spaces preserved for display
+const toLowerPreserveSpaces = (str: string): string => {
+  return str.toLowerCase().trim();
+};
+
 export default function AdminSettingsTagsPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,8 +109,8 @@ export default function AdminSettingsTagsPage() {
     e.preventDefault();
     setSubmitting(true);
     const payload = {
-      name: formName,
-      nameAr: formNameAr,
+      name: toSlug(formName),
+      nameAr: toLowerPreserveSpaces(formNameAr),
       domain: "general",
       description: formDescription,
       descriptionAr: formDescriptionAr,
@@ -254,7 +268,6 @@ export default function AdminSettingsTagsPage() {
           <p className="text-sm text-gray-500 mt-4">Loading tags...</p>
         </div>
       ) : filteredTags.length === 0 ? (
-        /* Empty state */
         <div className="flex flex-col items-center justify-center text-center py-20">
           <div className="w-20 h-20 bg-linear-to-br from-gray-50 to-gray-100 rounded-3xl flex items-center justify-center mb-6 shadow-inner">
             <Tags className="w-8 h-8 text-gray-400" />
@@ -281,7 +294,6 @@ export default function AdminSettingsTagsPage() {
           )}
         </div>
       ) : (
-        /* Tags list */
         <div className="grid gap-3">
           <AnimatePresence mode="popLayout">
             {filteredTags.map((tag, index) => (
@@ -428,9 +440,12 @@ export default function AdminSettingsTagsPage() {
                         required
                         value={formName}
                         onChange={(e) => setFormName(e.target.value)}
-                        placeholder="e.g. New Arrival"
+                        placeholder="e.g. new-arrival (will become lowercase slug)"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Will be saved as: {formName ? toSlug(formName) : "..."}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -445,6 +460,9 @@ export default function AdminSettingsTagsPage() {
                         placeholder="مثال: الوصلات الجديدة"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-gray-400 transition-shadow"
                       />
+                      <p className="text-xs text-gray-400 mt-1 text-right">
+                        {formNameAr ? toLowerPreserveSpaces(formNameAr) : "..."}
+                      </p>
                     </div>
                   </div>
 
