@@ -11,9 +11,9 @@ const filterRoutes = express.Router();
 // GET /api/filters/categories
 filterRoutes.get("/categories", async (req, res) => {
   try {
-    const categories = await Category.find({
-      isActive: true,
-    })
+    const filter = { isActive: true };
+
+    const categories = await Category.find(filter)
       .sort({ sortOrder: 1, name: 1 })
       .select("name nameAr isActive sortOrder");
 

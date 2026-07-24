@@ -1,11 +1,8 @@
 import express from "express";
-import jwt from "jsonwebtoken";
 import TailorShop from "../models/TailorShop.js";
 import Design from "../models/Design.js";
-import Customer from "../models/customer.js";
 import User from "../models/User.js";
 import Category from "../models/Category.js";
-import { env } from "../config/env.js";
 
 const tailorRoutes = express.Router();
 
@@ -16,43 +13,6 @@ async function getApprovedTailorOwnerIds() {
   }).select("_id");
 
   return owners.map((owner) => owner._id);
-}
-function calculateAgeFromDob(dob) {
-  if (!dob) return null;
-  const birthDate = new Date(dob);
-  const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
-  const monthDiff = today.getMonth() - birthDate.getMonth();
-
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDate.getDate())
-  ) {
-    age--;
-  }
-
-  return age;
-}
-
-async function getCustomerAgeFromAuthToken(req) {
-  const authorization = req.headers.authorization;
-  if (!authorization?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  const token = authorization.slice(7);
-  try {
-    const decoded = jwt.verify(token, env.jwtSecret);
-    const userId = decoded?._id;
-    if (!userId) return null;
-
-    const customer = await Customer.findOne({ userId }).select("dob");
-    if (!customer?.dob) return null;
-
-    return calculateAgeFromDob(customer.dob);
-  } catch (error) {
-    return null;
-  }
 }
 
 const toListItem = (shop) => ({
@@ -190,12 +150,6 @@ tailorRoutes.get("/designs/all", async (req, res) => {
 
     if (category && category !== "all") {
       query.category = category;
-    }
-
-    const customerAge = await getCustomerAgeFromAuthToken(req);
-    if (typeof customerAge === "number") {
-      query.ageMin = { $lte: customerAge };
-      query.ageMax = { $gte: customerAge };
     }
 
     const limitNumber = Math.min(Math.max(Number(limit) || 20, 1), 100);
@@ -385,3 +339,4 @@ tailorRoutes.get("/:slug", async (req, res) => {
 });
 
 export default tailorRoutes;
+

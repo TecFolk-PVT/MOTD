@@ -14,16 +14,12 @@ import {
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
 
-// react-hot-toast needs a mounted Toaster somewhere in the app;
-// success/error messages are fired from here on submit.
-
-// Predefined tag and color options
 const TAG_OPTIONS = [
   { value: "new", en: "New", ar: "جديد" },
   { value: "bestseller", en: "Bestseller", ar: "الأكثر مبيعاً" },
   { value: "premium", en: "Premium", ar: "ممتاز" },
   { value: "limited", en: "Limited", ar: "محدود" },
-  { value: "exclusive", en: "Exclusive", ar: "حصري" }, // replaced Eid Special
+  { value: "exclusive", en: "Exclusive", ar: "حصري" },
   { value: "trending", en: "Trending", ar: "رائج" },
   { value: "handmade", en: "Handmade", ar: "يدوي" },
 ];
@@ -92,9 +88,17 @@ const COLOR_OPTIONS = [
   { value: "mediumblue", en: "Medium Blue", ar: "أزرق متوسط" },
   { value: "mediumpurple", en: "Medium Purple", ar: "بنفسجي متوسط" },
   { value: "mediumseagreen", en: "Medium Sea Green", ar: "أخضر بحري متوسط" },
-  { value: "mediumslateblue", en: "Medium Slate Blue", ar: "أزرق أردوازي متوسط" },
+  {
+    value: "mediumslateblue",
+    en: "Medium Slate Blue",
+    ar: "أزرق أردوازي متوسط",
+  },
   { value: "mediumturquoise", en: "Medium Turquoise", ar: "فيروزي متوسط" },
-  { value: "mediumvioletred", en: "Medium Violet Red", ar: "أحمر بنفسجي متوسط" },
+  {
+    value: "mediumvioletred",
+    en: "Medium Violet Red",
+    ar: "أحمر بنفسجي متوسط",
+  },
   { value: "midnightblue", en: "Midnight Blue", ar: "أزرق منتصف الليل" },
   { value: "moccasin", en: "Moccasin", ar: "موكاسين" },
   { value: "navy", en: "Navy Blue", ar: "كحلي" },
@@ -136,7 +140,6 @@ const COLOR_OPTIONS = [
   { value: "yellowgreen", en: "Yellow Green", ar: "أصفر مخضر" },
 ];
 
-// Helper: sanitize name fields (allow letters, spaces, hyphens, apostrophes)
 const sanitizeName = (value: string) =>
   value.replace(/[^a-zA-Z\u0600-\u06FF\s\-']/g, "");
 
@@ -159,27 +162,36 @@ export default function NewReadyMadePage() {
   const [colorsOpen, setColorsOpen] = useState(false);
   const colorsDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Dropdown options states
   const [fabricShops, setFabricShops] = useState<any[]>([]);
   const [allFabrics, setAllFabrics] = useState<any[]>([]);
   const [tailorShops, setTailorShops] = useState<any[]>([]);
   const [allDesigns, setAllDesigns] = useState<any[]>([]);
+  const [allTags, setAllTags] = useState<any[]>(TAG_OPTIONS);
 
-  // Load dropdown data
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const [shopsRes, fabricsRes, tailorsRes, designsRes] =
+        const [shopsRes, fabricsRes, tailorsRes, designsRes, tagsRes] =
           await Promise.all([
             api.get<any>("/api/admin/fabric-shops"),
             api.get<any[]>("/api/admin/fabrics"),
             api.get<any>("/api/admin/tailors"),
             api.get<any[]>("/api/admin/designs"),
+            api.get<any[]>("/api/admin/tags"),
           ]);
         setFabricShops(shopsRes.items || []);
         setAllFabrics(fabricsRes || []);
         setTailorShops(tailorsRes.items || []);
         setAllDesigns(designsRes || []);
+        if (Array.isArray(tagsRes) && tagsRes.length > 0) {
+          setAllTags(
+            tagsRes.map((t: any) => ({
+              value: t.name,
+              en: t.name,
+              ar: t.nameAr || t.name,
+            })),
+          );
+        }
       } catch (err) {
         toast.error("Failed to load store or catalog data for dropdowns");
       }
@@ -187,7 +199,6 @@ export default function NewReadyMadePage() {
     loadDropdownData();
   }, []);
 
-  // Filter fabrics by selected fabric store
   const filteredFabrics = useMemo(() => {
     if (!formData.fabricShopId) return [];
     return allFabrics.filter((f) => {
@@ -201,7 +212,6 @@ export default function NewReadyMadePage() {
     });
   }, [allFabrics, formData.fabricShopId]);
 
-  // Filter designs by selected tailor shop
   const filteredDesigns = useMemo(() => {
     if (!formData.tailorShopId) return [];
     return allDesigns.filter((d) => {
@@ -232,7 +242,6 @@ export default function NewReadyMadePage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Sanitized handlers for name fields
   const handleNameChange = (
     field: "name" | "nameAr" | "tailorName" | "tailorNameAr",
     value: string,
@@ -241,7 +250,6 @@ export default function NewReadyMadePage() {
     handleChange(field, sanitized);
   };
 
-  // Number handler – allows empty (shows as empty), sets to 0 when empty, else parse non‑negative
   const handleNumberChange = (
     field: keyof ReadyMadeFormData,
     value: string,
@@ -256,12 +264,10 @@ export default function NewReadyMadePage() {
     }
   };
 
-  // Helper to get display value (empty when 0)
   const getNumberDisplay = (value: number): string => {
     return value === 0 ? "" : String(value);
   };
 
-  // Image handlers – max 5, initially one field
   const addImage = () => {
     if (formData.images.length < 5) {
       handleChange("images", [...formData.images, ""]);
@@ -279,7 +285,6 @@ export default function NewReadyMadePage() {
     handleChange("images", newImages);
   };
 
-  // Color checkboxes – toggle
   const toggleColor = (colorValue: string) => {
     const current = formData.colors;
     const index = current.indexOf(colorValue);
@@ -336,11 +341,9 @@ export default function NewReadyMadePage() {
     console.log("Create Product Button Clicked");
 
     if (!validate()) {
-      // Build a friendly, human‑readable message
       const errorMessages = Object.values(fieldErrors).filter(Boolean);
       let errorText = "Please check the highlighted fields and try again.";
       if (errorMessages.length > 0) {
-        // Show a concise summary
         errorText = `Please fix: ${errorMessages.join("; ")}.`;
       }
       toast.error(errorText);
@@ -438,34 +441,61 @@ export default function NewReadyMadePage() {
             />
           </FormField>
 
-          {/* CODE (optional) */}
-          <FormField label="Code (OPTIONAL)" name="code">
-            <input
-              value={formData.code}
-              onChange={(e) => handleChange("code", e.target.value)}
-              placeholder="0000"
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-            />
-          </FormField>
+          {/* CODE, STOCK, MIN AGE, MAX AGE - in one row */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <FormField label="Code (OPTIONAL)" name="code">
+              <input
+                value={formData.code}
+                onChange={(e) => handleChange("code", e.target.value)}
+                placeholder="0000"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
 
-          {/* STOCK */}
-          <FormField
-            label="Available Stock"
-            error={fieldErrors.availableFabricStock}
-            required
-          >
-            <input
-              type="number"
-              min="0"
-              step="1"
-              placeholder="05"
-              value={getNumberDisplay(formData.availableFabricStock)}
-              onChange={(e) =>
-                handleNumberChange("availableFabricStock", e.target.value)
-              }
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
-            />
-          </FormField>
+            <FormField
+              label="Available Stock"
+              error={fieldErrors.availableFabricStock}
+              required
+            >
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="05"
+                value={getNumberDisplay(formData.availableFabricStock)}
+                onChange={(e) =>
+                  handleNumberChange("availableFabricStock", e.target.value)
+                }
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
+
+            <FormField label="Min Age">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                placeholder="0"
+                value={getNumberDisplay(formData.minAge)}
+                onChange={(e) => handleNumberChange("minAge", e.target.value)}
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
+
+            <FormField label="Max Age">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                placeholder="0"
+                value={getNumberDisplay(formData.maxAge)}
+                onChange={(e) => handleNumberChange("maxAge", e.target.value)}
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              />
+            </FormField>
+          </div>
 
           {/* FABRIC STORE */}
           <FormField
@@ -479,7 +509,7 @@ export default function NewReadyMadePage() {
               onChange={(e) => {
                 const shopId = e.target.value;
                 handleChange("fabricShopId", shopId);
-                handleChange("fabricId", ""); // Reset selected fabric
+                handleChange("fabricId", "");
               }}
               className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-[14px]"
             >
@@ -525,7 +555,7 @@ export default function NewReadyMadePage() {
               onChange={(e) => {
                 const shopId = e.target.value;
                 handleChange("tailorShopId", shopId);
-                handleChange("designId", ""); // Reset selected design
+                handleChange("designId", "");
               }}
               className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-[14px]"
             >
@@ -616,7 +646,8 @@ export default function NewReadyMadePage() {
             </div>
           </div>
 
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* PRICES - in one row */}
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
             <FormField
               label="Fabric Price AED"
               error={fieldErrors.fabricPriceAED}
@@ -670,7 +701,7 @@ export default function NewReadyMadePage() {
             </FormField>
           </div>
 
-          {/* TAG + Color in one line (md+) */}
+          {/* TAG + Color + User in one row */}
           <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
             <FormField label="Tag (ENG)" name="tag">
               <select
@@ -679,7 +710,7 @@ export default function NewReadyMadePage() {
                 className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent"
               >
                 <option value="">Select tag</option>
-                {TAG_OPTIONS.map((opt) => (
+                {allTags.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.en}
                   </option>
@@ -694,7 +725,7 @@ export default function NewReadyMadePage() {
                 className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent"
               >
                 <option value="">اختر الوسم</option>
-                {TAG_OPTIONS.map((opt) => (
+                {allTags.map((opt) => (
                   <option key={opt.value} value={opt.value}>
                     {opt.ar}
                   </option>
@@ -704,7 +735,6 @@ export default function NewReadyMadePage() {
 
             <FormField label="Colors" name="colors" required>
               <div className="relative" ref={colorsDropdownRef}>
-                {/* Select field */}
                 <button
                   type="button"
                   onClick={() => setColorsOpen((prev) => !prev)}
@@ -734,7 +764,6 @@ export default function NewReadyMadePage() {
                   )}
                 </button>
 
-                {/* Dropdown */}
                 {colorsOpen && (
                   <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3 z-50">
                     <div className="max-h-44 overflow-auto flex flex-col gap-2">
@@ -771,11 +800,7 @@ export default function NewReadyMadePage() {
               </div>
             </FormField>
 
-            {/* USER (OWNER) */}
-            <FormField
-              label="User"
-              name="ownerName"
-            >
+            <FormField label="User" name="ownerName">
               <input
                 value={userName}
                 disabled
@@ -785,7 +810,7 @@ export default function NewReadyMadePage() {
             </FormField>
           </div>
 
-          {/* IMAGES – starts with one field, max 5 */}
+          {/* IMAGES */}
           <div className="md:col-span-2">
             <div className="mb-2 text-xs uppercase tracking-widest text-gray-500">
               Images (max 5) *

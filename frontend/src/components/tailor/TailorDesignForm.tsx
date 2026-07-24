@@ -23,11 +23,10 @@ import {
   type TailorDesignFormData,
 } from "@/lib/tailorDesigns";
 
-// Styling aligned with CreateReadyMadeForm
 const INPUT_CLASS =
   "w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent";
 const TEXTAREA_CLASS =
-  "w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent resize-none overflow-hidden";
+  "w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent resize-none overflow-hidden min-h-[2.5rem]";
 
 type TailorDesignFormProps = {
   designId?: string;
@@ -58,22 +57,34 @@ export default function TailorDesignForm({ designId }: TailorDesignFormProps) {
   const formActionsRef = useRef<HTMLDivElement>(null);
   const previousImageCountRef = useRef(formData.images.length);
 
-  // Fetch design categories from the admin categories API
+  // Auto-resize textareas
+  const textareaRefs = useRef<{ [key: string]: HTMLTextAreaElement | null }>(
+    {},
+  );
+
+  const autoResize = (key: string) => {
+    const el = textareaRefs.current[key];
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = el.scrollHeight + "px";
+    }
+  };
+
   useEffect(() => {
+    // Fetch design categories from the admin categories API
     let cancelled = false;
     const load = async () => {
       try {
         const cats = await fetchDesignCategories();
         if (cancelled) return;
         setCategoryOptions(cats);
-        // Set default category to first one if current is empty
         setFormData((prev) =>
           prev.category === "" && cats.length > 0
-            ? { ...prev, category: cats[0]._id }
+            ? { ...prev, category: cats[0].name }
             : prev,
         );
       } catch {
-        // silently fail — user will see empty dropdown
+        // silently fail
       } finally {
         if (!cancelled) setCategoriesLoading(false);
       }
@@ -188,14 +199,6 @@ export default function TailorDesignForm({ designId }: TailorDesignFormProps) {
     }
     if (!formData.images.some((image) => image.trim())) {
       errors.images = t("validation.imagesRequired");
-    }
-
-    if (
-      formData.ageMin < 0 ||
-      formData.ageMax > 150 ||
-      formData.ageMin > formData.ageMax
-    ) {
-      errors.ageRange = t("validation.ageRangeInvalid");
     }
 
     if (!Number.isFinite(formData.basePrice) || formData.basePrice < 0) {
@@ -356,23 +359,24 @@ export default function TailorDesignForm({ designId }: TailorDesignFormProps) {
             </FormField>
           </div>
 
-          <FormField
-            label={t("fields.slug")}
-            name="slug"
-            required
-            hint={t("hints.slug")}
-            error={fieldErrors.slug}
-          >
-            <input
-              id="slug"
-              type="text"
-              value={formData.slug}
-              onChange={(e) => handleChange("slug", e.target.value)}
-              className={INPUT_CLASS}
-            />
-          </FormField>
+          {/* Slug + Category in one row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField
+              label={t("fields.slug")}
+              name="slug"
+              required
+              hint={t("hints.slug")}
+              error={fieldErrors.slug}
+            >
+              <input
+                id="slug"
+                type="text"
+                value={formData.slug}
+                onChange={(e) => handleChange("slug", e.target.value)}
+                className={INPUT_CLASS}
+              />
+            </FormField>
 
-          <div className="grid grid-cols-3 gap-5">
             <FormField label={t("fields.category")} name="category" required>
               <select
                 id="category"
@@ -386,41 +390,18 @@ export default function TailorDesignForm({ designId }: TailorDesignFormProps) {
                 ) : categoryOptions.length === 0 ? (
                   <option value="">No categories available</option>
                 ) : (
-                  categoryOptions.map((cat) => (
-                    <option key={cat._id} value={cat._id}>
-                      {cat.nameAr ? `${cat.name} (${cat.nameAr})` : cat.name}
+                  <>
+                    <option value="" disabled className="text-gray-400">
+                      Select a category
                     </option>
-                  ))
+                    {categoryOptions.map((cat) => (
+                      <option key={cat._id} value={cat.name}>
+                        {cat.nameAr ? `${cat.name} (${cat.nameAr})` : cat.name}
+                      </option>
+                    ))}
+                  </>
                 )}
               </select>
-            </FormField>
-
-            <FormField label="Min Age" name="ageMin" required>
-              <input
-                id="ageMin"
-                type="number"
-                min={0}
-                max={120}
-                value={formData.ageMin}
-                onChange={(e) =>
-                  handleChange("ageMin", parseInt(e.target.value) || 0)
-                }
-                className={INPUT_CLASS}
-              />
-            </FormField>
-
-            <FormField label="Max Age" name="ageMax" required>
-              <input
-                id="ageMax"
-                type="number"
-                min={0}
-                max={120}
-                value={formData.ageMax}
-                onChange={(e) =>
-                  handleChange("ageMax", parseInt(e.target.value) || 0)
-                }
-                className={INPUT_CLASS}
-              />
             </FormField>
           </div>
         </section>
@@ -430,26 +411,43 @@ export default function TailorDesignForm({ designId }: TailorDesignFormProps) {
             {t("sections.about")}
           </h2>
 
-          <FormField label={t("fields.description")} name="description">
-            <textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              className={TEXTAREA_CLASS}
-              rows={2}
-            />
-          </FormField>
+          {/* Both descriptions in one row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <FormField label={t("fields.description")} name="description">
+              <textarea
+                id="description"
+                ref={(el) => {
+                  textareaRefs.current["description"] = el;
+                  if (el) autoResize("description");
+                }}
+                value={formData.description}
+                onChange={(e) => {
+                  handleChange("description", e.target.value);
+                  autoResize("description");
+                }}
+                className={TEXTAREA_CLASS}
+                rows={1}
+              />
+            </FormField>
 
-          <FormField label={t("fields.descriptionAr")} name="descriptionAr">
-            <textarea
-              id="descriptionAr"
-              value={formData.descriptionAr}
-              onChange={(e) => handleChange("descriptionAr", e.target.value)}
-              dir="rtl"
-              className={TEXTAREA_CLASS}
-              rows={2}
-            />
-          </FormField>
+            <FormField label={t("fields.descriptionAr")} name="descriptionAr">
+              <textarea
+                id="descriptionAr"
+                ref={(el) => {
+                  textareaRefs.current["descriptionAr"] = el;
+                  if (el) autoResize("descriptionAr");
+                }}
+                value={formData.descriptionAr}
+                onChange={(e) => {
+                  handleChange("descriptionAr", e.target.value);
+                  autoResize("descriptionAr");
+                }}
+                dir="rtl"
+                className={TEXTAREA_CLASS}
+                rows={1}
+              />
+            </FormField>
+          </div>
         </section>
 
         <section className="space-y-5">
@@ -537,8 +535,15 @@ export default function TailorDesignForm({ designId }: TailorDesignFormProps) {
                 step="0.1"
                 value={formData.estimatedMeters}
                 onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  handleChange("estimatedMeters", isNaN(val) ? 0 : val);
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    handleChange("estimatedMeters", 0);
+                    return;
+                  }
+                  const val = parseFloat(raw);
+                  if (!isNaN(val)) {
+                    handleChange("estimatedMeters", val);
+                  }
                 }}
                 className={INPUT_CLASS}
               />
@@ -557,8 +562,15 @@ export default function TailorDesignForm({ designId }: TailorDesignFormProps) {
                 step="1"
                 value={formData.estimatedDays}
                 onChange={(e) => {
-                  const val = parseInt(e.target.value, 10);
-                  handleChange("estimatedDays", isNaN(val) ? 0 : val);
+                  const raw = e.target.value;
+                  if (raw === "") {
+                    handleChange("estimatedDays", 0);
+                    return;
+                  }
+                  const val = parseInt(raw, 10);
+                  if (!isNaN(val)) {
+                    handleChange("estimatedDays", val);
+                  }
                 }}
                 className={INPUT_CLASS}
               />

@@ -34,6 +34,9 @@ export interface ReadyMadeFormData {
 
   availableFabricStock: number;
 
+  minAge: number;
+  maxAge: number;
+
   isActive?: boolean;
 }
 
@@ -108,6 +111,9 @@ export function defaultReadyMadeForm(): ReadyMadeFormData {
     finalSellingPriceAED: 0,
 
     availableFabricStock: 0,
+
+    minAge: 0,
+    maxAge: 0,
 
     isActive: true,
   };
@@ -200,6 +206,9 @@ export function fromApiProduct(
         ? product.availableFabricStock
         : 0,
 
+    minAge: typeof product.minAge === "number" ? product.minAge : 0,
+    maxAge: typeof product.maxAge === "number" ? product.maxAge : 0,
+
     isActive: typeof product.isActive === "boolean" ? product.isActive : true,
   };
 }
@@ -243,6 +252,9 @@ export function toApiPayload(form: ReadyMadeFormData): Record<string, unknown> {
     finalSellingPriceAED: form.finalSellingPriceAED,
 
     availableFabricStock: form.availableFabricStock,
+
+    minAge: form.minAge,
+    maxAge: form.maxAge,
 
     isActive: form.isActive,
   };

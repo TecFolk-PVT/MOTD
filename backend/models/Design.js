@@ -1,14 +1,5 @@
 import mongoose from "mongoose";
 
-const DESIGN_CATEGORIES = [
-  "hand-embroidered",
-  "crystal-embellished",
-  "non-crystal",
-  "talli",
-  "khous",
-  "beaded",
-];
-
 const designSchema = new mongoose.Schema(
   {
     tailorShopId: {
@@ -33,11 +24,8 @@ const designSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: DESIGN_CATEGORIES,
       required: true,
     },
-    ageMin: { type: Number, required: true, default: 0, min: 0 },
-    ageMax: { type: Number, required: true, default: 100, min: 0, max: 100 },
     basePrice: { type: Number, required: true, min: 0 },
     priceType: {
       type: String,
@@ -62,4 +50,3 @@ designSchema.index({ tailorShopId: 1, isActive: 1 });
 const Design = mongoose.model("Design", designSchema);
 
 export default Design;
-export { DESIGN_CATEGORIES };

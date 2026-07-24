@@ -170,6 +170,8 @@ adminRouter.post(
       mukhawarPriceAED,
       finalSellingPriceAED,
       availableFabricStock,
+      minAge,
+      maxAge,
       isActive,
     } = req.body;
 
@@ -208,6 +210,8 @@ adminRouter.post(
       mukhawarPriceAED,
       finalSellingPriceAED,
       availableFabricStock,
+      minAge: minAge !== undefined ? minAge : 0,
+      maxAge: maxAge !== undefined ? maxAge : 0,
       isActive: isActive !== undefined ? isActive : true,
       ownerName: req.body.ownerName || "MOTD Admin",
     });
@@ -278,6 +282,10 @@ adminRouter.put(
     product.availableFabricStock =
       req.body.availableFabricStock ?? product.availableFabricStock;
     product.ownerName = req.body.ownerName ?? product.ownerName;
+
+    // --- Age range ---
+    product.minAge = req.body.minAge ?? product.minAge;
+    product.maxAge = req.body.maxAge ?? product.maxAge;
 
     // --- Active ---
     product.isActive = req.body.isActive ?? product.isActive;
