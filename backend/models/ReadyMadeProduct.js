@@ -143,6 +143,18 @@ const readyMadeProductSchema = new mongoose.Schema(
       min: 0,
     },
 
+    // Age range
+    minAge: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    maxAge: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
     // Stock
     availableFabricStock: {
       type: Number,

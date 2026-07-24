@@ -22,8 +22,6 @@ export interface TailorDesignProfile {
   tailoringFee: number;
   estimatedMeters: number;
   estimatedDays: number;
-  ageMin: number;
-  ageMax: number;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -42,8 +40,6 @@ export interface TailorDesignFormData {
   tailoringFee: number;
   estimatedMeters: number;
   estimatedDays: number;
-  ageMin: number;
-  ageMax: number;
   isActive: boolean;
 }
 
@@ -65,8 +61,6 @@ export function emptyTailorDesignForm(): TailorDesignFormData {
     tailoringFee: DEFAULT_TAILORING_FEE,
     estimatedMeters: 3.5,
     estimatedDays: 7,
-    ageMin: 0,
-    ageMax: 150,
     isActive: true,
   };
 }
@@ -97,8 +91,6 @@ export function designToForm(
     tailoringFee: design.tailoringFee ?? DEFAULT_TAILORING_FEE,
     estimatedMeters: design.estimatedMeters ?? 3.5,
     estimatedDays: design.estimatedDays ?? 7,
-    ageMin: design.ageMin ?? 0,
-    ageMax: design.ageMax ?? 150,
     isActive: design.isActive ?? true,
   };
 }
@@ -119,8 +111,6 @@ export function toTailorDesignPayload(
     tailoringFee: Number(form.tailoringFee),
     estimatedMeters: Number(form.estimatedMeters),
     estimatedDays: Number(form.estimatedDays),
-    ageMin: form.ageMin,
-    ageMax: form.ageMax,
     isActive: form.isActive,
   };
 }
@@ -174,8 +164,6 @@ export function isShopMissingError(error: unknown): boolean {
 }
 
 export async function fetchDesignCategories(): Promise<DesignCategoryOption[]> {
-  const data = await api.get<DesignCategoryOption[]>(
-    "/api/tailors/categories/designs",
-  );
+  const data = await api.get<DesignCategoryOption[]>("/api/filters/categories");
   return Array.isArray(data) ? data : [];
 }
