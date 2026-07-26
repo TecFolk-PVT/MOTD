@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
+import toast from "react-hot-toast";
 import { api, getApiErrorMessage } from "@/lib/api/client";
 import FabricAdminFormFields from "@/components/admin/FabricAdminFormFields";
 import { getTranslation } from "@/lib/getTranslation";
@@ -130,9 +131,12 @@ export default function EditFabricPage() {
     try {
       const payload = toFabricApiPayload(formData, { includeIsActive: true });
       await api.put(`/api/admin/fabrics/${id}`, payload);
+      toast.success("Fabric updated successfully");
       router.push("/admin/fabrics");
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, t.adminFabrics.errors.update_failed));
+      const message = getApiErrorMessage(err, t.adminFabrics.errors.update_failed);
+      setError(message);
+      toast.error(message);
     } finally {
       setSubmitting(false);
     }

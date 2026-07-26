@@ -400,7 +400,6 @@ export default function AdminSettingsCategoriesPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-            onClick={() => setShowModal(false)}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
@@ -408,7 +407,6 @@ export default function AdminSettingsCategoriesPage() {
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: "spring", duration: 0.3, bounce: 0.2 }}
               className="bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
             >
               <div className="p-6 sm:p-8">
                 <div className="flex items-center justify-between mb-8">

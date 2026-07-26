@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import FormField from "@/components/admin/FormField";
 import FabricImageUpload from "@/components/admin/FabricImageUpload";
 import StorePartnerPicker from "@/components/admin/StorePartnerPicker";
@@ -15,6 +16,22 @@ import {
 } from "@/lib/createFabricAdmin";
 import { FabricUnitValue, WARA_TO_METERS } from "@/lib/fabrics";
 import { api } from "@/lib/api/client";
+
+const dropdownVariants = {
+  hidden: { opacity: 0, y: -6, scaleY: 0.95 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scaleY: 1,
+    transition: { duration: 0.15, ease: "easeOut" as const },
+  },
+  exit: {
+    opacity: 0,
+    y: -4,
+    scaleY: 0.95,
+    transition: { duration: 0.1, ease: "easeIn" as const },
+  },
+};
 
 type FabricAdminFormFieldsProps = {
   formData: FabricFormData;
@@ -41,8 +58,28 @@ export default function FabricAdminFormFields({
     { name: string; nameAr: string; _id: string }[]
   >([]);
   const [materialsLoading, setMaterialsLoading] = useState(true);
+  const [dbTags, setDbTags] = useState<
+    { name: string; nameAr: string; _id: string }[]
+  >([]);
+  const [tagsLoading, setTagsLoading] = useState(true);
 
-  // Fetch materials from DB for "fabrics" domain
+  // Dropdown open states for animated dropdowns
+  const [openMaterialEn, setOpenMaterialEn] = useState(false);
+  const [openMaterialAr, setOpenMaterialAr] = useState(false);
+  const [openTagEn, setOpenTagEn] = useState(false);
+  const [openTagAr, setOpenTagAr] = useState(false);
+  const [openEmirate, setOpenEmirate] = useState(false);
+  const [openUnit, setOpenUnit] = useState(false);
+
+  // Dropdown refs
+  const materialEnRef = useRef<HTMLDivElement>(null);
+  const materialArRef = useRef<HTMLDivElement>(null);
+  const tagEnRef = useRef<HTMLDivElement>(null);
+  const tagArRef = useRef<HTMLDivElement>(null);
+  const emirateRef = useRef<HTMLDivElement>(null);
+  const unitRef = useRef<HTMLDivElement>(null);
+
+  // Fetch materials from DB
   useEffect(() => {
     let cancelled = false;
     const fetchMaterials = async () => {
@@ -50,7 +87,7 @@ export default function FabricAdminFormFields({
         setMaterialsLoading(true);
         const data = await api.get<
           { name: string; nameAr: string; _id: string }[]
-        >("/api/admin/materials?domain=fabrics");
+        >("/api/filters/materials");
         if (!cancelled) {
           setDbMaterials(Array.isArray(data) ? data : []);
         }
@@ -61,6 +98,31 @@ export default function FabricAdminFormFields({
       }
     };
     fetchMaterials();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Fetch tags from DB
+  useEffect(() => {
+    let cancelled = false;
+    const fetchTags = async () => {
+      try {
+        setTagsLoading(true);
+        const data =
+          await api.get<{ name: string; nameAr: string; _id: string }[]>(
+            "/api/filters/tags",
+          );
+        if (!cancelled) {
+          setDbTags(Array.isArray(data) ? data : []);
+        }
+      } catch {
+        // Silently fall back to FABRIC_TAGS
+      } finally {
+        if (!cancelled) setTagsLoading(false);
+      }
+    };
+    fetchTags();
     return () => {
       cancelled = true;
     };
@@ -135,6 +197,39 @@ export default function FabricAdminFormFields({
       ) {
         setIsColorDropdownOpen(false);
       }
+      if (
+        materialEnRef.current &&
+        !materialEnRef.current.contains(event.target as Node)
+      ) {
+        setOpenMaterialEn(false);
+      }
+      if (
+        materialArRef.current &&
+        !materialArRef.current.contains(event.target as Node)
+      ) {
+        setOpenMaterialAr(false);
+      }
+      if (
+        tagEnRef.current &&
+        !tagEnRef.current.contains(event.target as Node)
+      ) {
+        setOpenTagEn(false);
+      }
+      if (
+        tagArRef.current &&
+        !tagArRef.current.contains(event.target as Node)
+      ) {
+        setOpenTagAr(false);
+      }
+      if (
+        emirateRef.current &&
+        !emirateRef.current.contains(event.target as Node)
+      ) {
+        setOpenEmirate(false);
+      }
+      if (unitRef.current && !unitRef.current.contains(event.target as Node)) {
+        setOpenUnit(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -157,14 +252,14 @@ export default function FabricAdminFormFields({
       "nameAr" in m ? m.nameAr! : (m as (typeof FABRIC_MATERIALS)[number]).ar,
   }));
 
-  // Tag options – map directly from FABRIC_TAGS
-  const tagOptionsEn = FABRIC_TAGS.map((t) => ({
-    value: t.value,
-    label: t.en,
+  // Tag options – use DB tags if loaded, fall back to FABRIC_TAGS
+  const tagOptionsEn = (dbTags.length > 0 ? dbTags : FABRIC_TAGS).map((t) => ({
+    value: "name" in t ? t.name : (t as (typeof FABRIC_TAGS)[number]).value,
+    label: "name" in t ? t.name : (t as (typeof FABRIC_TAGS)[number]).en,
   }));
-  const tagOptionsAr = FABRIC_TAGS.map((t) => ({
-    value: t.ar,
-    label: t.ar,
+  const tagOptionsAr = (dbTags.length > 0 ? dbTags : FABRIC_TAGS).map((t) => ({
+    value: "nameAr" in t ? t.nameAr! : (t as (typeof FABRIC_TAGS)[number]).ar,
+    label: "nameAr" in t ? t.nameAr! : (t as (typeof FABRIC_TAGS)[number]).ar,
   }));
 
   return (
@@ -240,20 +335,74 @@ export default function FabricAdminFormFields({
           required
           error={fieldErrors.material}
         >
-          <select
-            value={formData.material}
-            onChange={(e) =>
-              onFieldChange("material", e.target.value as FabricMaterialValue)
-            }
-            className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none cursor-pointer"
-          >
-            <option value="">Select material</option>
-            {materialOptionsEn.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={materialEnRef}>
+            <button
+              type="button"
+              onClick={() => setOpenMaterialEn((prev) => !prev)}
+              className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between"
+            >
+              <span
+                className={`text-xs ${formData.material ? "text-black" : "text-black/60"}`}
+              >
+                {formData.material
+                  ? materialOptionsEn.find((o) => o.value === formData.material)
+                      ?.label || formData.material
+                  : "Select material"}
+              </span>
+              <svg
+                className={`w-3 h-3 transition-transform ${openMaterialEn ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+            </button>
+            <AnimatePresence>
+              {openMaterialEn && (
+                <motion.div
+                  key="material-en-dropdown"
+                  variants={dropdownVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onFieldChange("material", "" as FabricMaterialValue);
+                      setOpenMaterialEn(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${!formData.material ? "bg-gray-50 font-medium" : ""}`}
+                  >
+                    Select material
+                  </button>
+                  {materialOptionsEn.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        onFieldChange(
+                          "material",
+                          opt.value as FabricMaterialValue,
+                        );
+                        setOpenMaterialEn(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.material === opt.value ? "bg-gray-50 font-medium" : ""}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </FormField>
 
         {/* Material (AR) – dropdown with Arabic labels */}
@@ -263,18 +412,72 @@ export default function FabricAdminFormFields({
           error={fieldErrors.materialAr}
           required
         >
-          <select
-            value={formData.materialAr}
-            onChange={(e) => onFieldChange("materialAr", e.target.value)}
-            className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right cursor-pointer"
-          >
-            <option value="">اختر النوع</option>
-            {materialOptionsAr.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={materialArRef}>
+            <button
+              type="button"
+              onClick={() => setOpenMaterialAr((prev) => !prev)}
+              className="w-full py-1 border-b border-gray-300 focus:border-black text-right bg-transparent min-h-7 flex items-center justify-between flex-row-reverse"
+            >
+              <svg
+                className={`w-3 h-3 transition-transform shrink-0 ${openMaterialAr ? "rotate-180" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
+              <span
+                className={`text-xs ${formData.materialAr ? "text-black" : "text-black/60"}`}
+              >
+                {formData.materialAr
+                  ? materialOptionsAr.find(
+                      (o) => o.value === formData.materialAr,
+                    )?.label || formData.materialAr
+                  : "اختر النوع"}
+              </span>
+            </button>
+            <AnimatePresence>
+              {openMaterialAr && (
+                <motion.div
+                  key="material-ar-dropdown"
+                  variants={dropdownVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onFieldChange("materialAr", "");
+                      setOpenMaterialAr(false);
+                    }}
+                    className={`w-full text-right px-3 py-2 text-xs hover:bg-gray-50 ${!formData.materialAr ? "bg-gray-50 font-medium" : ""}`}
+                  >
+                    اختر النوع
+                  </button>
+                  {materialOptionsAr.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        onFieldChange("materialAr", opt.value);
+                        setOpenMaterialAr(false);
+                      }}
+                      className={`w-full text-right px-3 py-2 text-xs hover:bg-gray-50 ${formData.materialAr === opt.value ? "bg-gray-50 font-medium" : ""}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </FormField>
 
         {/* Colors */}
@@ -314,37 +517,46 @@ export default function FabricAdminFormFields({
               )}
             </button>
 
-            {isColorDropdownOpen && (
-              <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3 z-50">
-                <div className="max-h-44 overflow-auto flex flex-col gap-2">
-                  {COLOR_OPTIONS.map((opt) => {
-                    const selected = selectedColors.includes(opt.value);
-                    return (
-                      <label
-                        key={opt.value}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selected}
-                          onChange={() => toggleColor(opt.value)}
-                          className="accent-black"
-                        />
-                        <span className="inline-flex items-center gap-2">
-                          <span
-                            className="w-4 h-4 rounded-full border border-gray-200"
-                            style={{ backgroundColor: opt.value }}
+            <AnimatePresence>
+              {isColorDropdownOpen && (
+                <motion.div
+                  key="color-dropdown"
+                  variants={dropdownVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3 z-50 origin-top"
+                >
+                  <div className="max-h-44 overflow-auto flex flex-col gap-2">
+                    {COLOR_OPTIONS.map((opt) => {
+                      const selected = selectedColors.includes(opt.value);
+                      return (
+                        <label
+                          key={opt.value}
+                          className="flex items-center gap-2 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selected}
+                            onChange={() => toggleColor(opt.value)}
+                            className="accent-black"
                           />
-                          <span className="text-xs">
-                            {opt.en} / {opt.ar}
+                          <span className="inline-flex items-center gap-2">
+                            <span
+                              className="w-4 h-4 rounded-full border border-gray-200"
+                              style={{ backgroundColor: opt.value }}
+                            />
+                            <span className="text-xs">
+                              {opt.en} / {opt.ar}
+                            </span>
                           </span>
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </FormField>
       </div>
@@ -365,34 +577,140 @@ export default function FabricAdminFormFields({
 
       {/* Tag (EN) – optional dropdown */}
       <FormField label="Tag (EN)" name="tag" error={fieldErrors.tag}>
-        <select
-          value={formData.tag}
-          onChange={(e) => onFieldChange("tag", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none cursor-pointer"
-        >
-          <option value="">Select tag (optional)</option>
-          {tagOptionsEn.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative" ref={tagEnRef}>
+          <button
+            type="button"
+            onClick={() => setOpenTagEn((prev) => !prev)}
+            className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between"
+          >
+            <span
+              className={`text-xs ${formData.tag ? "text-black" : "text-black/60"}`}
+            >
+              {formData.tag
+                ? tagOptionsEn.find((o) => o.value === formData.tag)?.label ||
+                  formData.tag
+                : "Select tag (optional)"}
+            </span>
+            <svg
+              className={`w-3 h-3 transition-transform ${openTagEn ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </button>
+          <AnimatePresence>
+            {openTagEn && (
+              <motion.div
+                key="tag-en-dropdown"
+                variants={dropdownVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    onFieldChange("tag", "");
+                    setOpenTagEn(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${!formData.tag ? "bg-gray-50 font-medium" : ""}`}
+                >
+                  Select tag (optional)
+                </button>
+                {tagOptionsEn.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      onFieldChange("tag", opt.value);
+                      setOpenTagEn(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.tag === opt.value ? "bg-gray-50 font-medium" : ""}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </FormField>
 
       {/* Tag (AR) – optional dropdown with Arabic labels */}
       <FormField label="Tag (AR)" name="tagAr" error={fieldErrors.tagAr}>
-        <select
-          value={formData.tagAr}
-          onChange={(e) => onFieldChange("tagAr", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right cursor-pointer"
-        >
-          <option value="">اختر الوسم (اختياري)</option>
-          {tagOptionsAr.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <div className="relative" ref={tagArRef}>
+          <button
+            type="button"
+            onClick={() => setOpenTagAr((prev) => !prev)}
+            className="w-full py-1 border-b border-gray-300 focus:border-black text-right bg-transparent min-h-7 flex items-center justify-between flex-row-reverse"
+          >
+            <svg
+              className={`w-3 h-3 transition-transform shrink-0 ${openTagAr ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+            <span
+              className={`text-xs ${formData.tagAr ? "text-black" : "text-black/60"}`}
+            >
+              {formData.tagAr
+                ? tagOptionsAr.find((o) => o.value === formData.tagAr)?.label ||
+                  formData.tagAr
+                : "اختر الوسم (اختياري)"}
+            </span>
+          </button>
+          <AnimatePresence>
+            {openTagAr && (
+              <motion.div
+                key="tag-ar-dropdown"
+                variants={dropdownVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    onFieldChange("tagAr", "");
+                    setOpenTagAr(false);
+                  }}
+                  className={`w-full text-right px-3 py-2 text-xs hover:bg-gray-50 ${!formData.tagAr ? "bg-gray-50 font-medium" : ""}`}
+                >
+                  اختر الوسم (اختياري)
+                </button>
+                {tagOptionsAr.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      onFieldChange("tagAr", opt.value);
+                      setOpenTagAr(false);
+                    }}
+                    className={`w-full text-right px-3 py-2 text-xs hover:bg-gray-50 ${formData.tagAr === opt.value ? "bg-gray-50 font-medium" : ""}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </FormField>
 
       {/* Fabric Unit, Price, Stock in one row */}
@@ -400,16 +718,63 @@ export default function FabricAdminFormFields({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           {/* Fabric Unit */}
           <FormField label="Unit" name="fabricUnit">
-            <select
-              value={formData.fabricUnit}
-              onChange={(e) =>
-                handleUnitChange(e.target.value as FabricUnitValue)
-              }
-              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none cursor-pointer bg-transparent"
-            >
-              <option value="meters">Meters</option>
-              <option value="wara">Wara</option>
-            </select>
+            <div className="relative" ref={unitRef}>
+              <button
+                type="button"
+                onClick={() => setOpenUnit((prev) => !prev)}
+                className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between"
+              >
+                <span className="text-xs">
+                  {formData.fabricUnit === "meters" ? "Meters" : "Wara"}
+                </span>
+                <svg
+                  className={`w-3 h-3 transition-transform ${openUnit ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <AnimatePresence>
+                {openUnit && (
+                  <motion.div
+                    key="unit-dropdown"
+                    variants={dropdownVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 origin-top"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleUnitChange("meters" as FabricUnitValue);
+                        setOpenUnit(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.fabricUnit === "meters" ? "bg-gray-50 font-medium" : ""}`}
+                    >
+                      Meters
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleUnitChange("wara" as FabricUnitValue);
+                        setOpenUnit(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.fabricUnit === "wara" ? "bg-gray-50 font-medium" : ""}`}
+                    >
+                      Wara
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </FormField>
 
           {/* Price Per Unit */}
@@ -480,18 +845,76 @@ export default function FabricAdminFormFields({
             required
             error={fieldErrors["pickupAddress.emirate"]}
           >
-            <select
-              value={formData.pickupAddress.emirate}
-              onChange={(e) => onPickupChange("emirate", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none cursor-pointer"
-            >
-              <option value="">Select emirate</option>
-              {UAE_EMIRATES.map((emirate) => (
-                <option key={emirate.value} value={emirate.value}>
-                  {emirate.en} / {emirate.ar}
-                </option>
-              ))}
-            </select>
+            <div className="relative" ref={emirateRef}>
+              <button
+                type="button"
+                onClick={() => setOpenEmirate((prev) => !prev)}
+                className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between"
+              >
+                <span
+                  className={`text-xs ${formData.pickupAddress.emirate ? "text-black" : "text-black/60"}`}
+                >
+                  {formData.pickupAddress.emirate
+                    ? UAE_EMIRATES.find(
+                        (e) => e.value === formData.pickupAddress.emirate,
+                      )?.en +
+                      " / " +
+                      UAE_EMIRATES.find(
+                        (e) => e.value === formData.pickupAddress.emirate,
+                      )?.ar
+                    : "Select emirate"}
+                </span>
+                <svg
+                  className={`w-3 h-3 transition-transform ${openEmirate ? "rotate-180" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <AnimatePresence>
+                {openEmirate && (
+                  <motion.div
+                    key="emirate-dropdown"
+                    variants={dropdownVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onPickupChange("emirate", "");
+                        setOpenEmirate(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${!formData.pickupAddress.emirate ? "bg-gray-50 font-medium" : ""}`}
+                    >
+                      Select emirate
+                    </button>
+                    {UAE_EMIRATES.map((emirate) => (
+                      <button
+                        key={emirate.value}
+                        type="button"
+                        onClick={() => {
+                          onPickupChange("emirate", emirate.value);
+                          setOpenEmirate(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.pickupAddress.emirate === emirate.value ? "bg-gray-50 font-medium" : ""}`}
+                      >
+                        {emirate.en} / {emirate.ar}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </FormField>
           <FormField
             label="City"
