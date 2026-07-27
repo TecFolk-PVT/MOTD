@@ -163,6 +163,7 @@ export interface PickupAddress {
 }
 
 export interface FabricFormData {
+  _id?: string;
   name: string;
   nameAr: string;
   slug: string;
@@ -181,6 +182,7 @@ export interface FabricFormData {
   listedByStore: string;
   pickupAddress: PickupAddress;
   isActive: boolean;
+  variants?: FabricFormData[];
 }
 
 // ... helper functions (slugFromName, etc.) remain unchanged ...
@@ -211,6 +213,7 @@ export function defaultFabricForm(): FabricFormData {
       phone: "",
     },
     isActive: true,
+    variants: [],
   };
 }
 
@@ -278,7 +281,11 @@ export function fromApiFabric(
       ? product.isActive
       : defaultForm.isActive;
 
+  const rawVariants = Array.isArray(product.variants) ? product.variants : [];
+  const variants = rawVariants.map((v: any) => fromApiFabric(v));
+
   return {
+    _id: typeof product._id === "string" ? product._id : undefined,
     name,
     nameAr,
     slug,
@@ -297,6 +304,7 @@ export function fromApiFabric(
     listedByStore,
     pickupAddress,
     isActive,
+    variants,
   };
 }
 
@@ -356,6 +364,30 @@ export function toFabricApiPayload(
       building: form.pickupAddress.building?.trim() || "",
       phone: form.pickupAddress.phone?.trim() || "",
     },
+    variants: form.variants?.map((v) => {
+      const vPrice =
+        v.fabricUnit === "wara"
+          ? Number(v.pricePerUnit) * WARA_TO_METERS
+          : Number(v.pricePerUnit);
+      return {
+        _id: v._id,
+        name: v.name.trim(),
+        nameAr: v.nameAr.trim(),
+        slug: resolveSlug(v),
+        description: v.description.trim(),
+        descriptionAr: v.descriptionAr.trim() || v.description.trim(),
+        images: v.images.filter((url) => url.trim() !== "" && !isDataUrl(url)),
+        material: v.material,
+        materialAr: v.materialAr.trim(),
+        colors: v.colors,
+        tag: v.tag,
+        tagAr: v.tagAr.trim(),
+        fabricUnit: v.fabricUnit,
+        pricePerMeter: Number(vPrice.toFixed(2)),
+        stockInMeters: Number(Number(v.stockInMeters).toFixed(2)),
+        isActive: v.isActive,
+      };
+    }),
   };
 
   if (options?.includeIsActive && form.isActive !== undefined) {
@@ -455,6 +487,40 @@ export function validateFabricForm(
     errors["pickupAddress.phone"] = "Phone is required";
   } else if (!/^\d{9}$/.test(form.pickupAddress.phone.trim())) {
     errors["pickupAddress.phone"] = "Phone number must be exactly 9 digits";
+  }
+
+  if (Array.isArray(form.variants) && form.variants.length > 0) {
+    form.variants.forEach((v, i) => {
+      const prefix = `variants.${i}`;
+      if (!v.name?.trim()) {
+        errors[`${prefix}.name`] = "Name (EN) is required for variant";
+      }
+      if (!v.nameAr?.trim()) {
+        errors[`${prefix}.nameAr`] = "Name (AR) is required for variant";
+      }
+      if (!v.slug?.trim()) {
+        errors[`${prefix}.slug`] = "Slug is required for variant";
+      } else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v.slug.trim().toLowerCase())) {
+        errors[`${prefix}.slug`] = "Slug is invalid for variant";
+      }
+      if (!v.material) {
+        errors[`${prefix}.material`] = "Material (EN) is required for variant";
+      }
+      if (!v.materialAr?.trim()) {
+        errors[`${prefix}.materialAr`] = "Material (AR) is required for variant";
+      }
+      const vPrice = Number(v.pricePerUnit);
+      if (isNaN(vPrice) || vPrice <= 0) {
+        errors[`${prefix}.pricePerUnit`] = "Please enter a valid price for variant";
+      }
+      const vStock = Number(v.stockInMeters);
+      if (isNaN(vStock) || vStock < 0) {
+        errors[`${prefix}.stockInMeters`] = "Please enter a valid stock for variant";
+      }
+      if (!v.images?.some(img => img.trim())) {
+        errors[`${prefix}.images`] = "At least one image is required for variant";
+      }
+    });
   }
 
   return errors;

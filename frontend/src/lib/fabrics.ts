@@ -42,6 +42,7 @@ export interface FabricListItem {
 export interface FabricDetailItem extends FabricListItem {
   storePickupAddress: FabricPickupAddress;
   listedByStore: FabricStoreInfo | null;
+  variations?: FabricListItem[];
 }
 
 import { resolveMediaUrl } from "@/lib/media";
