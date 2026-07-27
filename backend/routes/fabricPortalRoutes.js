@@ -256,7 +256,13 @@ fabricPortalRouter.get(
       return;
     }
 
-    const fabrics = await Fabric.find({ listedByStore: req.user._id }).sort({
+    const fabrics = await Fabric.find({
+      listedByStore: req.user._id,
+      $or: [
+        { isVariantOf: null },
+        { isVariantOf: { $exists: false } }
+      ]
+    }).sort({
       createdAt: -1,
     });
     res.json({ success: true, items: fabrics });
@@ -275,7 +281,10 @@ fabricPortalRouter.get(
       res.status(404).json({ success: false, message: "Fabric not found" });
       return;
     }
-    res.json({ success: true, item: fabric });
+    const variants = await Fabric.find({ isVariantOf: fabric._id });
+    const item = fabric.toObject();
+    item.variants = variants;
+    res.json({ success: true, item });
   }),
 );
 
@@ -364,6 +373,59 @@ fabricPortalRouter.post(
       },
       isActive: isActive !== undefined ? isActive : true,
     });
+
+    const generateUniqueSlug = async (name) => {
+      let base = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      if (!base) base = "fabric";
+      let slugVal = base;
+      let counter = 1;
+      while (await Fabric.findOne({ slug: slugVal })) {
+        slugVal = `${base}-${counter}`;
+        counter++;
+      }
+      return slugVal;
+    };
+
+    if (Array.isArray(req.body.variants)) {
+      for (const variant of req.body.variants) {
+        if (!variant.name || !variant.nameAr || !variant.material) continue;
+        let vSlug = variant.slug ? variant.slug.toLowerCase().trim() : "";
+        if (!vSlug) {
+          vSlug = await generateUniqueSlug(variant.name);
+        } else {
+          let originalSlug = vSlug;
+          let counter = 1;
+          while (await Fabric.findOne({ slug: vSlug })) {
+            vSlug = `${originalSlug}-${counter}`;
+            counter++;
+          }
+        }
+
+        await Fabric.create({
+          name: variant.name,
+          nameAr: variant.nameAr,
+          slug: vSlug,
+          description: variant.description || fabric.description,
+          descriptionAr: variant.descriptionAr || fabric.descriptionAr,
+          images: variant.images,
+          material: variant.material,
+          materialAr: variant.materialAr || fabric.materialAr,
+          colors: variant.colors || [],
+          tag: variant.tag || "",
+          tagAr: variant.tagAr || "",
+          pricePerMeter: Number(variant.pricePerMeter),
+          stockInMeters: Number(variant.stockInMeters || 0),
+          listedByStore: fabric.listedByStore,
+          fabricShopId: fabric.fabricShopId,
+          storePickupAddress: fabric.storePickupAddress,
+          isVariantOf: fabric._id,
+          isActive: variant.isActive !== undefined ? variant.isActive : true,
+        });
+      }
+    }
 
     res.status(201).json({ success: true, item: fabric });
   }),
@@ -456,6 +518,96 @@ fabricPortalRouter.put(
     }
 
     const updatedFabric = await fabric.save();
+
+    const generateUniqueSlug = async (name) => {
+      let base = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      if (!base) base = "fabric";
+      let slugVal = base;
+      let counter = 1;
+      while (await Fabric.findOne({ slug: slugVal })) {
+        slugVal = `${base}-${counter}`;
+        counter++;
+      }
+      return slugVal;
+    };
+
+    if (Array.isArray(req.body.variants)) {
+      const incomingIds = [];
+      for (const variant of req.body.variants) {
+        if (variant._id) {
+          incomingIds.push(variant._id.toString());
+          const existing = await Fabric.findOne({
+            _id: variant._id,
+            isVariantOf: updatedFabric._id,
+          });
+          if (existing) {
+            if (variant.name) existing.name = variant.name;
+            if (variant.nameAr) existing.nameAr = variant.nameAr;
+            if (variant.description !== undefined) existing.description = variant.description;
+            if (variant.descriptionAr !== undefined) existing.descriptionAr = variant.descriptionAr;
+            if (variant.images) existing.images = variant.images;
+            if (variant.material) existing.material = variant.material;
+            if (variant.materialAr !== undefined) existing.materialAr = variant.materialAr;
+            if (variant.colors) existing.colors = variant.colors;
+            if (variant.tag !== undefined) existing.tag = variant.tag;
+            if (variant.tagAr !== undefined) existing.tagAr = variant.tagAr;
+            if (variant.pricePerMeter !== undefined) existing.pricePerMeter = Number(variant.pricePerMeter);
+            if (variant.stockInMeters !== undefined) existing.stockInMeters = Number(variant.stockInMeters);
+            if (variant.isActive !== undefined) existing.isActive = variant.isActive;
+
+            existing.listedByStore = updatedFabric.listedByStore;
+            existing.fabricShopId = updatedFabric.fabricShopId;
+            existing.storePickupAddress = updatedFabric.storePickupAddress;
+
+            await existing.save();
+          }
+        } else {
+          if (!variant.name || !variant.nameAr || !variant.material) continue;
+          let vSlug = variant.slug ? variant.slug.toLowerCase().trim() : "";
+          if (!vSlug) {
+            vSlug = await generateUniqueSlug(variant.name);
+          } else {
+            let originalSlug = vSlug;
+            let counter = 1;
+            while (await Fabric.findOne({ slug: vSlug })) {
+              vSlug = `${originalSlug}-${counter}`;
+              counter++;
+            }
+          }
+
+          const newV = await Fabric.create({
+            name: variant.name,
+            nameAr: variant.nameAr,
+            slug: vSlug,
+            description: variant.description || updatedFabric.description,
+            descriptionAr: variant.descriptionAr || updatedFabric.descriptionAr,
+            images: variant.images,
+            material: variant.material,
+            materialAr: variant.materialAr || updatedFabric.materialAr,
+            colors: variant.colors || [],
+            tag: variant.tag || "",
+            tagAr: variant.tagAr || "",
+            pricePerMeter: Number(variant.pricePerMeter),
+            stockInMeters: Number(variant.stockInMeters || 0),
+            listedByStore: updatedFabric.listedByStore,
+            fabricShopId: updatedFabric.fabricShopId,
+            storePickupAddress: updatedFabric.storePickupAddress,
+            isVariantOf: updatedFabric._id,
+            isActive: variant.isActive !== undefined ? variant.isActive : true,
+          });
+          incomingIds.push(newV._id.toString());
+        }
+      }
+
+      await Fabric.deleteMany({
+        isVariantOf: updatedFabric._id,
+        _id: { $nin: incomingIds },
+      });
+    }
+
     res.json({ success: true, item: updatedFabric });
   }),
 );

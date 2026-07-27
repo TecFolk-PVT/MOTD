@@ -72,7 +72,13 @@ fabricRoutes.get("/materials", async (req, res) => {
 fabricRoutes.get("/", async (req, res) => {
   try {
     const { material, page = 1, limit = 20 } = req.query;
-    const filter = { isActive: true };
+    const filter = {
+      isActive: true,
+      $or: [
+        { isVariantOf: null },
+        { isVariantOf: { $exists: false } }
+      ]
+    };
 
     if (material) {
       const normalizedMaterial = material.trim().toLowerCase();
@@ -164,9 +170,29 @@ fabricRoutes.get("/:slug", async (req, res) => {
       });
     }
 
+    const parentId = fabric.isVariantOf || fabric._id;
+    const variants = await Fabric.find({
+      $or: [
+        { _id: parentId },
+        { isVariantOf: parentId }
+      ],
+      isActive: true,
+    }).select("_id name nameAr slug images colors material");
+
+    const detailItem = toDetailItem(fabric);
+    detailItem.variations = variants.map(v => ({
+      _id: v._id,
+      slug: v.slug,
+      name: v.name,
+      nameAr: v.nameAr,
+      images: v.images,
+      colors: v.colors,
+      material: v.material,
+    }));
+
     res.json({
       success: true,
-      item: toDetailItem(fabric),
+      item: detailItem,
     });
   } catch (error) {
     console.error("GET /api/fabrics/:slug error:", error);
