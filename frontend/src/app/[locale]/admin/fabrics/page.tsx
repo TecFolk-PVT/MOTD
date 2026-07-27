@@ -298,9 +298,17 @@ export default function AdminFabricsPage() {
                 right: menuPosition.right,
                 zIndex: 50,
               }}
-              initial={{ opacity: 0, scale: 0.95, y: -8 }}
+              initial={{
+                opacity: 0,
+                scale: 0.95,
+                y: menuPosition.top > 200 ? -8 : 8,
+              }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -8 }}
+              exit={{
+                opacity: 0,
+                scale: 0.95,
+                y: menuPosition.top > 200 ? -8 : 8,
+              }}
               transition={{ duration: 0.15, ease: "easeOut" }}
               className="w-fit bg-white rounded-xl shadow-lg border border-gray-200 py-1 px-2 overflow-hidden"
             >
@@ -477,8 +485,14 @@ export default function AdminFabricsPage() {
                       <button
                         onClick={(e) => {
                           const rect = e.currentTarget.getBoundingClientRect();
+                          const menuHeight = 180; // approximate menu height
+                          const spaceBelow = window.innerHeight - rect.bottom;
+                          const top =
+                            spaceBelow >= menuHeight
+                              ? rect.bottom + 8
+                              : rect.top - menuHeight;
                           setMenuPosition({
-                            top: rect.bottom + 8,
+                            top: Math.max(8, top),
                             right: window.innerWidth - rect.right,
                           });
                           setMenuItem(item);

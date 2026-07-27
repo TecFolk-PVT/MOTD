@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 import { api, getApiErrorMessage } from "@/lib/api/client";
 import FabricAdminFormFields from "@/components/admin/FabricAdminFormFields";
 import { getTranslation } from "@/lib/getTranslation";
@@ -76,9 +77,15 @@ export default function NewFabricPage() {
     try {
       const payload = toFabricApiPayload(formData, { includeIsActive: true });
       await api.post("/api/admin/fabrics", payload);
+      toast.success("Fabric created successfully");
       router.push("/admin/fabrics");
     } catch (err: unknown) {
-      setError(getApiErrorMessage(err, t.adminFabrics.errors.create_failed));
+      const message = getApiErrorMessage(
+        err,
+        t.adminFabrics.errors.create_failed,
+      );
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
