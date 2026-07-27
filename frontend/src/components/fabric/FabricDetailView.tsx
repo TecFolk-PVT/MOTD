@@ -436,6 +436,51 @@ export default function FabricDetailView({
                 </div>
               </motion.div>
 
+              {/* Variations */}
+              {fabric.variations && fabric.variations.length > 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="space-y-3 pt-4 border-t border-[#E4E0D8]"
+                >
+                  <h3 className="[font-family:var(--font-ui)] text-[11px] uppercase tracking-[0.2em] text-black">
+                    {locale === "ar" ? "خيارات بديلة" : "Available Variations"}
+                  </h3>
+                  <div className="flex gap-3 flex-wrap">
+                    {fabric.variations.map((v) => {
+                      const isActive = v._id === fabric._id;
+                      const vTitle = locale === "ar" ? v.nameAr || v.name : v.name;
+                      const imageSrc = resolveMediaUrl(v.images?.[0]) || "/images/placeholder-fabric.jpg";
+                      return (
+                        <Link
+                          key={v._id}
+                          href={`/fabrics/${v.slug}`}
+                          className={`group block w-16 sm:w-20 text-center transition-all ${
+                            isActive ? "opacity-100 pointer-events-none" : "opacity-60 hover:opacity-100"
+                          }`}
+                        >
+                          <div
+                            className={`w-16 h-16 sm:w-20 sm:h-20 overflow-hidden rounded-sm border-2 ${
+                              isActive ? "border-black" : "border-transparent group-hover:border-black/30"
+                            } transition`}
+                          >
+                            <img
+                              src={imageSrc}
+                              alt={vTitle}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="block text-[10px] text-black/70 mt-1 truncate max-w-full font-body-sm uppercase tracking-wide">
+                            {vTitle}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              )}
+
               <motion.div
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}

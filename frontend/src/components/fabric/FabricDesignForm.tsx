@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
@@ -76,6 +76,7 @@ const ERROR_TOAST = {
 
 export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
   const t = useTranslations("FabricPortal.fabrics");
+  const locale = useLocale();
   const router = useRouter();
   const isEditMode = Boolean(fabricId);
 
@@ -90,6 +91,7 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
   const [slugTouched, setSlugTouched] = useState(false);
   const [shopName, setShopName] = useState<string>("");
   const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
+  const [openVariantColorDropdown, setOpenVariantColorDropdown] = useState<number | null>(null);
   const [isMaterialDropdownOpen, setIsMaterialDropdownOpen] = useState(false);
   const [isMaterialArDropdownOpen, setIsMaterialArDropdownOpen] =
     useState(false);
@@ -246,9 +248,63 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
 
     if (field === "slug") setSlugTouched(true);
 
-    if (fieldErrors[field as string]) {
-      setFieldErrors((prev) => ({ ...prev, [field as string]: undefined }));
+  };
+
+  const handleVariantChange = (index: number, field: keyof FabricFormData, value: unknown) => {
+    setFormData((prev) => {
+      const nextVariants = [...(prev.variants || [])];
+      nextVariants[index] = {
+        ...nextVariants[index],
+        [field]: value,
+      } as FabricFormData;
+
+      if (field === "name" && !nextVariants[index].slug && typeof value === "string") {
+        nextVariants[index].slug = slugifyFabricName(value);
+      }
+
+      return {
+        ...prev,
+        variants: nextVariants,
+      };
+    });
+
+    const errorKey = `variants.${index}.${field as string}`;
+    if (fieldErrors[errorKey]) {
+      setFieldErrors((prev) => ({ ...prev, [errorKey]: undefined }));
     }
+  };
+
+  const addVariant = () => {
+    setFormData((prev) => ({
+      ...prev,
+      variants: [
+        ...(prev.variants || []),
+        {
+          name: "",
+          nameAr: "",
+          slug: "",
+          description: "",
+          descriptionAr: "",
+          images: [""],
+          material: prev.material,
+          materialAr: prev.materialAr,
+          colors: [],
+          tag: "",
+          tagAr: "",
+          pricePerMeter: prev.pricePerMeter,
+          stockInMeters: 0,
+          storePickupAddress: prev.storePickupAddress,
+          isActive: true,
+        },
+      ],
+    }));
+  };
+
+  const removeVariant = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      variants: (prev.variants || []).filter((_, i) => i !== index),
+    }));
   };
 
   const handlePickupChange = (subfield: keyof PickupAddress, value: string) => {
@@ -338,6 +394,30 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
     } else if (!/^\d{9}$/.test(formData.storePickupAddress.phone.trim())) {
       errors["storePickupAddress.phone"] =
         "Phone number must be exactly 9 digits";
+    }
+
+    if (formData.variants && formData.variants.length > 0) {
+      formData.variants.forEach((v, i) => {
+        const prefix = `variants.${i}`;
+        if (!v.name.trim()) errors[`${prefix}.name`] = t("validation.nameRequired");
+        if (!v.nameAr.trim()) errors[`${prefix}.nameAr`] = t("validation.nameArRequired");
+        if (!v.slug.trim()) {
+          errors[`${prefix}.slug`] = t("validation.slugRequired");
+        } else if (!SLUG_PATTERN.test(v.slug.trim().toLowerCase())) {
+          errors[`${prefix}.slug`] = t("validation.slugInvalid");
+        }
+        if (!v.images.some((img) => img.trim())) {
+          errors[`${prefix}.images`] = t("validation.imagesRequired");
+        }
+        const pNum = Number(v.pricePerMeter);
+        if (isNaN(pNum) || pNum <= 0) {
+          errors[`${prefix}.pricePerMeter`] = t("validation.pricePerMeterInvalid");
+        }
+        const sNum = Number(v.stockInMeters);
+        if (isNaN(sNum) || sNum < 0) {
+          errors[`${prefix}.stockInMeters`] = t("validation.stockInMetersInvalid");
+        }
+      });
     }
 
     setFieldErrors(errors);
@@ -1115,6 +1195,350 @@ export default function FabricDesignForm({ fabricId }: FabricDesignFormProps) {
             </FormField>
           </div>
         </div>
+
+        {/* VARIATIONS SECTION */}
+        <div className="pt-8 mt-8 border-t border-gray-200 space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-[14px] font-bold text-black tracking-wider uppercase [font-family:var(--font-ui)]">
+                {locale === "ar" ? "خيارات الأقمشة البديلة" : "Fabric Variations"}
+              </h3>
+              <p className="text-gray-500 text-xs mt-1">
+                {locale === "ar" ? "أضف ألواناً أو نقوشاً بديلة لهذا القماش" : "Add different variations of this fabric (e.g., other colorways, weights, etc.)"}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={addVariant}
+              className="px-4 py-2 border border-black text-[11px] uppercase tracking-wider hover:bg-black hover:text-white transition font-medium cursor-pointer"
+            >
+              + {locale === "ar" ? "إضافة خيار بديل" : "Add Variant"}
+            </button>
+          </div>
+
+          {formData.variants && formData.variants.length > 0 && (
+            <div className="space-y-8">
+              {formData.variants.map((variant, index) => {
+                const prefix = `variants.${index}`;
+                return (
+                  <div
+                    key={index}
+                    className="p-6 border border-gray-200 bg-[#FAF9F5] space-y-6 relative rounded-none"
+                  >
+                    <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+                      <span className="font-label-sm text-[11px] text-black/60 uppercase tracking-widest font-semibold">
+                        {locale === "ar" ? `الخيار البديل #${index + 1}` : `Variant #${index + 1}`}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeVariant(index)}
+                        className="text-xs text-red-600 hover:underline font-medium cursor-pointer"
+                      >
+                        {locale === "ar" ? "حذف هذا الخيار" : "Remove Variant"}
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* VARIANT NAME (EN) */}
+                      <FormField
+                        label="Name (EN)"
+                        name={`${prefix}.name`}
+                        error={fieldErrors[`${prefix}.name`]}
+                        required
+                      >
+                        <input
+                          type="text"
+                          value={variant.name}
+                          onChange={(e) => handleVariantChange(index, "name", e.target.value)}
+                          className={INPUT_CLASS}
+                          placeholder="e.g. Red Silk"
+                        />
+                      </FormField>
+
+                      {/* VARIANT NAME (AR) */}
+                      <FormField
+                        label="Name (AR)"
+                        name={`${prefix}.nameAr`}
+                        error={fieldErrors[`${prefix}.nameAr`]}
+                        required
+                      >
+                        <input
+                          type="text"
+                          value={variant.nameAr}
+                          onChange={(e) => handleVariantChange(index, "nameAr", e.target.value)}
+                          className={`${INPUT_CLASS} text-right`}
+                          placeholder="مثال: حرير أحمر"
+                          dir="rtl"
+                        />
+                      </FormField>
+
+                      {/* VARIANT SLUG */}
+                      <FormField
+                        label="Slug"
+                        name={`${prefix}.slug`}
+                        error={fieldErrors[`${prefix}.slug`]}
+                        required
+                      >
+                        <input
+                          type="text"
+                          value={variant.slug}
+                          onChange={(e) => handleVariantChange(index, "slug", e.target.value)}
+                          className={INPUT_CLASS}
+                          placeholder="e.g. red-silk"
+                        />
+                      </FormField>
+
+                      {/* VARIANT MATERIAL */}
+                      <FormField
+                        label="Material"
+                        name={`${prefix}.material`}
+                        error={fieldErrors[`${prefix}.material`]}
+                        required
+                      >
+                        <select
+                          value={variant.material}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            handleVariantChange(index, "material", val);
+                            const found = (dbMaterials.length > 0 ? dbMaterials : FABRIC_MATERIALS).find(
+                              (m) => ("value" in m ? m.value === val : m.name === val)
+                            );
+                            if (found) {
+                              const nameAr = "nameAr" in found ? found.nameAr : (found as any).ar;
+                              handleVariantChange(index, "materialAr", nameAr || "");
+                            }
+                          }}
+                          className={`${INPUT_CLASS} bg-transparent py-1 border-b border-gray-300 focus:border-black focus:outline-none`}
+                        >
+                          <option value="">Select material</option>
+                          {(dbMaterials.length > 0
+                            ? dbMaterials.map(m => ({ value: m.name, label: m.name }))
+                            : FABRIC_MATERIALS.map(m => ({ value: m.value, label: m.en }))
+                          ).map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </FormField>
+
+                      {/* VARIANT COLORS */}
+                      <div className="md:col-span-2">
+                        <FormField
+                          label="Colors"
+                          name={`${prefix}.colors`}
+                          error={fieldErrors[`${prefix}.colors`]}
+                          required
+                        >
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() => setOpenVariantColorDropdown(prev => prev === index ? null : index)}
+                              className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between gap-2 cursor-pointer"
+                            >
+                              {!variant.colors || variant.colors.length === 0 ? (
+                                <span className="text-xs text-black/60 leading-none">
+                                  Select colors
+                                </span>
+                              ) : (
+                                <div className="flex flex-wrap gap-2 items-center">
+                                  {COLOR_OPTIONS.filter((c) =>
+                                    variant.colors?.includes(c.value),
+                                  ).map((c) => (
+                                    <span
+                                      key={c.value}
+                                      className="inline-flex items-center justify-center"
+                                      title={c.en}
+                                    >
+                                      <span
+                                        className="w-5 h-5 rounded-full border border-gray-200"
+                                        style={{ backgroundColor: c.value }}
+                                      />
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                              <ChevronDown
+                                size={14}
+                                className={`shrink-0 text-black/40 transition-transform duration-200 ${
+                                  openVariantColorDropdown === index ? "rotate-180" : ""
+                                }`}
+                              />
+                            </button>
+
+                            <AnimatePresence>
+                              {openVariantColorDropdown === index && (
+                                <motion.div
+                                  initial={{ opacity: 0, y: -8, scale: 0.96 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                                  transition={{ duration: 0.15, ease: "easeOut" }}
+                                  className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3 z-50 origin-top"
+                                >
+                                  <div className="max-h-44 overflow-auto flex flex-col gap-2">
+                                    {COLOR_OPTIONS.map((opt) => {
+                                      const isSelected = variant.colors?.includes(opt.value);
+                                      return (
+                                        <label
+                                          key={opt.value}
+                                          className="flex items-center gap-2 cursor-pointer"
+                                        >
+                                          <input
+                                            type="checkbox"
+                                            checked={isSelected}
+                                            onChange={() => {
+                                              const currentColors = variant.colors || [];
+                                              const nextColors = currentColors.includes(opt.value)
+                                                ? currentColors.filter((col) => col !== opt.value)
+                                                : [...currentColors, opt.value];
+                                              handleVariantChange(index, "colors", nextColors);
+                                            }}
+                                            className="accent-black"
+                                          />
+                                          <span className="inline-flex items-center gap-2">
+                                            <span
+                                              className="w-4 h-4 rounded-full border border-gray-200"
+                                              style={{ backgroundColor: opt.value }}
+                                            />
+                                            <span className="text-xs">
+                                              {opt.en} / {opt.ar}
+                                            </span>
+                                          </span>
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+                        </FormField>
+                      </div>
+
+                      {/* VARIANT PRICE PER METER */}
+                      <FormField
+                        label="Price Per Meter (AED)"
+                        name={`${prefix}.pricePerMeter`}
+                        error={fieldErrors[`${prefix}.pricePerMeter`]}
+                        required
+                      >
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={variant.pricePerMeter === 0 ? "" : variant.pricePerMeter}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || /^\d*\.?\d*$/.test(val)) {
+                              handleVariantChange(index, "pricePerMeter", val);
+                            }
+                          }}
+                          className={INPUT_CLASS}
+                          placeholder="0.00"
+                        />
+                      </FormField>
+
+                      {/* VARIANT STOCK IN METERS */}
+                      <FormField
+                        label="Stock in Meters"
+                        name={`${prefix}.stockInMeters`}
+                        error={fieldErrors[`${prefix}.stockInMeters`]}
+                        required
+                      >
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={variant.stockInMeters === 0 ? "" : variant.stockInMeters}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === "" || /^\d*$/.test(val)) {
+                              handleVariantChange(index, "stockInMeters", val);
+                            }
+                          }}
+                          className={INPUT_CLASS}
+                          placeholder="e.g. 50"
+                        />
+                      </FormField>
+
+                      {/* VARIANT ACTIVE STATUS */}
+                      <FormField label="Active Status" name={`${prefix}.isActive`}>
+                        <div className="flex items-center gap-2 mt-2">
+                          <input
+                            type="checkbox"
+                            id={`${prefix}.isActive`}
+                            checked={variant.isActive}
+                            onChange={(e) => handleVariantChange(index, "isActive", e.target.checked)}
+                            className="w-4 h-4 accent-black cursor-pointer"
+                          />
+                          <label
+                            htmlFor={`${prefix}.isActive`}
+                            className="text-xs text-gray-700 cursor-pointer"
+                          >
+                            Active (visible to customers)
+                          </label>
+                        </div>
+                      </FormField>
+
+                      {/* VARIANT IMAGES */}
+                      <div className="md:col-span-2 space-y-2">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-label-sm text-[10px] text-black/60 uppercase tracking-widest font-semibold">
+                            Images (Max 5)
+                          </span>
+                          {variant.images.length < 5 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newImgs = [...variant.images, ""];
+                                handleVariantChange(index, "images", newImgs);
+                              }}
+                              className="text-[11px] text-black underline hover:text-neutral-700 transition font-medium"
+                            >
+                              + Add Image
+                            </button>
+                          )}
+                        </div>
+                        {fieldErrors[`${prefix}.images`] && (
+                          <p className="text-xs text-red-500 mb-2">{fieldErrors[`${prefix}.images`]}</p>
+                        )}
+                        {variant.images.map((imgUrl, imgIdx) => (
+                          <div key={imgIdx} className="p-4 border border-gray-100 bg-white rounded-none space-y-2">
+                            <FabricImageUpload
+                              value={imgUrl}
+                              onChange={(val) => {
+                                const nextImgs = [...variant.images];
+                                nextImgs[imgIdx] = val;
+                                handleVariantChange(index, "images", nextImgs);
+                              }}
+                              chooseFileLabel="Upload Image"
+                              uploadingLabel="Uploading..."
+                              uploadFailedLabel="Upload failed"
+                              removeLabel="Remove"
+                              uploadEndpoint="/api/fabric/uploads/fabric-image"
+                            />
+                            {variant.images.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const nextImgs = variant.images.filter((_, i) => i !== imgIdx);
+                                  handleVariantChange(index, "images", nextImgs);
+                                }}
+                                className="text-[10px] text-red-500 hover:underline block mt-2"
+                              >
+                                Remove image from list
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
 
         <div
           ref={formActionsRef}

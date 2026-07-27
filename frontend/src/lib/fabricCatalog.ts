@@ -30,9 +30,11 @@ export interface FabricProfile {
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
+  variants?: FabricProfile[];
 }
 
 export interface FabricFormData {
+  _id?: string;
   name: string;
   nameAr: string;
   slug: string;
@@ -48,6 +50,7 @@ export interface FabricFormData {
   stockInMeters: number;
   storePickupAddress: PickupAddress;
   isActive: boolean;
+  variants?: FabricFormData[];
 }
 
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -90,6 +93,7 @@ export function slugifyFabricName(name: string): string {
 
 export function fabricToForm(fabric: FabricProfile): FabricFormData {
   return {
+    _id: fabric._id,
     name: fabric.name ?? "",
     nameAr: fabric.nameAr ?? "",
     slug: fabric.slug ?? "",
@@ -113,6 +117,7 @@ export function fabricToForm(fabric: FabricProfile): FabricFormData {
       phone: fabric.storePickupAddress?.phone ?? "",
     },
     isActive: fabric.isActive ?? true,
+    variants: fabric.variants?.map(fabricToForm) ?? [],
   };
 }
 
@@ -139,6 +144,23 @@ export function toFabricPayload(form: FabricFormData): Record<string, unknown> {
       phone: form.storePickupAddress.phone.trim(),
     },
     isActive: form.isActive,
+    variants: form.variants?.map(v => ({
+      _id: v._id,
+      name: v.name.trim(),
+      nameAr: v.nameAr.trim(),
+      slug: v.slug.trim().toLowerCase(),
+      description: v.description.trim(),
+      descriptionAr: v.descriptionAr.trim(),
+      images: v.images.map((image) => image.trim()).filter(Boolean),
+      material: v.material,
+      materialAr: v.materialAr.trim(),
+      colors: v.colors.map((c) => c.trim()).filter(Boolean),
+      tag: v.tag.trim(),
+      tagAr: v.tagAr.trim(),
+      pricePerMeter: Number(v.pricePerMeter),
+      stockInMeters: Number(v.stockInMeters),
+      isActive: v.isActive,
+    }))
   };
 }
 

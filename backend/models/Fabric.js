@@ -63,6 +63,11 @@ const fabricSchema = new mongoose.Schema(
       type: storePickupAddressSchema,
       required: true,
     },
+    isVariantOf: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Fabric",
+      default: null,
+    },
     isActive: { type: Boolean, default: true, required: true },
   },
   {
@@ -72,6 +77,7 @@ const fabricSchema = new mongoose.Schema(
 
 fabricSchema.index({ isActive: 1, material: 1 });
 fabricSchema.index({ listedByStore: 1 });
+fabricSchema.index({ isVariantOf: 1 });
 
 fabricSchema.pre("save", async function populateFabricShopId(next) {
   if (this.listedByStore) {
