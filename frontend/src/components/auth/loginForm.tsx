@@ -77,6 +77,20 @@ export default function LoginPage() {
         }
     };
 
+    const handleCustomerLogin = async () => {
+        setError("");
+        setSuccess("");
+        setIsLoading(true);
+        try {
+            await login("customer@motd.test", "MotdSeed123!");
+            setSuccess(t.login.successMessage || "Login successful! Redirecting...");
+        } catch (err: any) {
+            setError(err.message || "An error occurred during customer sign-in.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <main className="min-h-screen w-full flex flex-col md:flex-row bg-[#FFFDF9]">
             {/* Left Side - Image Section */}
@@ -240,6 +254,18 @@ export default function LoginPage() {
                                 disabled={isLoading}
                                 onError={(message) => setError(message)}
                             />
+
+                            <button
+                                type="button"
+                                onClick={handleCustomerLogin}
+                                disabled={isLoading}
+                                className="w-full h-12 md:h-13 border border-black/15 text-black bg-transparent font-label-sm text-[12px] md:text-[13px] uppercase tracking-[0.25em] hover:bg-black/5 transition-all duration-300 active:scale-[0.98] mt-4 flex items-center justify-center gap-2 hover:cursor-pointer"
+                            >
+                                <svg className="w-4.5 h-4.5 text-black/60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                                </svg>
+                                {locale === "ar" ? "تسجيل الدخول كعميل" : "Sign in as a Customer"}
+                            </button>
                         </form>
 
                         <footer className="mt-8 pt-5 border-t border-black/10 text-center fade-in">
