@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useMemo } from "react";
+import { useCallback, useEffect, useState, useMemo, Fragment } from "react";
 import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import { Link } from "@/i18n/navigation";
@@ -19,6 +19,7 @@ import {
   Package,
   Search,
   RefreshCw,
+  Image as ImageIcon,
 } from "lucide-react";
 
 // Reuse Toast configurations
@@ -67,6 +68,7 @@ export default function FabricDesignsList() {
     const [shopMissing, setShopMissing] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
+    const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
     const loadFabrics = useCallback(async () => {
         setLoading(true);
@@ -257,52 +259,150 @@ export default function FabricDesignsList() {
                                     const name = locale === "ar" ? fabric.nameAr || fabric.name : fabric.name;
                                     const materialDisplay = locale === "ar" ? fabric.materialAr || fabric.material : fabric.material;
                                     return (
-                                        <tr
-                                            key={fabric._id}
-                                            className="group hover:bg-gray-50 transition-all duration-200"
-                                        >
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black [font-family:var(--font-body)]">
-                                                {name}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 [font-family:var(--font-body)]">
-                                                {materialDisplay}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 [font-family:var(--font-body)]">
-                                                AED {fabric.pricePerMeter.toLocaleString()}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 [font-family:var(--font-body)]">
-                                                {fabric.stockInMeters.toLocaleString()} m
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <span
-                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium [font-family:var(--font-ui)] ${
-                                                        fabric.isActive
-                                                            ? "bg-white text-black border border-black/30"
-                                                            : "bg-gray-100 text-gray-500 border border-gray-200"
-                                                    }`}
-                                                >
-                                                    {fabric.isActive ? t("statusActive") : t("statusInactive")}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right">
-                                                <div className="flex items-center justify-end gap-3">
-                                                    <Link
-                                                        href={`/fabric/fabrics/${fabric._id}/edit`}
-                                                        className="text-gray-400 hover:text-black transition-colors"
+                                        <Fragment key={fabric._id}>
+                                            <tr
+                                                className="group hover:bg-gray-50 transition-all duration-200"
+                                            >
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-black [font-family:var(--font-body)]">
+                                                    {name}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 [font-family:var(--font-body)]">
+                                                    {materialDisplay}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 [font-family:var(--font-body)]">
+                                                    AED {fabric.pricePerMeter.toLocaleString()}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 [font-family:var(--font-body)]">
+                                                    {fabric.stockInMeters.toLocaleString()} m
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                    <span
+                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium [font-family:var(--font-ui)] ${
+                                                            fabric.isActive
+                                                                ? "bg-white text-black border border-black/30"
+                                                                : "bg-gray-100 text-gray-500 border border-gray-200"
+                                                        }`}
                                                     >
-                                                        <Edit className="w-4.5 h-4.5" />
-                                                    </Link>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleDelete(fabric)}
-                                                        disabled={deletingId === fabric._id}
-                                                        className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
-                                                    >
-                                                        <Trash2 className="w-4.5 h-4.5" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                                        {fabric.isActive ? t("statusActive") : t("statusInactive")}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-right">
+                                                    <div className="flex items-center justify-end gap-3">
+                                                        {fabric.variants && fabric.variants.length > 0 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setExpandedRows((prev) => ({
+                                                                        ...prev,
+                                                                        [fabric._id]: !prev[fabric._id],
+                                                                    }));
+                                                                }}
+                                                                className="px-2 py-1 border border-black/25 text-[10px] font-semibold uppercase tracking-wider hover:bg-black hover:text-white transition rounded cursor-pointer"
+                                                            >
+                                                                {expandedRows[fabric._id] ? (locale === "ar" ? "إخفاء الخيارات" : "Hide variants") : (locale === "ar" ? `عرض الخيارات (${fabric.variants.length})` : `Show variant (${fabric.variants.length})`)}
+                                                            </button>
+                                                        )}
+                                                        <Link
+                                                            href={`/fabric/fabrics/${fabric._id}/edit`}
+                                                            className="text-gray-400 hover:text-black transition-colors"
+                                                            title={locale === "ar" ? "تعديل" : "Edit"}
+                                                        >
+                                                            <Edit className="w-4.5 h-4.5" />
+                                                        </Link>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDelete(fabric)}
+                                                            disabled={deletingId === fabric._id}
+                                                            className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
+                                                            title={locale === "ar" ? "حذف" : "Delete"}
+                                                        >
+                                                            <Trash2 className="w-4.5 h-4.5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {expandedRows[fabric._id] && fabric.variants && fabric.variants.length > 0 && (
+                                                <tr className="bg-[#FAF9F5]/45">
+                                                    <td colSpan={6} className="px-6 py-4">
+                                                        <div className={`space-y-2.5 ${locale === "ar" ? "pr-8 text-right" : "pl-8 text-left"}`}>
+                                                            <span className="text-[10px] font-semibold uppercase tracking-widest text-black/55 block">
+                                                                {locale === "ar" ? "الخيارات البديلة" : "Variations"}
+                                                            </span>
+                                                            <div className="border border-gray-200/60 rounded-xl bg-white shadow-sm overflow-hidden">
+                                                                <table className="min-w-full divide-y divide-gray-100">
+                                                                    <thead className="bg-gray-50/70">
+                                                                        <tr>
+                                                                            <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">{locale === "ar" ? "الاسم" : "NAME"}</th>
+                                                                            <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">{locale === "ar" ? "المادة" : "MATERIAL"}</th>
+                                                                            <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">{locale === "ar" ? "السعر / متر" : "PRICE / M"}</th>
+                                                                            <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">{locale === "ar" ? "المخزون" : "STOCK"}</th>
+                                                                            <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">{locale === "ar" ? "الحالة" : "STATUS"}</th>
+                                                                            <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wider [font-family:var(--font-ui)]">{locale === "ar" ? "الإجراءات" : "ACTIONS"}</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody className="divide-y divide-gray-100 bg-white">
+                                                                        {fabric.variants.map((v) => {
+                                                                            const vName = locale === "ar" ? v.nameAr || v.name : v.name;
+                                                                            const vMaterial = locale === "ar" ? v.materialAr || v.material : v.material;
+                                                                            return (
+                                                                                <tr key={v._id} className="hover:bg-gray-50/60 transition-colors">
+                                                                                    <td className="px-4 py-3 whitespace-nowrap text-xs font-semibold text-black [font-family:var(--font-body)]">
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            {v.images && v.images.length > 0 ? (
+                                                                                                <img
+                                                                                                    src={v.images[0]}
+                                                                                                    alt={vName}
+                                                                                                    className="w-8 h-8 rounded-lg object-cover"
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                                                                                                    <ImageIcon className="w-3.5 h-3.5 text-gray-400" />
+                                                                                                </div>
+                                                                                            )}
+                                                                                            <span>{vName}</span>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600 [font-family:var(--font-body)]">{vMaterial}</td>
+                                                                                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600 [font-family:var(--font-body)]">AED {v.pricePerMeter.toLocaleString()}</td>
+                                                                                    <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600 [font-family:var(--font-body)]">{v.stockInMeters.toLocaleString()} m</td>
+                                                                                    <td className="px-4 py-3 whitespace-nowrap">
+                                                                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium [font-family:var(--font-ui)] ${
+                                                                                            v.isActive ? "bg-white text-black border border-black/30" : "bg-gray-100 text-gray-500"
+                                                                                        }`}>
+                                                                                            {v.isActive ? (locale === "ar" ? "نشط" : "Active") : (locale === "ar" ? "غير نشط" : "Inactive")}
+                                                                                        </span>
+                                                                                    </td>
+                                                                                    <td className="px-4 py-3 whitespace-nowrap text-right text-xs">
+                                                                                        <div className="flex items-center justify-end gap-3">
+                                                                                            <Link
+                                                                                                href={`/fabric/fabrics/${v._id}/edit`}
+                                                                                                className="text-gray-400 hover:text-black transition-colors"
+                                                                                                title={locale === "ar" ? "تعديل" : "Edit"}
+                                                                                            >
+                                                                                                <Edit className="w-4 h-4" />
+                                                                                            </Link>
+                                                                                            <button
+                                                                                                type="button"
+                                                                                                onClick={() => handleDelete(v)}
+                                                                                                disabled={deletingId === v._id}
+                                                                                                className="text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
+                                                                                                title={locale === "ar" ? "حذف" : "Delete"}
+                                                                                            >
+                                                                                                <Trash2 className="w-4 h-4" />
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            );
+                                                                        })}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </Fragment>
                                     );
                                 })}
                             </tbody>

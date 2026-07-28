@@ -550,7 +550,16 @@ adminRouter.get(
     const fabrics = await Fabric.find(filter)
       .populate("listedByStore", "name email")
       .sort({ createdAt: -1 });
-    res.send(fabrics);
+
+    const fabricsWithVariants = await Promise.all(
+      fabrics.map(async (fabric) => {
+        const variants = await Fabric.find({ isVariantOf: fabric._id }).populate("listedByStore", "name email");
+        const obj = fabric.toObject();
+        obj.variants = variants;
+        return obj;
+      })
+    );
+    res.send(fabricsWithVariants);
   }),
 );
 

@@ -265,7 +265,16 @@ fabricPortalRouter.get(
     }).sort({
       createdAt: -1,
     });
-    res.json({ success: true, items: fabrics });
+
+    const fabricsWithVariants = await Promise.all(
+      fabrics.map(async (fabric) => {
+        const variants = await Fabric.find({ isVariantOf: fabric._id });
+        const obj = fabric.toObject();
+        obj.variants = variants;
+        return obj;
+      })
+    );
+    res.json({ success: true, items: fabricsWithVariants });
   }),
 );
 
