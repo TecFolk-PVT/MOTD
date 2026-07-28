@@ -743,7 +743,7 @@ export interface CustomOrderCreatePayload extends CustomOrderPreviewPayload {
   measurements: CustomOrderMeasurements;
   customerDeliveryAddress: CustomOrderDeliveryAddress;
   pickupAddress?: CustomOrderDeliveryAddress;
-  paymentMethod: "cod" | "apple_pay";
+  paymentMethod: "cod" | "apple_pay" | "card";
   addPocket?: boolean;
   addBottomWideFold?: boolean;
 }
@@ -751,7 +751,7 @@ export interface CustomOrderCreatePayload extends CustomOrderPreviewPayload {
 export function buildCustomOrderCreatePayload(
   draft: CustomOrderDraft,
   deliveryAddress: CustomOrderDeliveryAddress,
-  paymentMethod: "cod" | "apple_pay" = "cod",
+  paymentMethod: "cod" | "apple_pay" | "card" = "cod",
 ): CustomOrderCreatePayload | null {
   const preview = buildCustomOrderPreviewPayload(draft);
   if (!preview) return null;

@@ -17,6 +17,7 @@ import type { CartItem } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { resolveMediaUrl } from "@/lib/media";
 import ApplePayCheckout from "@/components/payments/ApplePayCheckout";
+import CardPaymentForm from "@/components/payments/CardPaymentForm";
 import toast from "react-hot-toast";
 import { SUCCESS_TOAST, ERROR_TOAST } from "@/lib/tailorPortalToast";
 
@@ -213,9 +214,9 @@ function CheckoutPageContent() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "apple_pay">(
-    "cod",
-  );
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cod" | "apple_pay" | "card"
+  >("cod");
 
   // Redirect if not logged in — preserve query params
   useEffect(() => {
@@ -412,7 +413,10 @@ function CheckoutPageContent() {
     };
   };
 
-  const completeRetailOrder = async (paymentIntentId: string) => {
+  const completeRetailOrder = async (
+    paymentIntentId: string,
+    method: "apple_pay" | "card" = "apple_pay",
+  ) => {
     setIsSubmitting(true);
     setErrorMessage(null);
 
@@ -424,7 +428,7 @@ function CheckoutPageContent() {
         message?: string;
       }>("/api/orders/retail", {
         ...payload,
-        paymentMethod: "apple_pay",
+        paymentMethod: method,
         paymentIntentId,
       });
 
@@ -738,6 +742,24 @@ function CheckoutPageContent() {
                       <input
                         type="radio"
                         name="paymentMethod"
+                        value="card"
+                        checked={paymentMethod === "card"}
+                        onChange={() => setPaymentMethod("card")}
+                        className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                      />
+                      <span>
+                        <span className="block [font-family:var(--font-body)] text-[15px] text-black">
+                          {t.checkout.cardLabel}
+                        </span>
+                        <span className="block [font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) mt-0.5">
+                          {t.checkout.cardDescription}
+                        </span>
+                      </span>
+                    </label>
+                    <label className="flex items-start gap-3 cursor-pointer select-none">
+                      <input
+                        type="radio"
+                        name="paymentMethod"
                         value="apple_pay"
                         checked={paymentMethod === "apple_pay"}
                         onChange={() => setPaymentMethod("apple_pay")}
@@ -762,7 +784,7 @@ function CheckoutPageContent() {
                 )}
 
                 <div className="mt-6 md:mt-7">
-                  {paymentMethod === "cod" ? (
+                  {paymentMethod === "cod" && (
                     <button
                       type="button"
                       onClick={placeCodOrder}
@@ -773,7 +795,24 @@ function CheckoutPageContent() {
                         ? t.checkout.processing
                         : t.checkout.placeOrder}
                     </button>
-                  ) : (
+                  )}
+
+                  {paymentMethod === "card" && (
+                    <CardPaymentForm
+                      amountAed={total}
+                      cardholderName={formData.fullName}
+                      disabled={isSubmitting || displayItems.length === 0}
+                      payLabel={t.checkout.payButton}
+                      processingLabel={t.checkout.processing}
+                      loadingLabel={t.checkout.loadingCard}
+                      notConfiguredLabel={t.checkout.cardNotConfigured}
+                      createIntent={createRetailPaymentIntent}
+                      onPaid={(id) => completeRetailOrder(id, "card")}
+                      onError={handlePaymentError}
+                    />
+                  )}
+
+                  {paymentMethod === "apple_pay" && (
                     <ApplePayCheckout
                       amountAed={total}
                       orderLabel={t.checkout.applePayOrderLabel}
@@ -783,7 +822,7 @@ function CheckoutPageContent() {
                       unavailableLabel={t.checkout.applePayUnavailable}
                       notConfiguredLabel={t.checkout.applePayNotConfigured}
                       createIntent={createRetailPaymentIntent}
-                      onPaid={completeRetailOrder}
+                      onPaid={(id) => completeRetailOrder(id, "apple_pay")}
                       onError={handlePaymentError}
                     />
                   )}
