@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, Fragment } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
@@ -41,6 +41,7 @@ interface FabricItem {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  variants?: FabricItem[];
 }
 
 export default function AdminFabricsPage() {
@@ -59,6 +60,7 @@ export default function AdminFabricsPage() {
     right: number;
   } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   // Modal state
   const [modalOpen, setModalOpen] = useState(false);
@@ -312,6 +314,23 @@ export default function AdminFabricsPage() {
               transition={{ duration: 0.15, ease: "easeOut" }}
               className="w-fit bg-white rounded-xl shadow-lg border border-gray-200 py-1 px-2 overflow-hidden"
             >
+              {menuItem.variants && menuItem.variants.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setExpandedRows((prev) => ({
+                      ...prev,
+                      [menuItem._id]: !prev[menuItem._id],
+                    }));
+                    setMenuPosition(null);
+                    setMenuItem(null);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left hover:cursor-pointer"
+                >
+                  <Eye className="w-4 h-4 shrink-0" />
+                  <span>{expandedRows[menuItem._id] ? "Hide Variants" : `Show Variants (${menuItem.variants.length})`}</span>
+                </button>
+              )}
               <Link
                 href={`/admin/fabrics/${menuItem._id}/edit`}
                 onClick={() => {
@@ -454,56 +473,150 @@ export default function AdminFabricsPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {filteredItems.map((item) => (
-                  <tr
-                    key={item._id}
-                    className="group hover:bg-gray-50 transition-all duration-200"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
-                        {getItemImage(item)}
-                        <span className="text-sm font-medium text-black">
-                          {item.name || "—"}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {item.material}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      AED {item.pricePerMeter.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {getStoreDisplay(item.listedByStore)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {item.storePickupAddress.emirate || "—"}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <StatusBadge isActive={item.isActive} />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <button
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          const menuHeight = 180; // approximate menu height
-                          const spaceBelow = window.innerHeight - rect.bottom;
-                          const top =
-                            spaceBelow >= menuHeight
-                              ? rect.bottom + 8
-                              : rect.top - menuHeight;
-                          setMenuPosition({
-                            top: Math.max(8, top),
-                            right: window.innerWidth - rect.right,
-                          });
-                          setMenuItem(item);
-                        }}
-                        className="text-gray-400 hover:text-black transition-colors p-1.5 rounded-lg hover:bg-gray-100 inline-flex items-center justify-center"
-                        title="Actions"
-                      >
-                        <MoreVertical className="w-5 h-5 hover:cursor-pointer" />
-                      </button>
-                    </td>
-                  </tr>
+                  <Fragment key={item._id}>
+                    <tr
+                      className="group hover:bg-gray-50 transition-all duration-200"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          {getItemImage(item)}
+                          <span className="text-sm font-medium text-black">
+                            {item.name || "—"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {item.material}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        AED {item.pricePerMeter.toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {getStoreDisplay(item.listedByStore)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {item.storePickupAddress.emirate || "—"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <StatusBadge isActive={item.isActive} />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
+                        {item.variants && item.variants.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setExpandedRows((prev) => ({
+                                ...prev,
+                                [item._id]: !prev[item._id],
+                              }));
+                            }}
+                            className="px-2.5 py-1 border border-black/25 text-[10px] font-semibold uppercase tracking-wider hover:bg-black hover:text-white transition rounded cursor-pointer"
+                          >
+                            {expandedRows[item._id] ? "Hide variants" : `Show variant (${item.variants.length})`}
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const menuHeight = 180; // approximate menu height
+                            const spaceBelow = window.innerHeight - rect.bottom;
+                            const top =
+                              spaceBelow >= menuHeight
+                                ? rect.bottom + 8
+                                : rect.top - menuHeight;
+                            setMenuPosition({
+                              top: Math.max(8, top),
+                              right: window.innerWidth - rect.right,
+                            });
+                            setMenuItem(item);
+                          }}
+                          className="text-gray-400 hover:text-black transition-colors p-1.5 rounded-lg hover:bg-gray-100 inline-flex items-center justify-center"
+                          title="Actions"
+                        >
+                          <MoreVertical className="w-5 h-5 hover:cursor-pointer" />
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedRows[item._id] && item.variants && item.variants.length > 0 && (
+                      <tr className="bg-[#FAF9F5]/40">
+                        <td colSpan={7} className="px-6 py-4">
+                          <div className="pl-8 space-y-2.5">
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-black/55 block">
+                              Variations
+                            </span>
+                            <div className="border border-gray-200/60 rounded-xl bg-white shadow-sm overflow-hidden">
+                              <table className="min-w-full divide-y divide-gray-100">
+                                <thead className="bg-gray-50/70">
+                                  <tr>
+                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_name}</th>
+                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_material}</th>
+                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_price}</th>
+                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_store}</th>
+                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_city}</th>
+                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_status}</th>
+                                    <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_actions}</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-100 bg-white">
+                                  {item.variants.map((v) => (
+                                    <tr key={v._id} className="hover:bg-gray-50/60 transition-colors">
+                                      <td className="px-4 py-3 whitespace-nowrap text-xs font-semibold text-black">
+                                        <div className="flex items-center gap-2">
+                                          {v.images && v.images.length > 0 ? (
+                                            <img
+                                              src={v.images[0]}
+                                              alt={v.name}
+                                              className="w-8 h-8 rounded-lg object-cover cursor-pointer"
+                                              onClick={() => handleImageClick(v.images[0])}
+                                            />
+                                          ) : (
+                                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                                              <ImageIcon className="w-3.5 h-3.5 text-gray-400" />
+                                            </div>
+                                          )}
+                                          <span>{v.name}</span>
+                                        </div>
+                                      </td>
+                                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600">{v.material}</td>
+                                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600">AED {v.pricePerMeter.toLocaleString()}</td>
+                                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600">{getStoreDisplay(v.listedByStore || item.listedByStore)}</td>
+                                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600">{(v.storePickupAddress?.emirate || item.storePickupAddress?.emirate) || "—"}</td>
+                                      <td className="px-4 py-3 whitespace-nowrap">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium ${
+                                          v.isActive ? "bg-white text-black border border-black/30" : "bg-gray-100 text-gray-500"
+                                        }`}>
+                                          {v.isActive ? "Active" : "Inactive"}
+                                        </span>
+                                      </td>
+                                      <td className="px-4 py-3 whitespace-nowrap text-right text-xs">
+                                        <div className="flex items-center justify-end gap-3">
+                                          <Link
+                                            href={`/admin/fabrics/${v._id}/edit`}
+                                            className="text-gray-400 hover:text-black transition-colors"
+                                            title="Edit Variant"
+                                          >
+                                            <Edit className="w-4 h-4" />
+                                          </Link>
+                                          <button
+                                            type="button"
+                                            onClick={() => openDeleteModal(v)}
+                                            className="text-gray-400 hover:text-red-500 transition-colors hover:cursor-pointer"
+                                            title="Delete Variant"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
