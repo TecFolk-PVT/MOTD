@@ -10,7 +10,7 @@ const RETAIL_ORDER_STATUSES = [
   "cancelled",
 ];
 
-const PAYMENT_METHODS = ["cod", "apple_pay"];
+const PAYMENT_METHODS = ["cod", "apple_pay", "card"];
 
 const orderItemSchema = new mongoose.Schema(
   {

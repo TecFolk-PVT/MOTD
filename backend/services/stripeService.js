@@ -23,7 +23,7 @@ export function amountToStripeMinorUnits(amountAed) {
   return Math.round(Number(amountAed) * 100);
 }
 
-export async function createApplePayPaymentIntent({
+export async function createStripePaymentIntent({
   amountAed,
   userId,
   orderType,
@@ -39,6 +39,7 @@ export async function createApplePayPaymentIntent({
   return stripe.paymentIntents.create({
     amount,
     currency: 'aed',
+    // Supports both Apple Pay and direct card entry (Visa, Mastercard, etc.).
     payment_method_types: ['card'],
     metadata: {
       userId: String(userId),
@@ -49,7 +50,10 @@ export async function createApplePayPaymentIntent({
   });
 }
 
-export async function verifyApplePayPaymentIntent({
+// Backwards-compatible alias.
+export const createApplePayPaymentIntent = createStripePaymentIntent;
+
+export async function verifyStripePaymentIntent({
   paymentIntentId,
   userId,
   orderType,
@@ -85,3 +89,6 @@ export async function verifyApplePayPaymentIntent({
 
   return paymentIntent;
 }
+
+// Backwards-compatible alias.
+export const verifyApplePayPaymentIntent = verifyStripePaymentIntent;
