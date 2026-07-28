@@ -32,6 +32,7 @@ import AdminNotification from "../models/AdminNotification.js";
 import {
   getCustomOrderPricing,
   getMultiItemCustomOrderPricing,
+  applyAddonsToCustomOrderPricing,
   PricingValidationError,
 } from "../services/pricingService.js";
 import PlatformSettings from "../models/PlatformSettings.js";
@@ -41,10 +42,15 @@ import {
 } from "../services/retailOrderService.js";
 import {
   isStripeConfigured,
-  verifyApplePayPaymentIntent,
+  verifyStripePaymentIntent,
 } from "../services/stripeService.js";
 
 const orderRoutes = express.Router();
+
+// Payment methods that are settled online through Stripe (card entry + Apple Pay).
+const STRIPE_PAYMENT_METHODS = ["apple_pay", "card"];
+const isStripePaymentMethod = (method) =>
+  STRIPE_PAYMENT_METHODS.includes(method);
 
 const isApprovedTailorOwner = (owner) =>
   owner?.role === "tailor" && owner?.approvalStatus === "approved";
@@ -408,14 +414,15 @@ async function buildMultiItemOrderData(orderInput, deliveryType = "delivery") {
   };
 }
 
+async function getAddonsCost(addonIds = []) {
+  if (!Array.isArray(addonIds) || addonIds.length === 0) return 0;
+  const dbAddons = await AddOn.find({ _id: { $in: addonIds }, isActive: true });
+  return dbAddons.reduce((sum, item) => sum + item.price, 0);
+}
+
 async function getCustomOrderTotalFromBody(body) {
   const { deliveryType = "delivery", addonIds = [] } = body;
-
-  let addonsCost = 0;
-  if (addonIds && addonIds.length > 0) {
-    const dbAddons = await AddOn.find({ _id: { $in: addonIds }, isActive: true });
-    addonsCost = dbAddons.reduce((sum, item) => sum + item.price, 0);
-  }
+  const addonsCost = await getAddonsCost(addonIds);
 
   if (isMultiItemPayload(body)) {
     const orderInput = validateMultiItemOrderInput(body);
@@ -423,10 +430,7 @@ async function getCustomOrderTotalFromBody(body) {
       ...orderInput,
       deliveryType,
     });
-    const subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
-    const vatAmount = Number((subtotal * pricing.vatRate).toFixed(2));
-    const total = Number((subtotal + vatAmount + pricing.deliveryFee).toFixed(2));
-    return total;
+    return applyAddonsToCustomOrderPricing(pricing, addonsCost).total;
   }
 
   const orderInput = validateFabricOrderInput(body);
@@ -434,10 +438,7 @@ async function getCustomOrderTotalFromBody(body) {
     ...orderInput,
     deliveryType,
   });
-  const subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
-  const vatAmount = Number((subtotal * pricing.vatRate).toFixed(2));
-  const total = Number((subtotal + vatAmount + pricing.deliveryFee).toFixed(2));
-  return total;
+  return applyAddonsToCustomOrderPricing(pricing, addonsCost).total;
 }
 
 orderRoutes.post("/custom/preview", async (req, res) => {
@@ -458,9 +459,7 @@ orderRoutes.post("/custom/preview", async (req, res) => {
         deliveryType,
       });
 
-      pricing.subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
-      pricing.vatAmount = Number((pricing.subtotal * pricing.vatRate).toFixed(2));
-      pricing.total = Number((pricing.subtotal + pricing.vatAmount + pricing.deliveryFee).toFixed(2));
+      Object.assign(pricing, applyAddonsToCustomOrderPricing(pricing, addonsCost));
 
       return res.json({
         success: true,
@@ -481,9 +480,7 @@ orderRoutes.post("/custom/preview", async (req, res) => {
       deliveryType,
     });
 
-    pricing.subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
-    pricing.vatAmount = Number((pricing.subtotal * pricing.vatRate).toFixed(2));
-    pricing.total = Number((pricing.subtotal + pricing.vatAmount + pricing.deliveryFee).toFixed(2));
+    Object.assign(pricing, applyAddonsToCustomOrderPricing(pricing, addonsCost));
 
     res.json({
       success: true,
@@ -544,23 +541,23 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       stripePaymentIntentId: null,
     };
 
-    if (paymentMethod === "apple_pay") {
+    if (isStripePaymentMethod(paymentMethod)) {
       if (!isStripeConfigured()) {
         return res.status(503).json({
           success: false,
-          message: "Apple Pay is not configured",
+          message: "Online payments are not configured",
         });
       }
 
       if (!paymentIntentId) {
         return res.status(400).json({
           success: false,
-          message: "paymentIntentId is required for Apple Pay",
+          message: "paymentIntentId is required for online payments",
         });
       }
 
       const orderTotal = await getCustomOrderTotalFromBody(req.body);
-      await verifyApplePayPaymentIntent({
+      await verifyStripePaymentIntent({
         paymentIntentId,
         userId: req.user._id,
         orderType: "custom",
@@ -608,9 +605,7 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
 
       const confirmedAt = new Date();
 
-      pricing.subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
-      pricing.vatAmount = Number((pricing.subtotal * pricing.vatRate).toFixed(2));
-      pricing.total = Number((pricing.subtotal + pricing.vatAmount + pricing.deliveryFee).toFixed(2));
+      Object.assign(pricing, applyAddonsToCustomOrderPricing(pricing, addonsCost));
 
       const order = await CustomOrder.create({
         userId: req.user._id,
@@ -712,9 +707,7 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       deliveryType,
     });
 
-    pricing.subtotal = Number((pricing.subtotal + addonsCost).toFixed(2));
-    pricing.vatAmount = Number((pricing.subtotal * pricing.vatRate).toFixed(2));
-    pricing.total = Number((pricing.subtotal + pricing.vatAmount + pricing.deliveryFee).toFixed(2));
+    Object.assign(pricing, applyAddonsToCustomOrderPricing(pricing, addonsCost));
 
     const confirmedAt = new Date();
 
@@ -919,22 +912,22 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
     };
     let orderStatus = "pending";
 
-    if (paymentMethod === "apple_pay") {
+    if (isStripePaymentMethod(paymentMethod)) {
       if (!isStripeConfigured()) {
         return res.status(503).json({
           success: false,
-          message: "Apple Pay is not configured",
+          message: "Online payments are not configured",
         });
       }
 
       if (!paymentIntentId) {
         return res.status(400).json({
           success: false,
-          message: "paymentIntentId is required for Apple Pay",
+          message: "paymentIntentId is required for online payments",
         });
       }
 
-      await verifyApplePayPaymentIntent({
+      await verifyStripePaymentIntent({
         paymentIntentId,
         userId: req.user._id,
         orderType: "retail",
