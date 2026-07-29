@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
+import { ImageModal } from "@/components/shared/ImageModal";
 
 interface ReadyMadeItem {
   _id: string;
@@ -51,6 +52,10 @@ export default function FabricReadyMadePage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ReadyMadeItem | null>(null);
+  const [modalImage, setModalImage] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
 
   // Close menu on outside click
   useEffect(() => {
@@ -143,12 +148,19 @@ export default function FabricReadyMadePage() {
 
   const getItemImage = (item: ReadyMadeItem) => {
     if (item.images && item.images.length > 0) {
+      const imageUrl = item.images[0];
       return (
-        <img
-          src={item.images[0]}
-          alt={item.name}
-          className="w-10 h-10 rounded-lg object-cover"
-        />
+        <button
+          type="button"
+          onClick={() => setModalImage({ url: imageUrl, name: item.name })}
+          className="cursor-pointer"
+        >
+          <img
+            src={imageUrl}
+            alt={item.name}
+            className="w-10 h-10 rounded-lg object-cover hover:ring-2 hover:ring-black/20 transition-all"
+          />
+        </button>
       );
     }
     return (
@@ -230,7 +242,8 @@ export default function FabricReadyMadePage() {
           Store Profile Required
         </h1>
         <p className="text-gray-500 text-sm mb-6">
-          You must set up your store profile first before you can manage ready-to-wear items.
+          You must set up your store profile first before you can manage
+          ready-to-wear items.
         </p>
         <Link
           href="/fabric/shop"
@@ -490,6 +503,14 @@ export default function FabricReadyMadePage() {
           </div>
         </div>
       )}
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={!!modalImage}
+        imageUrl={modalImage?.url ?? ""}
+        alt={modalImage?.name ?? "Fabric image"}
+        onClose={() => setModalImage(null)}
+      />
     </div>
   );
 }

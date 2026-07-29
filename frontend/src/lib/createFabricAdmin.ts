@@ -1,6 +1,5 @@
 import {
   WARA_TO_METERS,
-  FABRIC_UNITS,
   type FabricUnitValue,
 } from "@/lib/fabrics";
 

@@ -14,6 +14,7 @@ import {
 } from "@/lib/tailors";
 import { Share2 } from "lucide-react";
 import { usePathname } from "next/navigation";
+import WishlistButton from "../shared/wishlistButton";
 
 interface FilterOption {
   _id: string;
@@ -143,8 +144,8 @@ export function TrendingSection() {
       },
       ...categories.map((cat) => ({
         key: cat._id,
-        labelEn: cat.nameAr ? `${cat.name} (${cat.nameAr})` : cat.name,
-        labelAr: cat.nameAr ? `${cat.nameAr} (${cat.name})` : cat.name,
+        labelEn: cat.name,
+        labelAr: cat.nameAr || cat.name,
         value: cat._id,
       })),
     ],
@@ -470,19 +471,36 @@ export function TrendingSection() {
                         />
                         <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                        {/* Top-right Share button */}
-                        <button
-                          type="button"
-                          aria-label={isArabic ? "مشاركة" : "Share"}
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            await handleShare(hrefPath);
-                          }}
-                          className="absolute top-2 xs:top-3 right-2 z-20 p-2 rounded-full bg-white/85 backdrop-blur-sm shadow-sm hover:scale-110 transition-transform hover:cursor-pointer"
-                        >
-                          <Share2 className="w-4 h-4 text-black" />
-                        </button>
+                        {/* Top-right Share & wishlist actions */}
+                        <div className="absolute top-2 xs:top-3 right-2 z-20 flex items-center gap-1.5 xs:gap-2">
+                          <button
+                            type="button"
+                            aria-label={isArabic ? "مشاركة" : "Share"}
+                            onClick={async (e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              await handleShare(hrefPath);
+                            }}
+                            className="p-2 rounded-full bg-white/85 backdrop-blur-sm shadow-sm hover:scale-110 transition-transform hover:cursor-pointer border-0 flex items-center justify-center w-8 h-8 xs:w-9 xs:h-9"
+                          >
+                            <Share2 className="w-4 h-4 text-black" />
+                          </button>
+
+                          <WishlistButton
+                            item={{
+                              id: design._id,
+                              name: name,
+                              image: imageUrl || "",
+                              price: design.basePrice,
+                              slug: design.slug,
+                              size: "N/A",
+                              quantity: 1,
+                            }}
+                            inline={true}
+                            className="p-2 rounded-full bg-white/85 backdrop-blur-sm shadow-sm border-0 flex h-8 w-8 items-center justify-center xs:h-9 xs:w-9"
+                            iconClassName="h-4 w-4"
+                          />
+                        </div>
 
                         <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
                           <span

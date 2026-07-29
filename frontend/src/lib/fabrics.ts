@@ -1,9 +1,15 @@
 import type { Locale } from "@/i18n/routing";
 import { formatCurrency } from "@/lib/format";
 
-export type FabricMaterial = "wool" | "silk" | "linen" | "cashmere" | "cotton";
+export type FabricMaterial = string;
 
-export type FabricFilter = "all" | FabricMaterial;
+export type FabricFilter = "all" | string;
+
+export const FABRIC_FILTER_OPTIONS = [
+  "chiffon",
+  "silk velvet",
+  "tana linen cotton",
+] as const;
 
 export interface FabricStoreInfo {
   _id: string;
@@ -147,26 +153,11 @@ export function filterFabricsByMaterial(
   return items.filter((item) => item.material === filter);
 }
 
-export const FABRIC_FILTER_OPTIONS: FabricMaterial[] = [
-  "wool",
-  "silk",
-  "linen",
-  "cashmere",
-  "cotton",
-];
-
 export function formatMaterialLabel(material: string, locale: Locale): string {
-  const labels: Record<FabricMaterial, { en: string; ar: string }> = {
-    wool: { en: "Wool", ar: "صوف" },
-    silk: { en: "Silk", ar: "حرير" },
-    linen: { en: "Linen", ar: "كتان" },
-    cashmere: { en: "Cashmere", ar: "كشمير" },
-    cotton: { en: "Cotton", ar: "قطن" },
-  };
-
-  const entry = labels[material as FabricMaterial];
-  if (!entry) return material;
-  return locale === "ar" ? entry.ar : entry.en;
+  // Simple fallback: materials are now fetched dynamically from the API
+  // which provides name (English) and nameAr (Arabic) fields.
+  // This function can be used as a generic fallback if dynamic data isn't available.
+  return material;
 }
 
 export function formatPickupAddress(

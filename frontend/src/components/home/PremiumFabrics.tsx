@@ -8,7 +8,6 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { api, type ApiError } from "@/lib/api/client";
 import {
-  FABRIC_FILTER_OPTIONS,
   type FabricFilter,
   type FabricListItem,
   filterFabricsByMaterial,
@@ -38,21 +37,22 @@ function getLocaleBasePath(pathname: string, fallbackLocale: string) {
   return `/${fallbackLocale || "en"}`;
 }
 
-// Define TAG COLORS
-const TAG_COLORS: Record<string, { bg: string; text: string }> = {
-  new: { bg: "#2D5A3D", text: "#FFFFFF" }, // Deep muted green
-  bestseller: { bg: "#8B7355", text: "#FFFFFF" }, // Warm taupe
-  premium: { bg: "#4A4A4A", text: "#FFFFFF" }, // Charcoal (matches theme)
-  limited: { bg: "#8B3A3A", text: "#FFFFFF" }, // Muted burgundy
-  exclusive: { bg: "#C4A47A", text: "#000000" }, // Soft gold/beige
-  trending: { bg: "#3A5A78", text: "#FFFFFF" }, // Muted navy
-  handmade: { bg: "#6B4F3C", text: "#FFFFFF" }, // Earthy brown
-};
+// Interface for material options from the API
+interface MaterialOption {
+  _id: string;
+  name: string;
+  nameAr?: string;
+}
 
-const getTagStyles = (tagValue?: string) => {
-  if (!tagValue) return { bg: "#1A1A1A", text: "#FFFFFF" };
-  const key = tagValue.toLowerCase().trim();
-  return TAG_COLORS[key] || { bg: "#1A1A1A", text: "#FFFFFF" };
+// Helper to get localized material label
+const getMaterialLabel = (
+  materialName: string,
+  materials: MaterialOption[],
+  locale: string,
+): string => {
+  const found = materials.find((m) => m.name === materialName);
+  if (!found) return materialName;
+  return locale === "ar" ? found.nameAr || found.name : found.name;
 };
 
 export function PremiumFabrics() {
@@ -63,6 +63,7 @@ export function PremiumFabrics() {
   const locale = params.locale === "ar" ? "ar" : "en";
 
   const [fabrics, setFabrics] = useState<FabricListItem[]>([]);
+  const [materials, setMaterials] = useState<MaterialOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<FabricFilter>("all");
@@ -93,7 +94,20 @@ export function PremiumFabrics() {
       }
     };
 
+    const fetchMaterials = async () => {
+      try {
+        const data = await api.get<MaterialOption[]>("/api/filters/materials");
+        if (Array.isArray(data)) {
+          setMaterials(data);
+        }
+      } catch {
+        // Materials fetch is non-critical; filters will gracefully fall back
+        console.warn("Failed to fetch materials for filters");
+      }
+    };
+
     fetchFabrics();
+    fetchMaterials();
   }, []);
 
   const filteredItems = useMemo(
@@ -272,7 +286,7 @@ export function PremiumFabrics() {
         <div className="flex gap-2 xs:gap-2.5 sm:gap-3 mb-6 xs:mb-8 sm:mb-10 md:mb-12 lg:mb-(--space-40) overflow-x-auto pb-2 xs:pb-3">
           <button
             onClick={() => setSelectedFilter("all")}
-            className={`px-3 xs:px-4 py-1.5 xs:py-2 border border-(--color-border) text-[9px] xs:text-[9px] sm:text-[10px] md:text-[9px] lg:text-[10px] xl:text-[11px] uppercase tracking-[0.24em] whitespace-nowrap [font-family:var(--font-ui)] transition-all font-normal ${
+            className={`px-3 xs:px-4 py-1.5 xs:py-2 border border-(--color-border) text-[9px] xs:text-[9px] sm:text-[10px] md:text-[9px] lg:text-[10px] xl:text-[11px] uppercase tracking-[0.24em] whitespace-nowrap [font-family:var(--font-ui)] transition-all duration-200 font-normal cursor-pointer hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 ${
               selectedFilter === "all"
                 ? "bg-black text-white border-black"
                 : "text-black hover:bg-black hover:text-white hover:border-black"
@@ -280,19 +294,22 @@ export function PremiumFabrics() {
           >
             {t("filters.all")}
           </button>
-          {FABRIC_FILTER_OPTIONS.map((material) => (
-            <button
-              key={material}
-              onClick={() => setSelectedFilter(material)}
-              className={`px-3 xs:px-4 py-1.5 xs:py-2 border border-(--color-border) text-[9px] xs:text-[9px] sm:text-[10px] md:text-[9px] lg:text-[10px] xl:text-[11px] uppercase tracking-[0.24em] whitespace-nowrap [font-family:var(--font-ui)] transition-all font-normal ${
-                selectedFilter === material
-                  ? "bg-black text-white border-black"
-                  : "text-black hover:bg-black hover:text-white hover:border-black"
-              }`}
-            >
-              {t(`filters.${material}`)}
-            </button>
-          ))}
+          {materials.map((mat) => {
+            const label = locale === "ar" ? mat.nameAr || mat.name : mat.name;
+            return (
+              <button
+                key={mat._id}
+                onClick={() => setSelectedFilter(mat.name)}
+                className={`px-3 xs:px-4 py-1.5 xs:py-2 border border-(--color-border) text-[9px] xs:text-[9px] sm:text-[10px] md:text-[9px] lg:text-[10px] xl:text-[11px] uppercase tracking-[0.24em] whitespace-nowrap [font-family:var(--font-ui)] transition-all duration-200 font-normal cursor-pointer hover:-translate-y-0.5 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/20 ${
+                  selectedFilter === mat.name
+                    ? "bg-black text-white border-black"
+                    : "text-black hover:bg-black hover:text-white hover:border-black"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         {filteredItems.length === 0 ? (
@@ -349,7 +366,11 @@ export function PremiumFabrics() {
                   const { title, description, location } =
                     getFabricDisplayFields(item, locale);
                   const imageUrl = resolveMediaUrl(item.images?.[0]);
-                  const { bg, text } = getTagStyles(item.tag);
+                  const materialLabel = getMaterialLabel(
+                    item.material,
+                    materials,
+                    locale,
+                  );
                   const hrefPath = `/fabrics/${item.slug}`;
 
                   return (
@@ -384,6 +405,9 @@ export function PremiumFabrics() {
                             </button>
 
                             <WishlistButton
+                              inline
+                              className="p-2 rounded-full bg-white/85 backdrop-blur-sm shadow-sm border-0 flex h-8 w-8 items-center justify-center xs:h-9 xs:w-9"
+                              iconClassName="h-4 w-4"
                               item={{
                                 id: item._id,
                                 name: title,
@@ -401,16 +425,11 @@ export function PremiumFabrics() {
 
                           <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
-                          {item.tag && (
-                            <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
-                              <span
-                                className={`bg-black text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold`}
-                                style={{ backgroundColor: bg, color: text }}
-                              >
-                                {item.tag}
-                              </span>
-                            </div>
-                          )}
+                          <div className="absolute top-2 xs:top-3 left-2 xs:left-3 z-10">
+                            <span className="bg-black text-white px-2.5 xs:px-3 py-1 xs:py-1.25 text-[10px] xs:text-[12px] uppercase whitespace-nowrap [font-family:var(--font-ui)] tracking-[0.24em] font-bold">
+                              {materialLabel}
+                            </span>
+                          </div>
                         </div>
 
                         <div className="p-3 xs:p-4 sm:p-5 md:p-6 lg:p-(--space-24) flex flex-col grow">
