@@ -1,10 +1,13 @@
-
 import type { Locale } from "@/i18n/routing";
 import { formatCurrency } from "@/lib/format";
 
 export type FabricMaterial = string;
 
 export type FabricFilter = "all" | string;
+
+export const FABRIC_FILTER_OPTIONS = {
+  ALL: "all" as const,
+} as const;
 
 export interface FabricStoreInfo {
   _id: string;
