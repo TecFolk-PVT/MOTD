@@ -83,7 +83,15 @@ export function ReadyToWearSection() {
       dragFree: false,
       loop: products.length > 1,
       slidesToScroll: 1,
-      axis: "x",
+      breakpoints: {
+        "(max-width: 480px)": { slidesToScroll: 1 },
+        "(min-width: 481px) and (max-width: 640px)": { slidesToScroll: 1 },
+        "(min-width: 641px) and (max-width: 768px)": { slidesToScroll: 1 },
+        "(min-width: 769px) and (max-width: 1024px)": { slidesToScroll: 1 },
+        "(min-width: 1025px) and (max-width: 1280px)": { slidesToScroll: 1 },
+        "(min-width: 1281px) and (max-width: 1536px)": { slidesToScroll: 1 },
+        "(min-width: 1537px)": { slidesToScroll: 1 },
+      },
     },
     [
       Autoplay({
@@ -292,7 +300,7 @@ export function ReadyToWearSection() {
             </svg>
           </button>
 
-          <div className="overflow-hidden" ref={emblaRef}>
+          <div className="overflow-hidden py-8 -my-8" ref={emblaRef}>
             <div className="flex will-change-transform -mx-1 xs:-mx-1.5 sm:-mx-2 md:-mx-2.5 lg:-mx-3">
               {products.map((item) => {
                 const { title, description } = getReadyMadeDisplayFields(
@@ -310,9 +318,11 @@ export function ReadyToWearSection() {
                     key={item._id}
                     className="flex-[0_0_100%] xs:flex-[0_0_66.666%] sm:flex-[0_0_50%] md:flex-[0_0_40%] lg:flex-[0_0_33.333%] xl:flex-[0_0_28.571%] 2xl:flex-[0_0_25%] px-1 xs:px-1.5 sm:px-2 md:px-2.5 lg:px-3 group py-4"
                   >
-                    <Link href={hrefPath} className="block h-full">
-                      <div className="group bg-(--bg-page) border border-(--color-border) rounded-lg overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 h-full flex flex-col hover:cursor-pointer text-left">
-                        <div className="relative overflow-hidden bg-(--color-border)/10 rounded-t-lg">
+                    <Link
+                        href={hrefPath}
+                        className="bg-(--bg-page) border border-(--color-border) rounded-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 h-full flex flex-col hover:cursor-pointer"
+                      >
+                        <div className="aspect-9/9 relative overflow-hidden rounded-t-lg">
                           <img
                             src={image}
                             alt={title}
@@ -348,7 +358,9 @@ export function ReadyToWearSection() {
                                   ? { maxStock: item.availableFabricStock }
                                   : {}),
                               }}
-                              className="relative! top-0! right-0! translate-x-0"
+                              inline={true}
+                              className="p-2 rounded-full bg-white/85 backdrop-blur-sm shadow-sm border-0 flex h-8 w-8 items-center justify-center xs:h-9 xs:w-9"
+                              iconClassName="h-4 w-4"
                             />
                           </div>
 
@@ -385,7 +397,6 @@ export function ReadyToWearSection() {
                             {description}
                           </p>
                         </div>
-                      </div>
                     </Link>
                   </div>
                 );
