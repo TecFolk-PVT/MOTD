@@ -110,7 +110,8 @@ userRouter.get(
       authProvider: user.authProvider,
       hasPassword: Boolean(user.password),
       perms,
-      token: generateToken(user),
+      isGuest: req.user?.isGuest || false,
+      token: generateToken(user, req.user?.isGuest || false),
     });
   }),
 );
@@ -118,7 +119,7 @@ userRouter.get(
 userRouter.post(
   "/signin",
   expressAsyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, isGuest = false } = req.body;
     if (!email || !password) {
       res.status(400).send({ message: "Email and password are required" });
       return;
@@ -165,7 +166,8 @@ userRouter.post(
       authProvider: user.authProvider,
       hasPassword: Boolean(user.password),
       perms,
-      token: generateToken(user),
+      isGuest,
+      token: generateToken(user, isGuest),
     });
   }),
 );
