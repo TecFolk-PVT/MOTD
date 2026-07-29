@@ -20,7 +20,7 @@ const CUSTOM_STATUSES = [
   "refund_processed",
 ];
 
-const PAYMENT_METHODS = ["cod", "apple_pay"];
+const PAYMENT_METHODS = ["cod", "apple_pay", "card"];
 
 const deliveryAddressSchema = new mongoose.Schema(
   {

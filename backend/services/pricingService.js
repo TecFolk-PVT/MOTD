@@ -12,6 +12,24 @@ export class PricingValidationError extends Error {
 
 const roundMoney = (amount) => Number(amount.toFixed(2));
 
+/**
+ * Apply add-on costs onto an existing custom-order pricing snapshot.
+ * `pricing.subtotal` already includes deliveryFee, so do NOT add delivery again.
+ */
+export function applyAddonsToCustomOrderPricing(pricing, addonsCost = 0) {
+  const addons = Number(addonsCost) || 0;
+  const subtotal = roundMoney(pricing.subtotal + addons);
+  const vatAmount = roundMoney(subtotal * pricing.vatRate);
+  const total = roundMoney(subtotal + vatAmount);
+
+  return {
+    ...pricing,
+    subtotal,
+    vatAmount,
+    total,
+  };
+}
+
 export function resolveDeliveryFee(defaultDeliveryFee, deliveryType = 'delivery') {
   if (deliveryType === 'pickup') {
     return 0;

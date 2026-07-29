@@ -18,6 +18,7 @@ import {
 import { formatCurrency } from "@/lib/format";
 import CustomOrderJourneyRibbon from "@/components/custom-order/CustomOrderJourneyRibbon";
 import ApplePayCheckout from "@/components/payments/ApplePayCheckout";
+import CardPaymentForm from "@/components/payments/CardPaymentForm";
 import SuccessModal from "@/components/shared/SuccessModal";
 import toast from "react-hot-toast";
 import { ERROR_TOAST } from "@/lib/tailorPortalToast";
@@ -116,9 +117,9 @@ export default function CustomOrderCheckoutStep() {
     Array<{ name: string }>
   >([]);
   const [measurementsConfirmed, setMeasurementsConfirmed] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "apple_pay">(
-    "cod",
-  );
+  const [paymentMethod, setPaymentMethod] = useState<
+    "cod" | "apple_pay" | "card"
+  >("cod");
 
   const [profileLoading, setProfileLoading] = useState(true);
   const [tailorShop, setTailorShop] = useState<TailorShop | null>(null);
@@ -405,7 +406,10 @@ export default function CustomOrderCheckoutStep() {
     }
   };
 
-  const completeCustomOrder = async (paymentIntentId: string) => {
+  const completeCustomOrder = async (
+    paymentIntentId: string,
+    method: "apple_pay" | "card" = "apple_pay",
+  ) => {
     setIsSubmitting(true);
     setSubmitError(null);
 
@@ -417,7 +421,7 @@ export default function CustomOrderCheckoutStep() {
         message?: string;
       }>("/api/orders/custom", {
         ...orderPayload,
-        paymentMethod: "apple_pay",
+        paymentMethod: method,
         paymentIntentId,
       });
 
@@ -823,6 +827,24 @@ export default function CustomOrderCheckoutStep() {
                     <input
                       type="radio"
                       name="paymentMethod"
+                      value="card"
+                      checked={paymentMethod === "card"}
+                      onChange={() => setPaymentMethod("card")}
+                      className="w-4 h-4 mt-0.5 accent-black shrink-0"
+                    />
+                    <span>
+                      <span className="block [font-family:var(--font-body)] text-[15px] text-black">
+                        {t("cardLabel")}
+                      </span>
+                      <span className="block [font-family:var(--font-body)] text-[13px] text-(--color-grey-muted) mt-0.5">
+                        {t("cardDescription")}
+                      </span>
+                    </span>
+                  </label>
+                  <label className="flex items-start gap-3 cursor-pointer select-none">
+                    <input
+                      type="radio"
+                      name="paymentMethod"
                       value="apple_pay"
                       checked={paymentMethod === "apple_pay"}
                       onChange={() => setPaymentMethod("apple_pay")}
@@ -858,7 +880,7 @@ export default function CustomOrderCheckoutStep() {
                 <p className="text-red-600 text-sm mb-4">{submitError}</p>
               )}
 
-              {paymentMethod === "cod" ? (
+              {paymentMethod === "cod" && (
                 <button
                   type="button"
                   onClick={placeCodOrder}
@@ -872,7 +894,29 @@ export default function CustomOrderCheckoutStep() {
                 >
                   {isSubmitting ? t("processing") : t("placeOrder")}
                 </button>
-              ) : (
+              )}
+
+              {paymentMethod === "card" && (
+                <CardPaymentForm
+                  amountAed={pricing?.total ?? 0}
+                  cardholderName={address.fullName || ""}
+                  disabled={
+                    isSubmitting ||
+                    loadingPricing ||
+                    !pricing ||
+                    !measurementsConfirmed
+                  }
+                  payLabel={t("payButton")}
+                  processingLabel={t("processing")}
+                  loadingLabel={t("loadingCard")}
+                  notConfiguredLabel={t("cardNotConfigured")}
+                  createIntent={createCustomPaymentIntent}
+                  onPaid={(id) => completeCustomOrder(id, "card")}
+                  onError={handlePaymentError}
+                />
+              )}
+
+              {paymentMethod === "apple_pay" && (
                 <ApplePayCheckout
                   amountAed={pricing?.total ?? 0}
                   orderLabel={t("applePayOrderLabel")}
@@ -887,7 +931,7 @@ export default function CustomOrderCheckoutStep() {
                   unavailableLabel={t("applePayUnavailable")}
                   notConfiguredLabel={t("applePayNotConfigured")}
                   createIntent={createCustomPaymentIntent}
-                  onPaid={completeCustomOrder}
+                  onPaid={(id) => completeCustomOrder(id, "apple_pay")}
                   onError={handlePaymentError}
                 />
               )}

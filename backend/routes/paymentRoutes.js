@@ -3,14 +3,16 @@ import expressAsyncHandler from 'express-async-handler';
 import mongoose from 'mongoose';
 import { env } from '../config/env.js';
 import { isAuth } from '../middleware/auth.js';
-import { isStripeConfigured, createApplePayPaymentIntent } from '../services/stripeService.js';
+import { isStripeConfigured, createStripePaymentIntent } from '../services/stripeService.js';
 import { prepareRetailOrder } from '../services/retailOrderService.js';
 import {
   getCustomOrderPricing,
   getMultiItemCustomOrderPricing,
+  applyAddonsToCustomOrderPricing,
   PricingValidationError,
 } from '../services/pricingService.js';
 import { FABRIC_SOURCES } from '../models/CustomOrder.js';
+import AddOn from '../models/AddOn.js';
 
 const paymentRoutes = express.Router();
 
@@ -84,8 +86,15 @@ function isMultiItemPayload(body) {
   return Array.isArray(body?.items) && body.items.length > 0;
 }
 
+async function getAddonsCost(addonIds = []) {
+  if (!Array.isArray(addonIds) || addonIds.length === 0) return 0;
+  const dbAddons = await AddOn.find({ _id: { $in: addonIds }, isActive: true });
+  return dbAddons.reduce((sum, item) => sum + item.price, 0);
+}
+
 async function getCustomOrderTotal(body) {
-  const { deliveryType = 'delivery' } = body;
+  const { deliveryType = 'delivery', addonIds = [] } = body;
+  const addonsCost = await getAddonsCost(addonIds);
 
   if (isMultiItemPayload(body)) {
     const orderInput = validateMultiItemOrderInput(body);
@@ -93,7 +102,7 @@ async function getCustomOrderTotal(body) {
       ...orderInput,
       deliveryType,
     });
-    return pricing.total;
+    return applyAddonsToCustomOrderPricing(pricing, addonsCost).total;
   }
 
   const orderInput = validateFabricOrderInput(body);
@@ -102,7 +111,7 @@ async function getCustomOrderTotal(body) {
     deliveryType,
   });
 
-  return pricing.total;
+  return applyAddonsToCustomOrderPricing(pricing, addonsCost).total;
 }
 
 function paymentNotConfigured(res) {
@@ -137,7 +146,7 @@ paymentRoutes.post(
 
     try {
       const prepared = await prepareRetailOrder(orderItems);
-      const paymentIntent = await createApplePayPaymentIntent({
+      const paymentIntent = await createStripePaymentIntent({
         amountAed: prepared.totalPrice,
         userId: req.user._id,
         orderType: 'retail',
@@ -169,7 +178,7 @@ paymentRoutes.post(
 
     try {
       const total = await getCustomOrderTotal(req.body);
-      const paymentIntent = await createApplePayPaymentIntent({
+      const paymentIntent = await createStripePaymentIntent({
         amountAed: total,
         userId: req.user._id,
         orderType: 'custom',
