@@ -5,9 +5,11 @@ export type FabricMaterial = string;
 
 export type FabricFilter = "all" | string;
 
-export const FABRIC_FILTER_OPTIONS = {
-  ALL: "all" as const,
-} as const;
+export const FABRIC_FILTER_OPTIONS = [
+  "chiffon",
+  "silk velvet",
+  "tana linen cotton",
+] as const;
 
 export interface FabricStoreInfo {
   _id: string;
