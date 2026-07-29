@@ -58,6 +58,7 @@ export async function connectDB() {
   }
 
   if (!globalCache._mongooseCache.promise) {
+    mongoose.set('strictQuery', false);
     globalCache._mongooseCache.promise = mongoose
       .connect(env.mongodbUri)
       .then(async () => {
