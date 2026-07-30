@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import User from "../models/User.js";
 
-export const generateToken = (user) => {
+export const generateToken = (user, isGuest = false) => {
   return jwt.sign(
     {
       _id: user._id,
@@ -10,6 +10,7 @@ export const generateToken = (user) => {
       email: user.email,
       role: user.role,
       isAdmin: user.isAdmin,
+      isGuest,
     },
     env.jwtSecret,
     { expiresIn: "30d" },
