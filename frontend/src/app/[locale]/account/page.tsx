@@ -55,6 +55,7 @@ type AccountSidebarProps = {
   collapsed: boolean;
   onToggle: () => void;
   unreadNotificationCount?: number;
+  isGuest?: boolean;
 };
 
 function AccountSidebar({
@@ -64,6 +65,7 @@ function AccountSidebar({
   collapsed,
   onToggle,
   unreadNotificationCount = 0,
+  isGuest = false,
 }: AccountSidebarProps) {
   return (
     <>
@@ -96,6 +98,7 @@ function AccountSidebar({
 
       <nav className="flex-1 space-y-1.5">
         {NAV_ITEMS.map((item) => {
+          if (isGuest && item.id !== "orders") return null;
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
@@ -221,17 +224,21 @@ function AccountPageContent() {
         } else if (role === "fabric_store") {
           router.replace("/fabric");
         } else if (user.isGuest) {
-          router.replace("/");
+          // Allow guest user to access account page
         }
       }
     }
   }, [user, authLoading, router]);
 
   useEffect(() => {
+    if (user?.isGuest) {
+      setActiveTab("orders");
+      return;
+    }
     if (isAccountTab(tabFromUrl) && tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
     }
-  }, [tabFromUrl, activeTab]);
+  }, [tabFromUrl, activeTab, user]);
 
   const handleTabChange = useCallback(
     (tab: AccountTab) => {
@@ -279,6 +286,7 @@ function AccountPageContent() {
           collapsed={sidebarCollapsed}
           onToggle={toggleSidebar}
           unreadNotificationCount={unreadNotificationCount}
+          isGuest={user?.isGuest}
         />
       </aside>
 
@@ -325,6 +333,7 @@ function AccountPageContent() {
                 collapsed={false}
                 onToggle={() => {}}
                 unreadNotificationCount={unreadNotificationCount}
+                isGuest={user?.isGuest}
               />
             </motion.aside>
           </>
