@@ -31,6 +31,11 @@ const EMIRATES = [
   "Umm Al Quwain",
 ];
 
+function validateUaePhone(phone: string): boolean {
+  const cleaned = phone.replace(/[^\d+]/g, "");
+  return /^\+971\d{9}$/.test(cleaned);
+}
+
 // Customer address type (matches new schema)
 type CustomerAddress = {
   _id?: string;
@@ -234,6 +239,20 @@ function CheckoutPageContent() {
   useEffect(() => {
     async function fetchCustomerProfile() {
       if (!isAuthenticated) return;
+      if (user?.isGuest) {
+        setFormData((prev) => ({
+          ...prev,
+          fullName: "",
+          phone: "",
+          emirate: "",
+          city: "",
+          street: "",
+          building: "",
+        }));
+        initialFillDone.current = true;
+        setProfileLoading(false);
+        return;
+      }
       try {
         setProfileLoading(true);
         const data = await api.get<CustomerProfile>("/api/customer/profile");
@@ -269,10 +288,11 @@ function CheckoutPageContent() {
       }
     }
     fetchCustomerProfile();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user]);
 
   // --- Fallback: if no customer profile and user exists, fill name from auth user ---
   useEffect(() => {
+    if (user?.isGuest) return;
     if (
       user &&
       !customerProfile &&
@@ -340,7 +360,13 @@ function CheckoutPageContent() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.fullName.trim()) newErrors.fullName = "Required";
-    if (!formData.phone.trim()) newErrors.phone = "Required";
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Required";
+    } else if (!validateUaePhone(formData.phone)) {
+      newErrors.phone = localeParams === "ar"
+        ? "رقم الهاتف غير صحيح. يجب أن يكون بتنسيق دولة الإمارات"
+        : "Invalid phone number. Must be a valid UAE format";
+    }
     if (!formData.emirate) newErrors.emirate = "Required";
     if (!formData.city.trim()) newErrors.city = "Required";
     if (!formData.street.trim()) newErrors.street = "Required";
@@ -357,10 +383,16 @@ function CheckoutPageContent() {
       price: item.price,
     }));
 
+    const isArabic = localeParams === "ar";
+    const guestSuffix = isArabic ? " - زائر" : " - Guest";
+    const submittedName = user?.isGuest
+      ? `${formData.fullName.trim()}${guestSuffix}`
+      : formData.fullName.trim();
+
     return {
       orderItems,
       shippingAddress: {
-        fullName: formData.fullName,
+        fullName: submittedName,
         phone: formData.phone,
         emirate: formData.emirate,
         city: formData.city,
@@ -597,13 +629,22 @@ function CheckoutPageContent() {
                       <label className="font-label-sm text-[11px] md:text-[12px] text-black/60 uppercase tracking-[0.2em] block">
                         {t.checkout.fullName}*
                       </label>
-                      <input
-                        type="text"
-                        name="fullName"
-                        value={formData.fullName}
-                        onChange={handleChange}
-                        className="w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black"
-                      />
+                      <div className="relative flex items-center">
+                        <input
+                          type="text"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleChange}
+                          className={`w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black ${
+                            user?.isGuest ? (localeParams === "ar" ? "pl-20" : "pr-20") : ""
+                          }`}
+                        />
+                        {user?.isGuest && (
+                          <span className={`absolute ${localeParams === "ar" ? "left-0" : "right-0"} text-gray-400 select-none pointer-events-none font-medium text-[14px] md:text-[15px] pb-1`}>
+                            {localeParams === "ar" ? " - زائر" : " - Guest"}
+                          </span>
+                        )}
+                      </div>
                       {errors.fullName && (
                         <p className="text-red-500 text-[11px] mt-1">
                           {errors.fullName}
@@ -800,7 +841,7 @@ function CheckoutPageContent() {
                   {paymentMethod === "card" && (
                     <CardPaymentForm
                       amountAed={total}
-                      cardholderName={formData.fullName}
+                      cardholderName={user?.isGuest ? `${formData.fullName.trim()} - ${localeParams === "ar" ? "زائر" : "Guest"}` : formData.fullName}
                       disabled={isSubmitting || displayItems.length === 0}
                       payLabel={t.checkout.payButton}
                       processingLabel={t.checkout.processing}
