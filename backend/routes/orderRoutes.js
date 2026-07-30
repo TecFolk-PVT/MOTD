@@ -1019,6 +1019,37 @@ orderRoutes.get("/retail/mine", isAuth, async (req, res) => {
           const product = item.productId || {};
           const fabric = product.fabricId || {};
           const design = product.designId || {};
+
+          let fabricName = fabric.name || product.fabricType || "";
+          let fabricNameAr = fabric.nameAr || product.fabricTypeAr || "";
+          let fabricImage = fabric.images?.[0] || "";
+          let fabricSlug = fabric.slug || "";
+
+          let designName = design.name || product.name || "";
+          let designNameAr = design.nameAr || product.nameAr || "";
+          let designImage = design.images?.[0] || product.thumbnailImage || "";
+          let designSlug = design.slug || "";
+
+          if (item.size === "Per Meter") {
+            fabricName = item.name;
+            fabricNameAr = item.nameAr || "";
+            fabricImage = item.image || "";
+            fabricSlug = item.slug || "";
+            designName = "";
+            designNameAr = "";
+            designImage = "";
+            designSlug = "";
+          } else if (item.size === "N/A") {
+            fabricName = "";
+            fabricNameAr = "";
+            fabricImage = "";
+            fabricSlug = "";
+            designName = "";
+            designNameAr = "";
+            designImage = "";
+            designSlug = "";
+          }
+
           return {
             name: item.name,
             nameAr: item.nameAr,
@@ -1026,14 +1057,14 @@ orderRoutes.get("/retail/mine", isAuth, async (req, res) => {
             size: item.size,
             price: item.price,
             quantity: item.quantity,
-            fabricName: fabric.name || product.fabricType || "",
-            fabricNameAr: fabric.nameAr || product.fabricTypeAr || "",
-            fabricImage: fabric.images?.[0] || "",
-            fabricSlug: fabric.slug || "",
-            designName: design.name || product.name || "",
-            designNameAr: design.nameAr || product.nameAr || "",
-            designImage: design.images?.[0] || product.thumbnailImage || "",
-            designSlug: design.slug || "",
+            fabricName,
+            fabricNameAr,
+            fabricImage,
+            fabricSlug,
+            designName,
+            designNameAr,
+            designImage,
+            designSlug,
           };
         }) || [],
     }));

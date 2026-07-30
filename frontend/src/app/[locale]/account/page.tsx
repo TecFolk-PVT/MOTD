@@ -209,14 +209,20 @@ function AccountPageContent() {
   }, [pathname]);
 
   useEffect(() => {
-    if (!authLoading && user) {
-      const role = user.role.toLowerCase();
-      if (role === "admin") {
-        router.replace("/admin");
-      } else if (role === "tailor") {
-        router.replace("/tailor");
-      } else if (role === "fabric_store") {
-        router.replace("/fabric");
+    if (!authLoading) {
+      if (!user) {
+        router.replace("/auth/login");
+      } else {
+        const role = user.role.toLowerCase();
+        if (role === "admin") {
+          router.replace("/admin");
+        } else if (role === "tailor") {
+          router.replace("/tailor");
+        } else if (role === "fabric_store") {
+          router.replace("/fabric");
+        } else if (user.isGuest) {
+          router.replace("/");
+        }
       }
     }
   }, [user, authLoading, router]);

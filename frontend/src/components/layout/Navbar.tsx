@@ -8,7 +8,7 @@ import LocaleSwitcher from "../shared/LocaleSwitcher";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
 import { getTranslation } from "@/lib/getTranslation";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useNotificationUnreadCount } from "@/hooks/useNotifications";
 import CustomerNotificationBell from "@/components/account/CustomerNotificationBell";
 
@@ -77,15 +77,32 @@ const UserIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const LogOutIcon = ({ className }: { className?: string }) => (
+  <svg
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+    <polyline points="16 17 21 12 16 7" />
+    <line x1="21" y1="12" x2="9" y2="12" />
+  </svg>
+);
+
 export function Navbar() {
   const params = useParams();
+  const router = useRouter();
   const localParams = params.locale as string;
   const isArabic = localParams === "ar";
   const t = getTranslation(localParams);
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logout } = useAuth();
   const accountLabel = user ? t.navbar.actions.account : t.navbar.actions.login;
   const { items } = useCart();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -99,6 +116,7 @@ export function Navbar() {
   const getAccountHref = () => {
     if (isLoading) return undefined;
     if (!user) return "/auth/login";
+    if (user.isGuest) return undefined;
     if (user.role.toLowerCase() === "admin") return "/admin";
     if (user.role.toLowerCase() === "tailor") return "/tailor";
     if (user.role.toLowerCase() === "fabric_store") return "/fabric";
@@ -273,7 +291,18 @@ export function Navbar() {
           {isCustomerAccount && <CustomerNotificationBell />}
 
           {/* User Icon */}
-          {accountHref ? (
+          {user && user.isGuest ? (
+            <button
+              onClick={() => {
+                logout();
+                router.push("/auth/login");
+              }}
+              className="hidden lg:flex p-1.5 lg:p-2 hover:opacity-50 transition items-center justify-center text-red-600 hover:cursor-pointer bg-transparent border-0"
+              title={localParams === "ar" ? "تسجيل الخروج كضيف" : "Sign out from Guest"}
+            >
+              <LogOutIcon className="w-4 h-4 xs:w-4 sm:w-4 md:w-4 lg:w-5 xl:w-5 2xl:w-6" />
+            </button>
+          ) : accountHref ? (
             <Link
               href={accountHref}
               className="hidden lg:flex p-1.5 lg:p-2 hover:opacity-50 transition items-center justify-center"
@@ -348,7 +377,20 @@ export function Navbar() {
               isCustomerAccount ? "grid-cols-4" : "grid-cols-3"
             }`}
           >
-            {accountHref ? (
+            {user && user.isGuest ? (
+              <button
+                onClick={() => {
+                  closeMenu();
+                  logout();
+                  router.push("/auth/login");
+                }}
+                className="flex flex-col items-center gap-1 group hover:opacity-50 transition text-red-600 hover:cursor-pointer bg-transparent border-0"
+                aria-label={localParams === "ar" ? "تسجيل الخروج" : "Sign Out"}
+              >
+                <LogOutIcon className="w-4.5 h-4.5 xs:w-[20px] xs:h-[20px] sm:w-5.5 sm:h-5.5" />
+                <span className={bottomLabelClass}>{localParams === "ar" ? "تسجيل الخروج" : "Sign Out"}</span>
+              </button>
+            ) : accountHref ? (
               <Link
                 href={accountHref}
                 className="flex flex-col items-center gap-1 group hover:opacity-50 transition"

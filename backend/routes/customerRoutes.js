@@ -112,6 +112,23 @@ customerRouter.post("/profile", isAuth, async (req, res) => {
 // routes/customer.js
 customerRouter.get("/profile", isAuth, async (req, res) => {
   try {
+    if (req.user?.isGuest === true) {
+      return res.json({
+        userId: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+        isAdmin: req.user.isAdmin,
+        approvalStatus: req.user.approvalStatus,
+        phone: undefined,
+        dob: undefined,
+        profilePic: undefined,
+        gender: undefined,
+        addresses: [],
+        defaultAddressId: undefined,
+      });
+    }
+
     const userId = new mongoose.Types.ObjectId(req.user._id);
     console.log("🔍 Searching for customer with userId:", userId);
     const customer = await Customer.findOne({ userId });
@@ -150,6 +167,17 @@ customerRouter.put("/profile", isAuth, async (req, res) => {
   const { name, phone, gender, dob, profilePic, address } = req.body;
 
   try {
+    if (req.user?.isGuest === true) {
+      return res.json({
+        userId: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+        phone: undefined,
+        addresses: address ? [{ ...address, _id: new mongoose.Types.ObjectId() }] : [],
+      });
+    }
+
     let customer = await Customer.findOne({ userId });
 
     if (!customer) {

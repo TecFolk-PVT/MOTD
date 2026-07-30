@@ -372,7 +372,10 @@
       "silk": "Silk",
       "linen": "Linen",
       "cashmere": "Cashmere",
-      "cotton": "Cotton"
+      "cotton": "Cotton",
+      "chiffon": "Chiffon",
+      "silk velvet": "Silk Velvet",
+      "tana linen cotton": "Tana Linen Cotton"
     }
   },
   "TailorDetail": {

@@ -418,7 +418,10 @@
       "silk": "حرير",
       "linen": "كتان",
       "cashmere": "كشمير",
-      "cotton": "قطن"
+      "cotton": "قطن",
+      "chiffon": "شيفون",
+      "silk velvet": "مخمل حريري",
+      "tana linen cotton": "كتان تانا القطني"
     }
   },
   "TailorDetail": {
