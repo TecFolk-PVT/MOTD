@@ -466,10 +466,16 @@ export default function AdminCustomOrdersPage() {
             const isUpdating = updatingOrderId === order._id;
             const nextStatus = getNextCustomOrderStatus(order.status);
             const previousStatus = getPreviousCustomOrderStatus(order.status);
-            const customerName = readPartnerName(
-              typeof order.userId === "object" ? order.userId : null,
-              t("unknownCustomer"),
-            );
+            const isGuest =
+              order.userId &&
+              typeof order.userId === "object" &&
+              order.userId.email === "customer@motd.test";
+            const customerName = isGuest && (order as any).customerDeliveryAddress?.fullName
+              ? (order as any).customerDeliveryAddress.fullName
+              : readPartnerName(
+                  typeof order.userId === "object" ? order.userId : null,
+                  t("unknownCustomer"),
+                );
             const customerEmail =
               order.userId && typeof order.userId === "object"
                 ? order.userId.email || ""
@@ -503,12 +509,20 @@ export default function AdminCustomOrdersPage() {
                     {customerEmail && (
                       <p className="text-xs text-gray-500">{customerEmail}</p>
                     )}
-                    {typeof order.userId === "object" &&
+                    {isGuest ? (
+                      (order as any).customerDeliveryAddress?.phone && (
+                        <p className="text-xs text-gray-500 font-mono mt-0.5">
+                          {(order as any).customerDeliveryAddress.phone}
+                        </p>
+                      )
+                    ) : (
+                      typeof order.userId === "object" &&
                       order.userId?.phone && (
                         <p className="text-xs text-gray-500 font-mono mt-0.5">
                           {order.userId.phone}
                         </p>
-                      )}
+                      )
+                    )}
                   </div>
 
                   <div className="md:col-span-2 space-y-3">

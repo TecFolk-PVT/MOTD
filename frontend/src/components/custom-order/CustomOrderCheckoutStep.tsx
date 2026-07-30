@@ -85,6 +85,11 @@ const REQUIRED_FIELDS: FormField[] = [
   "emirate",
 ];
 
+function validateUaePhone(phone: string): boolean {
+  const cleaned = phone.replace(/[^\d+]/g, "");
+  return /^(?:\+?9715|0?5)\d{8}$/.test(cleaned);
+}
+
 export default function CustomOrderCheckoutStep() {
   const t = useTranslations("CustomOrderCheckout");
   const router = useRouter();
@@ -207,6 +212,18 @@ export default function CustomOrderCheckoutStep() {
   useEffect(() => {
     async function fetchCustomerOrMemberAddress() {
       if (!isAuthenticated) return;
+      if (user?.isGuest) {
+        updateDeliveryAddress({
+          fullName: "",
+          phone: "",
+          emirate: "",
+          city: "",
+          line1: "",
+          line2: "",
+        });
+        setProfileLoading(false);
+        return;
+      }
       try {
         setProfileLoading(true);
 
@@ -244,7 +261,7 @@ export default function CustomOrderCheckoutStep() {
     }
 
     fetchCustomerOrMemberAddress();
-  }, [isAuthenticated, updateDeliveryAddress]);
+  }, [isAuthenticated, updateDeliveryAddress, user]);
 
   useEffect(() => {
     if (!isHydrated || !previewPayload) return;
@@ -328,11 +345,23 @@ export default function CustomOrderCheckoutStep() {
       }
     }
 
+    if (address.phone?.trim() && !validateUaePhone(address.phone)) {
+      nextErrors.phone = locale === "ar"
+        ? "رقم الهاتف غير صحيح. يجب أن يكون بتنسيق دولة الإمارات"
+        : "Invalid UAE phone number format";
+    }
+
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return null;
 
+    const isArabic = locale === "ar";
+    const guestSuffix = isArabic ? " - زائر" : " - Guest";
+    const submittedName = user?.isGuest
+      ? `${address.fullName!.trim()}${guestSuffix}`
+      : address.fullName!.trim();
+
     return {
-      fullName: address.fullName!.trim(),
+      fullName: submittedName,
       phone: address.phone!.trim(),
       line1: address.line1!.trim(),
       line2: address.line2?.trim() || "",
@@ -623,15 +652,24 @@ export default function CustomOrderCheckoutStep() {
                       >
                         {t("fullName")}*
                       </label>
-                      <input
-                        id="checkout-fullName"
-                        type="text"
-                        value={address.fullName || ""}
-                        onChange={(e) =>
-                          handleFieldChange("fullName", e.target.value)
-                        }
-                        className="w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition"
-                      />
+                      <div className="relative flex items-center">
+                        <input
+                          id="checkout-fullName"
+                          type="text"
+                          value={address.fullName || ""}
+                          onChange={(e) =>
+                            handleFieldChange("fullName", e.target.value)
+                          }
+                          className={`w-full border border-(--color-border) bg-white px-4 py-3 [font-family:var(--font-body)] text-[15px] text-black focus:outline-none focus:border-black transition ${
+                            user?.isGuest ? (locale === "ar" ? "pl-20" : "pr-20") : ""
+                          }`}
+                        />
+                        {user?.isGuest && (
+                          <span className={`absolute ${locale === "ar" ? "left-4" : "right-4"} text-gray-400 select-none pointer-events-none font-medium text-[15px]`}>
+                            {locale === "ar" ? " - زائر" : " - Guest"}
+                          </span>
+                        )}
+                      </div>
                       {errors.fullName && (
                         <p className="text-red-600 text-[12px] mt-1">
                           {errors.fullName}
@@ -899,7 +937,7 @@ export default function CustomOrderCheckoutStep() {
               {paymentMethod === "card" && (
                 <CardPaymentForm
                   amountAed={pricing?.total ?? 0}
-                  cardholderName={address.fullName || ""}
+                  cardholderName={user?.isGuest ? `${address.fullName?.trim()} - ${locale === "ar" ? "زائر" : "Guest"}` : (address.fullName || "")}
                   disabled={
                     isSubmitting ||
                     loadingPricing ||

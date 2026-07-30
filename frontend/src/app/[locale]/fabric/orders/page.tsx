@@ -371,17 +371,30 @@ export default function FabricOrdersPage() {
       ) : (
         <div className="space-y-4">
           {filteredOrders.map((order) => {
-            const customerName = readPartnerName(
-              typeof order.userId === "object" ? order.userId : null,
-              locale === "ar" ? "عميل غير معروف" : "Unknown Customer",
-            );
+            const isRetail = activeTab === "retail";
+            const isGuest =
+              order.userId &&
+              typeof order.userId === "object" &&
+              order.userId.email === "customer@motd.test";
+            const customerName = isGuest
+              ? (isRetail
+                  ? (order as any).shippingAddress?.fullName
+                  : (order as any).customerDeliveryAddress?.fullName) || (locale === "ar" ? "زائر" : "Guest")
+              : readPartnerName(
+                  typeof order.userId === "object" ? order.userId : null,
+                  locale === "ar" ? "عميل غير معروف" : "Unknown Customer",
+                );
             const user =
               order.userId && typeof order.userId === "object"
                 ? order.userId
                 : null;
 
             const customerEmail = user?.email || "";
-            const customerPhone = user?.phone || "";
+            const customerPhone = isGuest
+              ? (isRetail
+                  ? (order as any).shippingAddress?.phone
+                  : (order as any).customerDeliveryAddress?.phone) || ""
+              : user?.phone || "";
             const fabricName =
               order.fabricSnapshot?.name ||
               (locale === "ar" ? "قماش خاص" : "Self Fabric");

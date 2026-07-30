@@ -1439,6 +1439,45 @@ export default function CustomOrdersTab({
                           </div>
                         ),
                     )}
+
+                    {(isExpanded ? order.items : [order.items[0]]).map((item, idx) => {
+                      if (!item) return null;
+                      const isFabricOnly = item.size === "Per Meter";
+                      const hasFabric = Boolean(item.fabricName) || isFabricOnly;
+                      const fabricNameDisplay = item.fabricName
+                        ? (locale === "ar" ? item.fabricNameAr || item.fabricName : item.fabricName)
+                        : (isFabricOnly ? (locale === "ar" ? item.nameAr || item.name : item.name) : "");
+                      const fabricImageDisplay = item.fabricImage || (isFabricOnly ? item.image : "");
+
+                      return (
+                        <div key={idx} className="space-y-1">
+                          {hasFabric ? (
+                            <div className="flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100">
+                              <div className="w-12 h-12 bg-[#F0EBE3] overflow-hidden rounded-lg border border-gray-200 shrink-0 flex items-center justify-center">
+                                {fabricImageDisplay ? (
+                                  <img
+                                    src={resolveFabricImage(fabricImageDisplay)}
+                                    alt="Fabric"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
+                                    <Package size={16} />
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-xs text-black font-medium line-clamp-2">
+                                {fabricNameDisplay}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="border border-dashed border-gray-200 rounded-xl p-3 text-center text-[10px] text-gray-400 uppercase tracking-wider font-ui py-5 bg-gray-50/20">
+                              {locale === "ar" ? "لا يوجد قماش" : "No Fabric"}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1467,6 +1506,41 @@ export default function CustomOrdersTab({
                           </div>
                         ),
                     )}
+
+                    {(isExpanded ? order.items : [order.items[0]]).map((item, idx) => {
+                      if (!item) return null;
+                      const isFabricOnly = item.size === "Per Meter";
+                      const hasDesign = Boolean(item.designName) && !isFabricOnly;
+                      return (
+                        <div key={idx} className="space-y-1">
+                          {hasDesign ? (
+                            <div className="flex items-center gap-3 bg-[#FDFAF5]/50 p-2.5 rounded-xl border border-gray-100">
+                              <div className="w-12 h-12 bg-white overflow-hidden rounded-lg border border-gray-200 shrink-0 flex items-center justify-center">
+                                {item.designImage ? (
+                                  <img
+                                    src={resolveDesignImage(item.designImage)}
+                                    alt="Design"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
+                                    <Package size={18} />
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-xs text-black font-medium line-clamp-2">
+                                {locale === "ar" ? item.designNameAr || item.designName : item.designName}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="border border-dashed border-gray-200 rounded-xl p-3 text-center text-[10px] text-gray-400 uppercase tracking-wider font-ui py-5 bg-gray-50/20">
+                              {locale === "ar" ? "لا يوجد تصميم" : "No Design"}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
                   </div>
                 </div>
 
