@@ -20,12 +20,13 @@ import {
   type RetailOrderListItem,
 } from "@/lib/customOrders";
 import OrderTimeline from "@/components/orders/OrderTimeline";
-import { ChevronDown, ChevronUp, Package } from "lucide-react";
+import { ChevronDown, ChevronUp, Maximize2, Package } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { resolveDesignImage } from "@/lib/tailors";
 import { resolveFabricImage } from "@/lib/fabrics";
 import { resolveReadyMadeImage } from "@/lib/readyMade";
 import { useMemo } from "react";
+import { ImageModal } from "@/components/shared/ImageModal";
 
 type ReturnDraft = {
   condition: string;
@@ -100,7 +101,9 @@ export default function CustomOrdersTab({
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [retailExpandedId, setRetailExpandedId] = useState<string | null>(null);
   const [itemsOpenId, setItemsOpenId] = useState<string | null>(null);
-  const [priceDetailsOpenIds, setPriceDetailsOpenIds] = useState<Record<string, boolean>>({});
+  const [priceDetailsOpenIds, setPriceDetailsOpenIds] = useState<
+    Record<string, boolean>
+  >({});
 
   const handleTogglePriceDetails = (orderId: string) => {
     setPriceDetailsOpenIds((prev) => ({
@@ -132,6 +135,18 @@ export default function CustomOrdersTab({
     error: {},
   });
 
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>("");
+  const [selectedImageAlt, setSelectedImageAlt] = useState<string>("");
+
+  const handleImageClick = (imageUrl: string, alt: string = "Image") => {
+    if (imageUrl) {
+      setSelectedImage(imageUrl);
+      setSelectedImageAlt(alt);
+      setImageModalOpen(true);
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -139,12 +154,18 @@ export default function CustomOrdersTab({
         setError(null);
 
         const [customRes, retailRes, profileRes] = await Promise.all([
-          api.get<{ success: boolean; orders: CustomOrderListItem[] }>(
-            "/api/orders/custom/mine",
-          ).catch(() => ({ success: false, orders: [] })),
-          api.get<{ success: boolean; orders: RetailOrderListItem[] }>(
-            "/api/orders/retail/mine",
-          ).catch(() => ({ success: false, orders: [] })),
+          api
+            .get<{
+              success: boolean;
+              orders: CustomOrderListItem[];
+            }>("/api/orders/custom/mine")
+            .catch(() => ({ success: false, orders: [] })),
+          api
+            .get<{
+              success: boolean;
+              orders: RetailOrderListItem[];
+            }>("/api/orders/retail/mine")
+            .catch(() => ({ success: false, orders: [] })),
           api.get<CustomerProfile>("/api/customer/profile").catch(() => null),
         ]);
 
@@ -165,15 +186,37 @@ export default function CustomOrdersTab({
   }, [t]);
 
   type UnifiedOrderListItem =
-    | { type: "custom"; date: string | Date; id: string; order: CustomOrderListItem }
-    | { type: "retail"; date: string | Date; id: string; order: RetailOrderListItem };
+    | {
+        type: "custom";
+        date: string | Date;
+        id: string;
+        order: CustomOrderListItem;
+      }
+    | {
+        type: "retail";
+        date: string | Date;
+        id: string;
+        order: RetailOrderListItem;
+      };
 
   const unifiedOrders = useMemo(() => {
     const list: UnifiedOrderListItem[] = [
-      ...customOrders.map((o) => ({ type: "custom" as const, date: o.date, id: o.id, order: o })),
-      ...retailOrders.map((o) => ({ type: "retail" as const, date: o.date, id: o.id, order: o })),
+      ...customOrders.map((o) => ({
+        type: "custom" as const,
+        date: o.date,
+        id: o.id,
+        order: o,
+      })),
+      ...retailOrders.map((o) => ({
+        type: "retail" as const,
+        date: o.date,
+        id: o.id,
+        order: o,
+      })),
     ];
-    return list.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return list.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
   }, [customOrders, retailOrders]);
 
   const loadDetail = useCallback(
@@ -563,19 +606,40 @@ export default function CustomOrdersTab({
                   </p>
                   <div className="space-y-3">
                     {items.map((item, index) => {
-                      const designName = getDesignDisplayName(item.design, locale) || t("unknownDesign");
+                      const designName =
+                        getDesignDisplayName(item.design, locale) ||
+                        t("unknownDesign");
                       const dImage = item.design?.images?.[0];
-                      const tailorName = getTailorDisplayName(item.tailorShop, locale);
+                      const tailorName = getTailorDisplayName(
+                        item.tailorShop,
+                        locale,
+                      );
                       return (
-                        <div key={index} className="space-y-2 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100">
+                        <div
+                          key={index}
+                          className="space-y-2 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100"
+                        >
                           <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-[#F0EBE3] overflow-hidden rounded-lg border border-gray-200 shrink-0">
+                            <div className="w-12 h-12 bg-[#F0EBE3] overflow-hidden rounded-lg border border-gray-200 shrink-0 relative group">
                               {dImage ? (
-                                <img
-                                  src={resolveDesignImage(dImage)}
-                                  alt="Design"
-                                  className="w-full h-full object-cover"
-                                />
+                                <>
+                                  <img
+                                    src={resolveDesignImage(dImage)}
+                                    alt="Design"
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <button
+                                    onClick={() =>
+                                      handleImageClick(
+                                        resolveDesignImage(dImage),
+                                        designName,
+                                      )
+                                    }
+                                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:cursor-pointer rounded-lg"
+                                  >
+                                    <Maximize2 className="w-4 h-4 text-white" />
+                                  </button>
+                                </>
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
                                   <Package size={18} />
@@ -587,8 +651,9 @@ export default function CustomOrdersTab({
                             </span>
                           </div>
                           {tailorName && (
-                            <p className="text-[9px] uppercase tracking-[0.1em] text-gray-400 font-ui pl-1 mt-1">
-                              {locale === "ar" ? "الخياط: " : "Tailor: "} {tailorName}
+                            <p className="text-[9px] uppercase tracking-widest text-gray-400 font-ui pl-1 mt-1">
+                              {locale === "ar" ? "الخياط: " : "Tailor: "}{" "}
+                              {tailorName}
                             </p>
                           )}
                         </div>
@@ -604,19 +669,40 @@ export default function CustomOrdersTab({
                   </p>
                   <div className="space-y-3">
                     {items.map((item, index) => {
-                      const fabricName = order.fabricSource === "self"
-                        ? t("ownFabric")
-                        : getFabricDisplayName(item.fabric, locale) || t("unknownFabric");
-                      const fImage = order.fabricSource === "storefront" ? item.fabric?.images?.[0] : null;
+                      const fabricName =
+                        order.fabricSource === "self"
+                          ? t("ownFabric")
+                          : getFabricDisplayName(item.fabric, locale) ||
+                            t("unknownFabric");
+                      const fImage =
+                        order.fabricSource === "storefront"
+                          ? item.fabric?.images?.[0]
+                          : null;
                       return (
-                        <div key={index} className="flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100">
-                          <div className="w-12 h-12 bg-[#F0EBE3] overflow-hidden rounded-lg border border-gray-200 shrink-0 flex items-center justify-center">
+                        <div
+                          key={index}
+                          className="flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100"
+                        >
+                          <div className="w-12 h-12 bg-[#F0EBE3] overflow-hidden rounded-lg border border-gray-200 shrink-0 flex items-center justify-center relative group">
                             {fImage ? (
-                              <img
-                                src={resolveFabricImage(fImage)}
-                                alt="Fabric"
-                                className="w-full h-full object-cover"
-                              />
+                              <>
+                                <img
+                                  src={resolveFabricImage(fImage)}
+                                  alt="Fabric"
+                                  className="w-full h-full object-cover"
+                                />
+                                <button
+                                  onClick={() =>
+                                    handleImageClick(
+                                      resolveFabricImage(fImage),
+                                      fabricName,
+                                    )
+                                  }
+                                  className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:cursor-pointer rounded-lg"
+                                >
+                                  <Maximize2 className="w-4 h-4 text-white" />
+                                </button>
+                              </>
                             ) : (
                               <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
                                 <Package size={16} />
@@ -641,11 +727,19 @@ export default function CustomOrdersTab({
                     <div className="border border-gray-200 rounded-xl p-3 bg-[#FDFAF5]">
                       <ul className="space-y-1.5">
                         {order.addons.map((addon: any, idx: number) => {
-                          const name = locale === "ar" ? addon.nameAr || addon.name : addon.name;
+                          const name =
+                            locale === "ar"
+                              ? addon.nameAr || addon.name
+                              : addon.name;
                           return (
-                            <li key={idx} className="flex justify-between items-center text-xs text-gray-600">
+                            <li
+                              key={idx}
+                              className="flex justify-between items-center text-xs text-gray-600"
+                            >
                               <span className="font-medium">{name}</span>
-                              <span className="font-semibold text-black">{formatCurrency(addon.price, locale)}</span>
+                              <span className="font-semibold text-black">
+                                {formatCurrency(addon.price, locale)}
+                              </span>
                             </li>
                           );
                         })}
@@ -674,15 +768,19 @@ export default function CustomOrdersTab({
                         </span>
                       )}
                     </div>
-                    
+
                     <button
                       type="button"
                       onClick={() => handleTogglePriceDetails(order.id)}
                       className="mt-3 w-full text-center py-1.5 border border-gray-200 bg-white hover:bg-gray-50 text-[10px] uppercase tracking-[0.16em] text-gray-600 hover:text-black rounded-lg transition font-ui font-medium cursor-pointer"
                     >
                       {priceDetailsOpenIds[order.id]
-                        ? (locale === "ar" ? "إخفاء التفاصيل" : "Hide Price Details")
-                        : (locale === "ar" ? "عرض تفاصيل السعر" : "View Price Details")}
+                        ? locale === "ar"
+                          ? "إخفاء التفاصيل"
+                          : "Hide Price Details"
+                        : locale === "ar"
+                          ? "عرض تفاصيل السعر"
+                          : "View Price Details"}
                     </button>
                   </div>
                 </div>
@@ -696,28 +794,55 @@ export default function CustomOrdersTab({
                   </p>
                   <div className="bg-[#FDFAF5] border border-gray-200 rounded-xl p-4 space-y-2 text-xs text-gray-600 font-ui">
                     <div className="flex justify-between">
-                      <span>{tReview("lines.designBase", { defaultValue: "Design Base Price" })}</span>
-                      <span className="font-semibold text-black">{formatCurrency(order.pricing.designBase, locale)}</span>
+                      <span>
+                        {tReview("lines.designBase", {
+                          defaultValue: "Design Base Price",
+                        })}
+                      </span>
+                      <span className="font-semibold text-black">
+                        {formatCurrency(order.pricing.designBase, locale)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>
-                        {tReview("lines.fabricCost", { defaultValue: "Fabric Cost" })}
+                        {tReview("lines.fabricCost", {
+                          defaultValue: "Fabric Cost",
+                        })}
                         {order.pricing.fabricPricePerMeter > 0 && (
                           <span className="block text-[10px] text-gray-400">
-                            ({order.pricing.fabricMeters}m × {formatCurrency(order.pricing.fabricPricePerMeter, locale)}/m)
+                            ({order.pricing.fabricMeters}m ×{" "}
+                            {formatCurrency(
+                              order.pricing.fabricPricePerMeter,
+                              locale,
+                            )}
+                            /m)
                           </span>
                         )}
                       </span>
-                      <span className="font-semibold text-black">{formatCurrency(order.pricing.fabricCost, locale)}</span>
+                      <span className="font-semibold text-black">
+                        {formatCurrency(order.pricing.fabricCost, locale)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>{tReview("lines.tailoringFee", { defaultValue: "Tailoring Fee" })}</span>
-                      <span className="font-semibold text-black">{formatCurrency(order.pricing.tailoringFee, locale)}</span>
+                      <span>
+                        {tReview("lines.tailoringFee", {
+                          defaultValue: "Tailoring Fee",
+                        })}
+                      </span>
+                      <span className="font-semibold text-black">
+                        {formatCurrency(order.pricing.tailoringFee, locale)}
+                      </span>
                     </div>
                     {order.pricing.deliveryFee > 0 && (
                       <div className="flex justify-between">
-                        <span>{tReview("lines.deliveryFee", { defaultValue: "Delivery Fee" })}</span>
-                        <span className="font-semibold text-black">{formatCurrency(order.pricing.deliveryFee, locale)}</span>
+                        <span>
+                          {tReview("lines.deliveryFee", {
+                            defaultValue: "Delivery Fee",
+                          })}
+                        </span>
+                        <span className="font-semibold text-black">
+                          {formatCurrency(order.pricing.deliveryFee, locale)}
+                        </span>
                       </div>
                     )}
                     {order.addons && order.addons.length > 0 && (
@@ -732,16 +857,35 @@ export default function CustomOrdersTab({
                       </div>
                     )}
                     <div className="flex justify-between pt-2 border-t border-gray-200">
-                      <span className="font-semibold text-black">{tReview("lines.subtotal", { defaultValue: "Subtotal" })}</span>
-                      <span className="font-semibold text-black">{formatCurrency(order.pricing.subtotal, locale)}</span>
+                      <span className="font-semibold text-black">
+                        {tReview("lines.subtotal", {
+                          defaultValue: "Subtotal",
+                        })}
+                      </span>
+                      <span className="font-semibold text-black">
+                        {formatCurrency(order.pricing.subtotal, locale)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
-                      <span>{tReview("lines.vat", { rate: Math.round(order.pricing.vatRate * 100), defaultValue: `VAT (${Math.round(order.pricing.vatRate * 100)}%)` })}</span>
-                      <span className="font-semibold text-black">{formatCurrency(order.pricing.vatAmount, locale)}</span>
+                      <span>
+                        {tReview("lines.vat", {
+                          rate: Math.round(order.pricing.vatRate * 100),
+                          defaultValue: `VAT (${Math.round(order.pricing.vatRate * 100)}%)`,
+                        })}
+                      </span>
+                      <span className="font-semibold text-black">
+                        {formatCurrency(order.pricing.vatAmount, locale)}
+                      </span>
                     </div>
                     <div className="flex justify-between pt-2 border-t border-black">
-                      <span className="font-bold text-black uppercase tracking-wider">{tReview("lines.total", { defaultValue: "Total Amount" })}</span>
-                      <span className="font-bold text-black text-sm">{formatCurrency(order.pricing.total, locale)}</span>
+                      <span className="font-bold text-black uppercase tracking-wider">
+                        {tReview("lines.total", {
+                          defaultValue: "Total Amount",
+                        })}
+                      </span>
+                      <span className="font-bold text-black text-sm">
+                        {formatCurrency(order.pricing.total, locale)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -840,7 +984,11 @@ export default function CustomOrdersTab({
                                           scale: 0.95,
                                         }}
                                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                        exit={{
+                                          opacity: 0,
+                                          y: -10,
+                                          scale: 0.95,
+                                        }}
                                         transition={{
                                           duration: 0.15,
                                           ease: "easeOut",
@@ -1020,7 +1168,8 @@ export default function CustomOrdersTab({
                                 </div>
                                 <div>
                                   <label className="text-[10px] uppercase tracking-[0.12em] text-gray-400 block mb-1">
-                                    State <span className="text-red-500">*</span>
+                                    State{" "}
+                                    <span className="text-red-500">*</span>
                                   </label>
                                   <input
                                     value={
@@ -1195,7 +1344,9 @@ export default function CustomOrdersTab({
                   {isMulti && (
                     <button
                       type="button"
-                      onClick={() => setRetailExpandedId(isExpanded ? null : order.id)}
+                      onClick={() =>
+                        setRetailExpandedId(isExpanded ? null : order.id)
+                      }
                       className="text-[10px] uppercase tracking-[0.18em] text-gray-400 hover:text-black transition hover:cursor-pointer whitespace-nowrap"
                       aria-expanded={isExpanded}
                     >
@@ -1213,33 +1364,53 @@ export default function CustomOrdersTab({
                     {locale === "ar" ? "الاسم" : "ITEM NAME"}
                   </p>
                   <div className="space-y-3">
-                    {(isExpanded ? order.items : [order.items[0]]).map((item, idx) => (
-                      item && (
-                        <div key={idx} className="flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100">
-                          <div className="w-12 h-12 bg-[#F0EBE3] overflow-hidden rounded-lg border border-gray-200 shrink-0">
-                            {item.image ? (
-                              <img
-                                src={resolveReadyMadeImage(item.image)}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
-                                <Package size={18} />
-                              </div>
-                            )}
+                    {(isExpanded ? order.items : [order.items[0]]).map(
+                      (item, idx) =>
+                        item && (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100"
+                          >
+                            <div className="w-12 h-12 bg-[#F0EBE3] overflow-hidden rounded-lg border border-gray-200 shrink-0 relative group">
+                              {item.image ? (
+                                <>
+                                  <img
+                                    src={resolveReadyMadeImage(item.image)}
+                                    alt={item.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <button
+                                    onClick={() =>
+                                      handleImageClick(
+                                        resolveReadyMadeImage(item.image),
+                                        item.name,
+                                      )
+                                    }
+                                    className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:cursor-pointer rounded-lg"
+                                  >
+                                    <Maximize2 className="w-4 h-4 text-white" />
+                                  </button>
+                                </>
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-300">
+                                  <Package size={18} />
+                                </div>
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-xs text-black font-medium line-clamp-2">
+                                {locale === "ar"
+                                  ? item.nameAr || item.name
+                                  : item.name}
+                              </span>
+                              <span className="block text-[10px] text-gray-500 font-ui mt-0.5">
+                                Qty: {item.quantity}{" "}
+                                {item.size && `| Size: ${item.size}`}
+                              </span>
+                            </div>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <span className="text-xs text-black font-medium line-clamp-2">
-                              {locale === "ar" ? item.nameAr || item.name : item.name}
-                            </span>
-                            <span className="block text-[10px] text-gray-500 font-ui mt-0.5">
-                              Qty: {item.quantity} {item.size && `| Size: ${item.size}`}
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    ))}
+                        ),
+                    )}
                   </div>
                 </div>
 
@@ -1249,18 +1420,25 @@ export default function CustomOrdersTab({
                     {locale === "ar" ? "الأقمشة" : "FABRICS"}
                   </p>
                   <div className="space-y-3">
-                    {(isExpanded ? order.items : [order.items[0]]).map((item, idx) => (
-                      item && (
-                        <div key={idx} className="space-y-1">
-                          <span className="[font-family:var(--font-ui)] text-[9px] uppercase tracking-[0.24em] text-gray-400 block font-semibold">
-                            {locale === "ar" ? "قماش المنتج" : "SOURCE FABRIC"}
-                          </span>
-                          <span className="[font-family:var(--font-body)] text-xs sm:text-sm font-semibold text-black block leading-tight">
-                            {locale === "ar" ? item.fabricNameAr || item.fabricName || tRetail("unknownFabric") : item.fabricName || tRetail("unknownFabric")}
-                          </span>
-                        </div>
-                      )
-                    ))}
+                    {(isExpanded ? order.items : [order.items[0]]).map(
+                      (item, idx) =>
+                        item && (
+                          <div key={idx} className="space-y-1">
+                            <span className="[font-family:var(--font-ui)] text-[9px] uppercase tracking-[0.24em] text-gray-400 block font-semibold">
+                              {locale === "ar"
+                                ? "قماش المنتج"
+                                : "SOURCE FABRIC"}
+                            </span>
+                            <span className="[font-family:var(--font-body)] text-xs sm:text-sm font-semibold text-black block leading-tight">
+                              {locale === "ar"
+                                ? item.fabricNameAr ||
+                                  item.fabricName ||
+                                  tRetail("unknownFabric")
+                                : item.fabricName || tRetail("unknownFabric")}
+                            </span>
+                          </div>
+                        ),
+                    )}
                   </div>
                 </div>
 
@@ -1270,18 +1448,25 @@ export default function CustomOrdersTab({
                     {locale === "ar" ? "التصاميم" : "DESIGNS"}
                   </p>
                   <div className="space-y-3">
-                    {(isExpanded ? order.items : [order.items[0]]).map((item, idx) => (
-                      item && (
-                        <div key={idx} className="space-y-1">
-                          <span className="[font-family:var(--font-ui)] text-[9px] uppercase tracking-[0.24em] text-gray-400 block font-semibold">
-                            {locale === "ar" ? "تصميم المنتج" : "TAILOR DESIGN"}
-                          </span>
-                          <span className="[font-family:var(--font-body)] text-xs sm:text-sm font-semibold text-black block leading-tight">
-                            {locale === "ar" ? item.designNameAr || item.designName || tRetail("unknownDesign") : item.designName || tRetail("unknownDesign")}
-                          </span>
-                        </div>
-                      )
-                    ))}
+                    {(isExpanded ? order.items : [order.items[0]]).map(
+                      (item, idx) =>
+                        item && (
+                          <div key={idx} className="space-y-1">
+                            <span className="[font-family:var(--font-ui)] text-[9px] uppercase tracking-[0.24em] text-gray-400 block font-semibold">
+                              {locale === "ar"
+                                ? "تصميم المنتج"
+                                : "TAILOR DESIGN"}
+                            </span>
+                            <span className="[font-family:var(--font-body)] text-xs sm:text-sm font-semibold text-black block leading-tight">
+                              {locale === "ar"
+                                ? item.designNameAr ||
+                                  item.designName ||
+                                  tRetail("unknownDesign")
+                                : item.designName || tRetail("unknownDesign")}
+                            </span>
+                          </div>
+                        ),
+                    )}
                   </div>
                 </div>
 
@@ -1319,8 +1504,12 @@ export default function CustomOrdersTab({
                       className="mt-3 w-full text-center py-1.5 border border-gray-200 bg-white hover:bg-gray-50 text-[10px] uppercase tracking-[0.16em] text-gray-600 hover:text-black rounded-lg transition font-ui font-medium cursor-pointer"
                     >
                       {priceDetailsOpenIds[order.id]
-                        ? (locale === "ar" ? "إخفاء التفاصيل" : "Hide Price Details")
-                        : (locale === "ar" ? "عرض تفاصيل السعر" : "View Price Details")}
+                        ? locale === "ar"
+                          ? "إخفاء التفاصيل"
+                          : "Hide Price Details"
+                        : locale === "ar"
+                          ? "عرض تفاصيل السعر"
+                          : "View Price Details"}
                     </button>
                   </div>
                 </div>
@@ -1334,28 +1523,49 @@ export default function CustomOrdersTab({
                   </p>
                   <div className="bg-[#FDFAF5] border border-gray-200 rounded-xl p-4 space-y-2 text-xs text-gray-600 font-ui">
                     <div className="flex justify-between">
-                      <span>{locale === "ar" ? "سعر المنتجات" : "Items Price"}</span>
+                      <span>
+                        {locale === "ar" ? "سعر المنتجات" : "Items Price"}
+                      </span>
                       <span className="font-semibold text-black">
-                        {formatCurrency(order.itemsPrice || order.totalPrice - (order.vatAmount || 0) - (order.shippingPrice || 0), locale)}
+                        {formatCurrency(
+                          order.itemsPrice ||
+                            order.totalPrice -
+                              (order.vatAmount || 0) -
+                              (order.shippingPrice || 0),
+                          locale,
+                        )}
                       </span>
                     </div>
-                    {order.shippingPrice !== undefined && order.shippingPrice > 0 && (
-                      <div className="flex justify-between">
-                        <span>{locale === "ar" ? "رسوم التوصيل" : "Delivery Fee"}</span>
-                        <span className="font-semibold text-black">{formatCurrency(order.shippingPrice, locale)}</span>
-                      </div>
-                    )}
+                    {order.shippingPrice !== undefined &&
+                      order.shippingPrice > 0 && (
+                        <div className="flex justify-between">
+                          <span>
+                            {locale === "ar" ? "رسوم التوصيل" : "Delivery Fee"}
+                          </span>
+                          <span className="font-semibold text-black">
+                            {formatCurrency(order.shippingPrice, locale)}
+                          </span>
+                        </div>
+                      )}
                     {order.vatAmount !== undefined && order.vatAmount > 0 && (
                       <div className="flex justify-between">
                         <span>
-                          {locale === "ar" ? `ضريبة القيمة المضافة (${Math.round((order.vatRate || 0.05) * 100)}%)` : `VAT (${Math.round((order.vatRate || 0.05) * 100)}%)`}
+                          {locale === "ar"
+                            ? `ضريبة القيمة المضافة (${Math.round((order.vatRate || 0.05) * 100)}%)`
+                            : `VAT (${Math.round((order.vatRate || 0.05) * 100)}%)`}
                         </span>
-                        <span className="font-semibold text-black">{formatCurrency(order.vatAmount, locale)}</span>
+                        <span className="font-semibold text-black">
+                          {formatCurrency(order.vatAmount, locale)}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between pt-2 border-t border-black">
-                      <span className="font-bold text-black uppercase tracking-wider">{locale === "ar" ? "المجموع الإجمالي" : "Total Amount"}</span>
-                      <span className="font-bold text-black text-sm">{formatCurrency(order.totalPrice, locale)}</span>
+                      <span className="font-bold text-black uppercase tracking-wider">
+                        {locale === "ar" ? "المجموع الإجمالي" : "Total Amount"}
+                      </span>
+                      <span className="font-bold text-black text-sm">
+                        {formatCurrency(order.totalPrice, locale)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1364,6 +1574,15 @@ export default function CustomOrdersTab({
           );
         }
       })}
+      <ImageModal
+        isOpen={imageModalOpen}
+        imageUrl={selectedImage}
+        alt="Item Image"
+        onClose={() => {
+          setImageModalOpen(false);
+          setSelectedImage("");
+        }}
+      />
     </div>
   );
 }

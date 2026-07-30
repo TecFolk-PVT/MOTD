@@ -19,9 +19,11 @@ import {
   Mailbox,
   Ruler,
   UserPen,
+  Maximize2,
 } from "lucide-react";
 import { resolveMediaUrl } from "@/lib/media";
 import { useRouter, useParams } from "next/navigation";
+import { ImageModal } from "@/components/shared/ImageModal";
 
 interface ProfileTabProps {
   onEditClick?: () => void;
@@ -90,7 +92,6 @@ const isProfileComplete = (profile: CustomerProfile): boolean => {
   return hasPhone && hasGender && hasDob && hasValidAddress;
 };
 
-// Convert cm to inches for display
 const cmToInches = (cm: number | null | undefined): string => {
   if (cm === null || cm === undefined) return "—";
   return (Math.round((cm / 2.54) * 10) / 10).toFixed(1);
@@ -105,7 +106,16 @@ export default function ProfileTab({ onEditClick }: ProfileTabProps) {
   const [measurements, setMeasurements] = useState<Measurements | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>("");
   const isComplete = profile ? isProfileComplete(profile) : false;
+
+  const handleImageClick = (imageUrl: string) => {
+    if (imageUrl) {
+      setSelectedImage(imageUrl);
+      setImageModalOpen(true);
+    }
+  };
 
   useEffect(() => {
     async function fetchProfile() {
@@ -117,7 +127,6 @@ export default function ProfileTab({ onEditClick }: ProfileTabProps) {
         setIsLoading(true);
         setError(null);
 
-        // Fetch profile
         const data = await api.get("/api/customer/profile");
         const mapped: CustomerProfile = {
           id: data._id || data.id,
@@ -132,7 +141,6 @@ export default function ProfileTab({ onEditClick }: ProfileTabProps) {
         };
         setProfile(mapped);
 
-        // Fetch measurements separately
         try {
           const measurementsData = await api.get(
             "/api/customer/customer_measurements",
@@ -254,7 +262,6 @@ export default function ProfileTab({ onEditClick }: ProfileTabProps) {
     ? `${formatDate(profile.dob)}${age !== null ? ` (${age} years)` : ""}`
     : undefined;
 
-  // Define all measurement fields - show all with "—" if no value
   const measurementFields = [
     { key: "totalLength", label: "Total Length" },
     { key: "shoulderWidth", label: "Shoulder Width" },
@@ -270,18 +277,22 @@ export default function ProfileTab({ onEditClick }: ProfileTabProps) {
     { key: "cuffLength", label: "Cuff Length" },
   ];
 
+  const profilePicUrl = profile.profilePic
+    ? resolveMediaUrl(profile.profilePic)
+    : null;
+
   return (
     <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
       <div className="p-4 sm:p-6 md:p-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
           <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto">
-            {/* Avatar */}
+            {/* Avatar with click to enlarge */}
             <div className="relative group shrink-0">
               <div className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 rounded-full bg-linear-to-br from-gray-200 to-gray-300 flex items-center justify-center overflow-hidden border-2 border-gray-200 shadow-md">
-                {profile.profilePic ? (
+                {profilePicUrl ? (
                   <img
-                    src={resolveMediaUrl(profile.profilePic)}
+                    src={profilePicUrl}
                     alt={profile.name}
                     className="w-full h-full object-cover"
                   />
@@ -291,6 +302,14 @@ export default function ProfileTab({ onEditClick }: ProfileTabProps) {
                   </span>
                 )}
               </div>
+              {profilePicUrl && (
+                <button
+                  onClick={() => handleImageClick(profilePicUrl)}
+                  className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 rounded-full transition-opacity duration-300 hover:cursor-pointer"
+                >
+                  <Maximize2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </button>
+              )}
             </div>
 
             {/* Name + Badge + Email/Phone */}
@@ -409,7 +428,7 @@ export default function ProfileTab({ onEditClick }: ProfileTabProps) {
           )}
         </div>
 
-        {/* Measurements Section - Show all fields */}
+        {/* Measurements Section */}
         <div className="mt-6 sm:mt-8">
           <h4 className="text-sm sm:text-md font-medium text-gray-700 flex items-center gap-2 mb-4 uppercase">
             <UserPen className="w-4 h-4" />
@@ -450,6 +469,17 @@ export default function ProfileTab({ onEditClick }: ProfileTabProps) {
           </div>
         </div>
       </div>
+
+      {/* Image Modal */}
+      <ImageModal
+        isOpen={imageModalOpen}
+        imageUrl={selectedImage}
+        alt="Profile Picture"
+        onClose={() => {
+          setImageModalOpen(false);
+          setSelectedImage("");
+        }}
+      />
     </div>
   );
 }

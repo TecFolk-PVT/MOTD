@@ -2,13 +2,21 @@
 
 import { Link } from "@/i18n/navigation";
 import { useParams, useRouter } from "next/navigation";
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft } from "lucide-react";
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ShoppingBag,
+  ArrowLeft,
+  Maximize2,
+} from "lucide-react";
 import MainLayout from "../main/layout";
 import FadeInSection from "@/components/shared/fadeInSection";
 import { useCart } from "@/context/CartContext";
 import { resolveMediaUrl } from "@/lib/media";
 import { useState, useEffect } from "react";
 import { api } from "@/lib/api/client";
+import { ImageModal } from "@/components/shared/ImageModal";
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, clearCart } = useCart();
@@ -16,6 +24,8 @@ export default function CartPage() {
   const router = useRouter();
   const locale = params.locale as string;
   const [vatRate, setVatRate] = useState(0);
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>("");
 
   // Fetch VAT rate from platform settings
   useEffect(() => {
@@ -42,12 +52,20 @@ export default function CartPage() {
   const total = subtotal + vat;
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
 
-  // Quantity handlers (fixed)
+  // Quantity handlers
   const increaseQty = (id: string, currentQty: number) => {
     updateQuantity(id, currentQty + 1);
   };
   const decreaseQty = (id: string, currentQty: number) => {
     if (currentQty > 1) updateQuantity(id, currentQty - 1);
+  };
+
+  // Image modal handler
+  const handleImageClick = (imageUrl: string) => {
+    if (imageUrl) {
+      setSelectedImage(imageUrl);
+      setImageModalOpen(true);
+    }
   };
 
   // Empty cart state
@@ -71,7 +89,6 @@ export default function CartPage() {
                 if (element) {
                   element.scrollIntoView({ behavior: "smooth" });
                 } else {
-                  // Fallback: go to home page and then scroll after navigation
                   router.push(`/${locale}`);
                   setTimeout(() => {
                     const el = document.getElementById("ready-made");
@@ -119,84 +136,91 @@ export default function CartPage() {
               {/* Items list */}
               <div className="lg:col-span-2 space-y-4">
                 <div className="bg-(--bg-page) border border-(--color-border) rounded-lg overflow-hidden divide-y divide-(--color-border)">
-                  {items.map((item) => (
-                    <div
-                      key={item.id}
-                      className="p-4 xs:p-5 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6"
-                    >
-                      {/* Image */}
-                      <div className="w-full sm:w-28 h-28 bg-[#F5F5F0] rounded-md overflow-hidden shrink-0">
-                        <img
-                          src={
-                            resolveMediaUrl(item.image) || "/placeholder.png"
-                          }
-                          alt={item.name}
-                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                        />
-                      </div>
-
-                      {/* Details */}
-                      <div className="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                        <div className="space-y-1">
-                          <h3 className="[font-family:var(--font-display)] text-[16px] xs:text-[18px] sm:text-[20px] font-normal text-black">
-                            {item.name}
-                          </h3>
-                          <p className="[font-family:var(--font-ui)] text-[11px] xs:text-[12px] text-(--color-grey-muted)">
-                            Size (in Meters): {item.size}
-                          </p>
-                          <p className="[font-family:var(--font-ui)] text-[14px] xs:text-[16px] font-medium text-black">
-                            AED {item.price.toFixed(2)}
-                          </p>
+                  {items.map((item) => {
+                    const imageUrl = resolveMediaUrl(item.image);
+                    return (
+                      <div
+                        key={item.id}
+                        className="p-4 xs:p-5 sm:p-6 flex flex-col sm:flex-row gap-4 sm:gap-6"
+                      >
+                        {/* Image with click to enlarge */}
+                        <div className="w-full sm:w-28 h-28 bg-[#F5F5F0] rounded-md overflow-hidden shrink-0 relative group">
+                          <img
+                            src={imageUrl || "/placeholder.png"}
+                            alt={item.name}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          />
+                          {imageUrl && (
+                            <button
+                              onClick={() => handleImageClick(imageUrl)}
+                              className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:cursor-pointer"
+                            >
+                              <Maximize2 className="w-6 h-6 text-white" />
+                            </button>
+                          )}
                         </div>
 
-                        {/* Quantity & remove */}
-                        <div className="flex items-center gap-4">
-                          {/* // In CartPage, inside the item mapping */}
-                          <div className="flex items-center border border-(--color-border) rounded-md">
+                        {/* Details */}
+                        <div className="flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                          <div className="space-y-1">
+                            <h3 className="[font-family:var(--font-display)] text-[16px] xs:text-[18px] sm:text-[20px] font-normal text-black">
+                              {item.name}
+                            </h3>
+                            <p className="[font-family:var(--font-ui)] text-[11px] xs:text-[12px] text-(--color-grey-muted)">
+                              Size (in Meters): {item.size}
+                            </p>
+                            <p className="[font-family:var(--font-ui)] text-[14px] xs:text-[16px] font-medium text-black">
+                              AED {item.price.toFixed(2)}
+                            </p>
+                          </div>
+
+                          {/* Quantity & remove */}
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center border border-(--color-border) rounded-md">
+                              <button
+                                onClick={() =>
+                                  decreaseQty(item.id, item.quantity)
+                                }
+                                disabled={item.quantity <= 1}
+                                className="px-2 py-1.5 disabled:opacity-40 hover:bg-black/5 transition hover:cursor-pointer"
+                              >
+                                <Minus size={14} />
+                              </button>
+                              <span className="w-8 text-center">
+                                {item.quantity}
+                              </span>
+                              <button
+                                onClick={() =>
+                                  increaseQty(item.id, item.quantity)
+                                }
+                                disabled={
+                                  item.maxStock != null &&
+                                  item.quantity >= item.maxStock
+                                }
+                                className="px-2 py-1.5 disabled:opacity-40 hover:bg-black/5 transition hover:cursor-pointer"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
                             <button
-                              onClick={() =>
-                                decreaseQty(item.id, item.quantity)
-                              }
-                              disabled={item.quantity <= 1}
-                              className="px-2 py-1.5 disabled:opacity-40 hover:bg-black/5 transition hover:cursor-pointer"
+                              onClick={() => removeItem(item.id)}
+                              className="text-(--color-grey-muted) hover:text-red-600 transition hover:cursor-pointer"
+                              aria-label="Remove item"
                             >
-                              <Minus size={14} />
-                            </button>
-                            <span className="w-8 text-center">
-                              {item.quantity}
-                            </span>
-                            <button
-                              onClick={() =>
-                                increaseQty(item.id, item.quantity)
-                              }
-                              // only disable when maxStock is known and reached
-                              disabled={
-                                item.maxStock != null &&
-                                item.quantity >= item.maxStock
-                              }
-                              className="px-2 py-1.5 disabled:opacity-40 hover:bg-black/5 transition hover:cursor-pointer"
-                            >
-                              <Plus size={14} />
+                              <Trash2 size={18} />
                             </button>
                           </div>
-                          <button
-                            onClick={() => removeItem(item.id)}
-                            className="text-(--color-grey-muted) hover:text-red-600 transition hover:cursor-pointer"
-                            aria-label="Remove item"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                        </div>
+
+                        {/* Item total (desktop only) */}
+                        <div className="hidden sm:block text-right min-w-20">
+                          <p className="[font-family:var(--font-ui)] text-[14px] xs:text-[16px] font-medium text-black">
+                            AED {(item.price * item.quantity).toFixed(2)}
+                          </p>
                         </div>
                       </div>
-
-                      {/* Item total (desktop only) */}
-                      <div className="hidden sm:block text-right min-w-20">
-                        <p className="[font-family:var(--font-ui)] text-[14px] xs:text-[16px] font-medium text-black">
-                          AED {(item.price * item.quantity).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Clear cart button */}
@@ -243,6 +267,16 @@ export default function CartPage() {
               </div>
             </div>
           </div>
+
+          <ImageModal
+            isOpen={imageModalOpen}
+            imageUrl={selectedImage}
+            alt="Cart Item Image"
+            onClose={() => {
+              setImageModalOpen(false);
+              setSelectedImage("");
+            }}
+          />
         </div>
       </FadeInSection>
     </MainLayout>

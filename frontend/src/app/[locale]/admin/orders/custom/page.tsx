@@ -145,13 +145,11 @@ export default function AdminCustomOrdersPage() {
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string>("");
 
-  // pop up image function
   const handleImageClick = (imageUrl: string) => {
     setSelectedImage(imageUrl);
     setImageModalOpen(true);
   };
 
-  // Date defaults: current month-to-date
   const getTodayString = () => {
     const d = new Date();
     const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -165,7 +163,6 @@ export default function AdminCustomOrdersPage() {
     return `${d.getFullYear()}-${month}-01`;
   };
 
-  // Filters State
   const [filterCustomer, setFilterCustomer] = useState<string>("");
   const [filterStatus, setFilterStatus] = useState<string>("");
   const [filterFrom, setFilterFrom] = useState<string>(
@@ -233,10 +230,8 @@ export default function AdminCustomOrdersPage() {
       currency,
     }).format(amount);
 
-  // Client-side filtering logic
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
-      // 1. Customer name/email/ID filter
       if (filterCustomer.trim()) {
         const term = filterCustomer.toLowerCase();
         const customerName = readPartnerName(
@@ -258,19 +253,16 @@ export default function AdminCustomOrdersPage() {
         }
       }
 
-      // 2. Status filter
       if (filterStatus) {
         if (order.status !== filterStatus) return false;
       }
 
-      // 3. From Date filter
       if (filterFrom) {
         const orderDate = new Date(order.createdAt);
         const fromDate = new Date(filterFrom + "T00:00:00");
         if (orderDate < fromDate) return false;
       }
 
-      // 4. To Date filter
       if (filterTo) {
         const orderDate = new Date(order.createdAt);
         const toDate = new Date(filterTo + "T23:59:59");
@@ -280,6 +272,43 @@ export default function AdminCustomOrdersPage() {
       return true;
     });
   }, [orders, filterCustomer, filterStatus, filterFrom, filterTo]);
+
+  const getFabricImage = (
+    fabricId: FabricPopulated | string | null | undefined,
+  ): string | null => {
+    if (
+      fabricId &&
+      typeof fabricId === "object" &&
+      Array.isArray(fabricId.images) &&
+      fabricId.images.length > 0
+    ) {
+      return fabricId.images[0];
+    }
+    return null;
+  };
+
+  const getDesignImage = (
+    designId: DesignPopulated | string | null | undefined,
+  ): string | null => {
+    if (
+      designId &&
+      typeof designId === "object" &&
+      Array.isArray(designId.images) &&
+      designId.images.length > 0
+    ) {
+      return designId.images[0];
+    }
+    return null;
+  };
+
+  const getTailorLogo = (
+    shop: TailorShopPopulated | string | null | undefined,
+  ): string | null => {
+    if (shop && typeof shop === "object" && shop.logo) {
+      return shop.logo;
+    }
+    return null;
+  };
 
   if (loading && orders.length === 0) {
     return (
@@ -320,7 +349,6 @@ export default function AdminCustomOrdersPage() {
         </button>
       </div>
 
-      {/* Stats Cards Section */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: t("stats.total"), value: filteredOrders.length },
@@ -350,7 +378,6 @@ export default function AdminCustomOrdersPage() {
         ))}
       </div>
 
-      {/* Filters Section */}
       <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div>
           <label className="block text-xs text-gray-400 mb-1.5 font-medium uppercase tracking-wider">
@@ -421,7 +448,6 @@ export default function AdminCustomOrdersPage() {
         </div>
       </div>
 
-      {/* Orders List Section */}
       {filteredOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-gray-100 py-20 shadow-sm">
           <PackageSearch
@@ -457,41 +483,6 @@ export default function AdminCustomOrdersPage() {
             );
             const fabricName = order.fabricSnapshot?.name || t("unknownFabric");
 
-            const getFabricImage = (
-              fabricId: FabricPopulated | string | null | undefined,
-            ): string | null => {
-              if (
-                fabricId &&
-                typeof fabricId === "object" &&
-                fabricId.images?.length > 0
-              ) {
-                return fabricId.images[0];
-              }
-              return null;
-            };
-
-            const getDesignImage = (
-              designId: DesignPopulated | string | null | undefined,
-            ): string | null => {
-              if (
-                designId &&
-                typeof designId === "object" &&
-                designId.images?.length > 0
-              ) {
-                return designId.images[0];
-              }
-              return null;
-            };
-
-            const getTailorLogo = (
-              shop: TailorShopPopulated | string | null | undefined,
-            ): string | null => {
-              if (shop && typeof shop === "object" && shop.logo) {
-                return shop.logo;
-              }
-              return null;
-            };
-
             const orderFabricImage = getFabricImage(order.fabricId);
             const orderDesignImage = getDesignImage(order.designId);
             const orderTailorLogo = getTailorLogo(order.tailorShopId);
@@ -501,7 +492,6 @@ export default function AdminCustomOrdersPage() {
                 key={order._id}
                 className="border border-gray-100 rounded-2xl bg-white overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200"
               >
-                {/* Upper card info grid */}
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4 p-5">
                   <div>
                     <p className="text-xs text-gray-400 uppercase tracking-wider mb-1">
@@ -533,27 +523,30 @@ export default function AdminCustomOrdersPage() {
                         return (
                           <div
                             key={idx}
-                            className="bg-gray-50/50 rounded-xl border border-gray-100/50 space-y-1"
+                            className="bg-gray-50/50 rounded-xl border border-gray-100/50 p-3 space-y-2"
                           >
-                            <div className="flex items-center gap-2">
-                              {itemDesignImage && (
+                            <div className="flex items-center gap-3">
+                              {itemDesignImage ? (
                                 <img
                                   src={itemDesignImage}
                                   alt={item.designSnapshot?.name || "Design"}
-                                  className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0 hover:cursor-pointer"
+                                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0 hover:cursor-pointer"
                                   onClick={() =>
                                     handleImageClick(itemDesignImage)
                                   }
                                 />
+                              ) : (
+                                <div className="w-12 h-12 rounded-lg bg-gray-100 border border-gray-200 shrink-0 flex items-center justify-center text-gray-400 text-xs">
+                                  No img
+                                </div>
                               )}
-                              <div className="flex justify-between items-start gap-2 flex-1">
-                                <span className="text-xs font-normal text-gray-500">
-                                  Design:
+                              <div className="flex-1 flex justify-between items-center">
+                                <span className="text-sm font-medium text-black">
                                   {item.designSnapshot?.name ||
                                     t("unknownDesign")}
                                 </span>
                                 {item.pricing?.total !== undefined && (
-                                  <span className="text-xs font-medium text-gray-500 font-mono">
+                                  <span className="text-sm font-mono text-gray-600">
                                     {formatCurrency(
                                       item.pricing.total,
                                       order.pricing.currency,
@@ -562,38 +555,50 @@ export default function AdminCustomOrdersPage() {
                                 )}
                               </div>
                             </div>
-                            <div className="flex flex-col gap-0.5 text-[11px] text-gray-500">
-                              <span className="flex items-center gap-2">
-                                {itemFabricImage && (
-                                  <img
-                                    src={itemFabricImage}
-                                    alt={item.fabricSnapshot?.name || "Fabric"}
-                                    className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0 hover:cursor-pointer"
-                                    onClick={() =>
-                                      handleImageClick(itemFabricImage)
-                                    }
-                                  />
-                                )}
+
+                            <div className="flex items-center gap-3 pl-1">
+                              {itemFabricImage ? (
+                                <img
+                                  src={itemFabricImage}
+                                  alt={item.fabricSnapshot?.name || "Fabric"}
+                                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0 hover:cursor-pointer"
+                                  onClick={() =>
+                                    handleImageClick(itemFabricImage)
+                                  }
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-200 shrink-0 flex items-center justify-center text-gray-400 text-[10px]">
+                                  No img
+                                </div>
+                              )}
+                              <span className="text-xs text-gray-600">
                                 {t("fabricLabel", {
                                   name:
                                     item.fabricSnapshot?.name ||
                                     t("unknownFabric"),
                                 })}
                               </span>
-                              <span className="flex items-center gap-1.5">
-                                {itemTailorLogo && (
-                                  <img
-                                    src={itemTailorLogo}
-                                    alt={readPartnerName(
-                                      item.tailorShopId,
-                                      t("unknownTailor"),
-                                    )}
-                                    className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0 hover:cursor-pointer"
-                                    onClick={() =>
-                                      handleImageClick(itemTailorLogo)
-                                    }
-                                  />
-                                )}
+                            </div>
+
+                            <div className="flex items-center gap-3 pl-1">
+                              {itemTailorLogo ? (
+                                <img
+                                  src={itemTailorLogo}
+                                  alt={readPartnerName(
+                                    item.tailorShopId,
+                                    t("unknownTailor"),
+                                  )}
+                                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0 hover:cursor-pointer"
+                                  onClick={() =>
+                                    handleImageClick(itemTailorLogo)
+                                  }
+                                />
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-gray-100 border border-gray-200 shrink-0 flex items-center justify-center text-gray-400 text-[8px]">
+                                  N/A
+                                </div>
+                              )}
+                              <span className="text-xs text-gray-600">
                                 {locale === "ar" ? `الخياط:` : `Tailor:`}{" "}
                                 {readPartnerName(
                                   item.tailorShopId,
@@ -605,40 +610,45 @@ export default function AdminCustomOrdersPage() {
                         );
                       })
                     ) : (
-                      <div className="bg-gray-50/50 rounded-xl p-3 border border-gray-100/50 space-y-">
+                      <div className="bg-gray-50/50 rounded-xl p-3 border border-gray-100/50 space-y-2">
                         <div className="flex items-center gap-2">
                           {orderDesignImage && (
                             <img
                               src={orderDesignImage}
                               alt={order.designSnapshot?.name || "Design"}
-                              className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
+                              className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0 hover:cursor-pointer"
+                              onClick={() => handleImageClick(orderDesignImage)}
                             />
                           )}
-                          <div className="flex justify-between items-start gap-2 flex-1">
-                            <span className="text-xs font-medium text-black">
+                          <div className="flex-1 flex justify-between items-center">
+                            <span className="text-sm font-medium text-black">
                               {order.designSnapshot?.name || t("unknownDesign")}
                             </span>
                           </div>
                         </div>
-                        <div className="flex flex-col gap-0.5 text-[11px] text-gray-500">
-                          <span className="flex items-center gap-2">
-                            {orderFabricImage && (
-                              <img
-                                src={orderFabricImage}
-                                alt={fabricName}
-                                className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0"
-                              />
-                            )}
+                        <div className="flex items-center gap-2 pl-1">
+                          {orderFabricImage && (
+                            <img
+                              src={orderFabricImage}
+                              alt={fabricName}
+                              className="w-10 h-10 rounded-lg object-cover border border-gray-200 shrink-0 hover:cursor-pointer"
+                              onClick={() => handleImageClick(orderFabricImage)}
+                            />
+                          )}
+                          <span className="text-xs text-gray-600">
                             {t("fabricLabel", { name: fabricName })}
                           </span>
-                          <span className="flex items-center gap-1.5">
-                            {orderTailorLogo && (
-                              <img
-                                src={orderTailorLogo}
-                                alt={tailorName}
-                                className="w-5 h-5 rounded-full object-cover border border-gray-200 shrink-0"
-                              />
-                            )}
+                        </div>
+                        <div className="flex items-center gap-2 pl-1">
+                          {orderTailorLogo && (
+                            <img
+                              src={orderTailorLogo}
+                              alt={tailorName}
+                              className="w-6 h-6 rounded-full object-cover border border-gray-200 shrink-0 hover:cursor-pointer"
+                              onClick={() => handleImageClick(orderTailorLogo)}
+                            />
+                          )}
+                          <span className="text-xs text-gray-600">
                             {locale === "ar" ? `الخياط:` : `Tailor:`}{" "}
                             {tailorName}
                           </span>
@@ -646,6 +656,7 @@ export default function AdminCustomOrdersPage() {
                       </div>
                     )}
                   </div>
+
                   {order.addons && order.addons.length > 0 && (
                     <div className="md:col-span-2 space-y-2 border-t border-gray-100 pt-3 mt-1">
                       <p className="text-xs text-gray-400 uppercase tracking-wider mb-1 font-medium">
@@ -700,7 +711,6 @@ export default function AdminCustomOrdersPage() {
                   </div>
                 </div>
 
-                {/* Lower card action footer */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 border-t border-gray-100 bg-gray-50/70 items-center">
                   <div>
                     <p className="text-xs text-gray-400 uppercase tracking-wider">
@@ -743,7 +753,9 @@ export default function AdminCustomOrdersPage() {
                         {isUpdating ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-500" />
                         ) : (
-                          t("revertTo", { status: statusLabel(previousStatus) })
+                          t("revertTo", {
+                            status: statusLabel(previousStatus),
+                          })
                         )}
                       </button>
                     )}
@@ -762,7 +774,9 @@ export default function AdminCustomOrdersPage() {
                         {isUpdating ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
                         ) : (
-                          t("advanceTo", { status: statusLabel(nextStatus) })
+                          t("advanceTo", {
+                            status: statusLabel(nextStatus),
+                          })
                         )}
                       </button>
                     )}

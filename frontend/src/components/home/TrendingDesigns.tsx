@@ -495,6 +495,7 @@ export function TrendingSection() {
                               slug: design.slug,
                               size: "N/A",
                               quantity: 1,
+                              type: "design",
                             }}
                             inline={true}
                             className="p-2 rounded-full bg-white/85 backdrop-blur-sm shadow-sm border-0 flex h-8 w-8 items-center justify-center xs:h-9 xs:w-9"

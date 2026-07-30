@@ -13,6 +13,7 @@ import {
   Check,
   Package,
   Star,
+  Maximize2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "@/i18n/navigation";
@@ -34,6 +35,7 @@ import {
 } from "@/lib/customOrders";
 import { resolveReadyMadeImage } from "@/lib/readyMade";
 import OrderTimeline from "@/components/orders/OrderTimeline";
+import { ImageModal } from "@/components/shared/ImageModal";
 
 function getApiErrMessage(err: unknown, fallback: string) {
   const msg = (err as { message?: string })?.message;
@@ -56,9 +58,11 @@ function formatDate(value?: string) {
 function NotificationOrderSummary({
   notification,
   locale,
+  onImageClick,
 }: {
   notification: NotificationItem;
   locale: Locale;
+  onImageClick?: (imageUrl: string) => void;
 }) {
   const t = useTranslations("Account.Notifications");
   const summary = notification.orderSummary;
@@ -82,34 +86,46 @@ function NotificationOrderSummary({
 
   return (
     <div className="flex gap-3 sm:gap-4 p-3 rounded-xl bg-gray-50 border border-gray-100">
-      <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center">
+      <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-lg overflow-hidden bg-gray-200 flex items-center justify-center relative group">
         {imageSrc ? (
-          <Image
-            src={imageSrc}
-            alt={designName || t("orderLabel")}
-            width={80}
-            height={80}
-            className="w-full h-full object-cover"
-            unoptimized
-          />
+          <>
+            <Image
+              src={imageSrc}
+              alt={designName || t("orderLabel")}
+              width={80}
+              height={80}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              unoptimized
+            />
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onImageClick?.(imageSrc);
+              }}
+              className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:cursor-pointer"
+            >
+              <Maximize2 className="w-5 h-5 text-white" />
+            </button>
+          </>
         ) : (
           <Package className="w-6 h-6 text-gray-400" />
         )}
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         {designName && (
-          <p className="text-sm font-medium text-black truncate">{designName}</p>
+          <p className="text-sm font-medium text-black truncate">
+            {designName}
+          </p>
         )}
         {typeof summary.total === "number" && (
           <p className="text-sm text-gray-600">
-            {t("orderTotal")}:{" "}
-            {formatCurrency(summary.total, locale)}
+            {t("orderTotal")}: {formatCurrency(summary.total, locale)}
           </p>
         )}
         {typeof summary.refundAmount === "number" && (
           <p className="text-sm font-medium text-green-700">
-            {t("refundAmount")}:{" "}
-            {formatCurrency(summary.refundAmount, locale)}
+            {t("refundAmount")}: {formatCurrency(summary.refundAmount, locale)}
           </p>
         )}
         {summary.status && (
@@ -132,6 +148,8 @@ export default function CustomerNotificationPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [markAllLoading, setMarkAllLoading] = useState(false);
   const [markingRead, setMarkingRead] = useState<Record<string, boolean>>({});
+  const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string>("");
 
   const {
     items: sortedItems,
@@ -164,6 +182,13 @@ export default function CustomerNotificationPage() {
     });
   };
 
+  const handleImageClick = (imageUrl: string) => {
+    if (imageUrl) {
+      setSelectedImage(imageUrl);
+      setImageModalOpen(true);
+    }
+  };
+
   const typeLabel = (type: string) =>
     getNotificationTypeLabel(type, (key) => t(`types.${key}`));
 
@@ -188,7 +213,10 @@ export default function CustomerNotificationPage() {
           <select
             value={readFilter}
             onChange={(e) =>
-              handleFilterChange(e.target.value as "" | "true" | "false", searchQuery)
+              handleFilterChange(
+                e.target.value as "" | "true" | "false",
+                searchQuery,
+              )
             }
             className="px-3 py-2 rounded-lg border border-gray-200 text-sm"
           >
@@ -236,7 +264,9 @@ export default function CustomerNotificationPage() {
       ) : sortedItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center text-center bg-white rounded-2xl border border-gray-100 py-16 shadow-sm px-6">
           <Bell className="w-12 h-12 text-gray-300 mb-4" />
-          <p className="text-lg font-medium text-gray-700 mb-2">{t("emptyTitle")}</p>
+          <p className="text-lg font-medium text-gray-700 mb-2">
+            {t("emptyTitle")}
+          </p>
           <p className="text-gray-500 max-w-md text-sm leading-relaxed">
             {t("emptyDescription")}
           </p>
@@ -245,9 +275,10 @@ export default function CustomerNotificationPage() {
         <div className="space-y-3">
           {sortedItems.map((n) => {
             const isProcessingMark = markingRead[n.id] || false;
-            const orderHref = getOrderDetailHref(
-              { ...n, audience: "customer" },
-            );
+            const orderHref = getOrderDetailHref({
+              ...n,
+              audience: "customer",
+            });
             const showTimeline =
               n.statusHistory &&
               n.statusHistory.length > 0 &&
@@ -326,7 +357,11 @@ export default function CustomerNotificationPage() {
                     >
                       {n.message ? <p>{n.message}</p> : null}
 
-                      <NotificationOrderSummary notification={n} locale={locale} />
+                      <NotificationOrderSummary
+                        notification={n}
+                        locale={locale}
+                        onImageClick={handleImageClick}
+                      />
 
                       {showTimeline && n.status && (
                         <div className="border-t border-gray-100 pt-3">
@@ -425,6 +460,15 @@ export default function CustomerNotificationPage() {
           )}
         </div>
       )}
+      <ImageModal
+        isOpen={imageModalOpen}
+        imageUrl={selectedImage}
+        alt="Wishlist Item Image"
+        onClose={() => {
+          setImageModalOpen(false);
+          setSelectedImage("");
+        }}
+      />
     </div>
   );
 }
