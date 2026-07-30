@@ -1513,7 +1513,7 @@ export default function ReadyMadeCatalogPage() {
                                 price: price,
                                 slug: product.slug,
                                 size: String(product.metersPerFabric ?? ""),
-                                type: "addons",
+                                type: "readyMade",
                                 quantity: 1,
                                 ...(Number.isFinite(
                                   product.availableFabricStock,

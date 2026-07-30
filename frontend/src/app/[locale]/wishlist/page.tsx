@@ -37,8 +37,6 @@ export default function WishlistPage() {
       path = `/ready-made/${slug}`;
     } else if (item.type === "addons") {
       path = `/addons/${slug}`;
-    } else {
-      path = `/products/${slug}`;
     }
 
     router.push(path);
