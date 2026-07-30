@@ -407,14 +407,21 @@ export default function TailorOrdersPage() {
             const isUpdating = updatingOrderId === order._id;
             const nextStatus = getNextCustomOrderStatus(order.status);
             const previousStatus = getPreviousCustomOrderStatus(order.status);
-            const customerName = readPartnerName(
-              typeof order.userId === "object" ? order.userId : null,
-              locale === "ar" ? "عميل غير معروف" : "Unknown Customer",
-            );
+            const isGuest =
+              order.userId &&
+              typeof order.userId === "object" &&
+              order.userId.email === "customer@motd.test";
+            const customerName = isGuest && (order as any).customerDeliveryAddress?.fullName
+              ? (order as any).customerDeliveryAddress.fullName
+              : readPartnerName(
+                  typeof order.userId === "object" ? order.userId : null,
+                  locale === "ar" ? "عميل غير معروف" : "Unknown Customer",
+                );
             const customerEmail =
               typeof order.userId === "object" ? order.userId.email : "";
-            const customerPhone =
-              typeof order.userId === "object" ? order.userId.phone : "";
+            const customerPhone = isGuest
+              ? (order as any).customerDeliveryAddress?.phone || ""
+              : (typeof order.userId === "object" ? order.userId.phone : "");
             const fabricName =
               order.fabricSnapshot?.name ||
               (locale === "ar" ? "قماش خاص" : "Self Fabric");
