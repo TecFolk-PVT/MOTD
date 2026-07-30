@@ -112,7 +112,7 @@ export default function AddonDetailPage() {
         price: addon.price,
         size: "N/A",
         maxStock: addon.stock || 0,
-        type: "addons",
+        type: "addons" as const,
       });
     }
   };
