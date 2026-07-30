@@ -1255,15 +1255,21 @@ export default function CustomOrdersTab({
                   <div className="space-y-3">
                     {(isExpanded ? order.items : [order.items[0]]).map((item, idx) => {
                       if (!item) return null;
-                      const hasFabric = Boolean(item.fabricName);
+                      const isFabricOnly = item.size === "Per Meter";
+                      const hasFabric = Boolean(item.fabricName) || isFabricOnly;
+                      const fabricNameDisplay = item.fabricName
+                        ? (locale === "ar" ? item.fabricNameAr || item.fabricName : item.fabricName)
+                        : (isFabricOnly ? (locale === "ar" ? item.nameAr || item.name : item.name) : "");
+                      const fabricImageDisplay = item.fabricImage || (isFabricOnly ? item.image : "");
+
                       return (
                         <div key={idx} className="space-y-1">
                           {hasFabric ? (
                             <div className="flex items-center gap-3 bg-gray-50/50 p-2.5 rounded-xl border border-gray-100">
                               <div className="w-12 h-12 bg-[#F0EBE3] overflow-hidden rounded-lg border border-gray-200 shrink-0 flex items-center justify-center">
-                                {item.fabricImage ? (
+                                {fabricImageDisplay ? (
                                   <img
-                                    src={resolveFabricImage(item.fabricImage)}
+                                    src={resolveFabricImage(fabricImageDisplay)}
                                     alt="Fabric"
                                     className="w-full h-full object-cover"
                                   />
@@ -1274,7 +1280,7 @@ export default function CustomOrdersTab({
                                 )}
                               </div>
                               <span className="text-xs text-black font-medium line-clamp-2">
-                                {locale === "ar" ? item.fabricNameAr || item.fabricName : item.fabricName}
+                                {fabricNameDisplay}
                               </span>
                             </div>
                           ) : (
@@ -1296,11 +1302,12 @@ export default function CustomOrdersTab({
                   <div className="space-y-3">
                     {(isExpanded ? order.items : [order.items[0]]).map((item, idx) => {
                       if (!item) return null;
-                      const hasDesign = Boolean(item.designName);
+                      const isFabricOnly = item.size === "Per Meter";
+                      const hasDesign = Boolean(item.designName) && !isFabricOnly;
                       return (
                         <div key={idx} className="space-y-1">
                           {hasDesign ? (
-                            <div className="flex items-center gap-3 bg-[#FDFAF5]/50 p-2.5 rounded-xl border border-[#F5E6D3]">
+                            <div className="flex items-center gap-3 bg-[#FDFAF5]/50 p-2.5 rounded-xl border border-gray-100">
                               <div className="w-12 h-12 bg-white overflow-hidden rounded-lg border border-gray-200 shrink-0 flex items-center justify-center">
                                 {item.designImage ? (
                                   <img

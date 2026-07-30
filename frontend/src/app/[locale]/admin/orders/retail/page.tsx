@@ -487,17 +487,27 @@ export default function AdminRetailOrdersPage() {
                       {t.columns.customer}
                     </p>
                     <p className="font-medium text-sm text-black">
-                      {order.userId?.name || t.unknownCustomer}
+                      {order.userId?.email === "customer@motd.test"
+                        ? (order as any).shippingAddress?.fullName || t.unknownCustomer
+                        : order.userId?.name || t.unknownCustomer}
                     </p>
                     {order.userId?.email && (
                       <p className="text-xs text-gray-500">
                         {order.userId.email}
                       </p>
                     )}
-                    {order.userId?.phone && (
-                      <p className="text-xs text-gray-500 font-mono mt-0.5">
-                        {order.userId.phone}
-                      </p>
+                    {order.userId?.email === "customer@motd.test" ? (
+                      (order as any).shippingAddress?.phone && (
+                        <p className="text-xs text-gray-500 font-mono mt-0.5">
+                          {(order as any).shippingAddress.phone}
+                        </p>
+                      )
+                    ) : (
+                      order.userId?.phone && (
+                        <p className="text-xs text-gray-500 font-mono mt-0.5">
+                          {order.userId.phone}
+                        </p>
+                      )
                     )}
                   </div>
 
