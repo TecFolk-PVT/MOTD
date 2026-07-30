@@ -26,7 +26,7 @@ const ToggleLanguage = () => {
     const isArabic = currentLocale === "ar";
 
     return (
-        <div className="fixed bottom-6 right-6 z-[9999]">
+        <div className="fixed bottom-6 right-6 z-9999">
             <button
                 onClick={switchLanguage}
                 aria-label="Toggle Language"
@@ -34,13 +34,13 @@ const ToggleLanguage = () => {
                     relative
                     flex
                     items-center
-                    w-[90px]
-                    h-[44px]
+                    w-22.5
+                    h-11
                     p-1
                     rounded-full
                     border
                     border-[#D7D2C9]
-                    bg-gradient-to-b from-[#FFFDF9] to-[#F2EEE8]
+                    bg-linear-to-b from-[#FFFDF9] to-[#F2EEE8]
                     backdrop-blur-md
                     shadow-lg
                     hover:shadow-xl
@@ -60,7 +60,7 @@ const ToggleLanguage = () => {
                         absolute
                         top-1
                         bottom-1
-                        w-[36px]
+                        w-9
                         rounded-full
                         bg-black
                     "

@@ -3,7 +3,6 @@
 import { useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import MainLayout from "../main/layout";
-import FadeInSection from "@/components/shared/fadeInSection";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Plus, 
@@ -357,7 +356,7 @@ export default function MOTDGuidePage() {
 
                   {/* Corner Accent Arrow */}
                   <ChevronRight className={`absolute bottom-5 right-5 w-4 h-4 transition-transform duration-300
-                    ${isSelected ? "text-white/40 translate-x-0" : "text-[#8A8A80] opacity-0 group-hover:opacity-100 translate-x-[-4px] group-hover:translate-x-0"}`} 
+                    ${isSelected ? "text-white/40 translate-x-0" : "text-[#8A8A80] opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0"}`} 
                   />
                 </button>
               );

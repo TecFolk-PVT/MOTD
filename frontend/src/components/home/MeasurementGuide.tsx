@@ -101,7 +101,7 @@ export function MeasurementGuide() {
                     {/* RIGHT SECTION - Measurement Image */}
                     <div className="relative mt-8 lg:mt-0 flex justify-center items-center w-full">
                         {/* Decorative frame */}
-                        <div className="relative w-full max-w-[340px] xs:max-w-[400px] sm:max-w-[480px] md:max-w-[520px] lg:max-w-[580px] aspect-square overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl">
+                        <div className="relative w-full max-w-85 xs:max-w-[400px] sm:max-w-120 md:max-w-130 lg:max-w-145 aspect-square overflow-hidden rounded-3xl border border-white/10 bg-white shadow-2xl">
                             <Image
                                 src={images.measure1}
                                 alt="How to measure guide"
