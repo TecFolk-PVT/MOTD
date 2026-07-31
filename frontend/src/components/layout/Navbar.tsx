@@ -118,6 +118,7 @@ export function Navbar() {
     if (!user) return "/auth/login";
     if (user.isGuest) return undefined;
     if (user.role.toLowerCase() === "admin") return "/admin";
+    if (user.role.toLowerCase() === "sub-admin") return "/sub-admin-dashboard";
     if (user.role.toLowerCase() === "tailor") return "/tailor";
     if (user.role.toLowerCase() === "fabric_store") return "/fabric";
     return "/account";
@@ -298,7 +299,11 @@ export function Navbar() {
                 router.push("/auth/login");
               }}
               className="hidden lg:flex p-1.5 lg:p-2 hover:opacity-50 transition items-center justify-center text-red-600 hover:cursor-pointer bg-transparent border-0"
-              title={localParams === "ar" ? "تسجيل الخروج كضيف" : "Sign out from Guest"}
+              title={
+                localParams === "ar"
+                  ? "تسجيل الخروج كضيف"
+                  : "Sign out from Guest"
+              }
             >
               <LogOutIcon className="w-4 h-4 xs:w-4 sm:w-4 md:w-4 lg:w-5 xl:w-5 2xl:w-6" />
             </button>
@@ -388,7 +393,9 @@ export function Navbar() {
                 aria-label={localParams === "ar" ? "تسجيل الخروج" : "Sign Out"}
               >
                 <LogOutIcon className="w-4.5 h-4.5 xs:w-[20px] xs:h-[20px] sm:w-5.5 sm:h-5.5" />
-                <span className={bottomLabelClass}>{localParams === "ar" ? "تسجيل الخروج" : "Sign Out"}</span>
+                <span className={bottomLabelClass}>
+                  {localParams === "ar" ? "تسجيل الخروج" : "Sign Out"}
+                </span>
               </button>
             ) : accountHref ? (
               <Link
