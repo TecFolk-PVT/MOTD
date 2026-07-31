@@ -218,7 +218,7 @@ function SelectionFrameCard({
 
     return (
         <div
-            className={`relative mx-auto w-[120px] sm:w-[140px] aspect-[4/5] border bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-transform duration-500 ${rotation} ${
+            className={`relative mx-auto w-30 sm:w-35 aspect-4/5 border bg-white shadow-[0_8px_24px_rgba(0,0,0,0.06)] transition-transform duration-500 ${rotation} ${
                 isPlaceholder
                     ? "border-dashed border-(--color-grey-muted)/40 bg-[#FAF7F2]"
                     : "border-black/15"
@@ -372,7 +372,7 @@ export default function CustomOrderJourneyRibbon() {
                     ) : (
                         <div
                             data-lenis-prevent
-                            className="h-[248px] sm:h-[268px] overflow-y-auto overscroll-y-contain snap-y snap-mandatory [scrollbar-width:thin]"
+                            className="h-62 sm:h-67 overflow-y-auto overscroll-y-contain snap-y snap-mandatory scrollbar-thin"
                         >
                             {pairs.map((pair) => (
                                 <div

@@ -10,7 +10,6 @@ import {
   useTransform,
   useInView,
 } from "framer-motion";
-import { fabrics } from "../shared/fabricData";
 
 interface FabricDetailsProps {
   product: {
@@ -64,9 +63,6 @@ const ViewFabricDetails = ({ product }: FabricDetailsProps) => {
 
   // Fallback: fetch related products or use local data
   useEffect(() => {
-    // If the `fabrics` import is available, you can uncomment the next line and remove the fetch.
-    setRelatedProducts(fabrics.slice(0, 4));
-
     // Otherwise, fetch from API (comment out if not available)
     fetch("/api/fabrics?limit=4")
       .then((res) => res.json())

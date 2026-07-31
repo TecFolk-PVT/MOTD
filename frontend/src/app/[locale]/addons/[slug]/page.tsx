@@ -45,7 +45,8 @@ export default function AddonDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState<string>("/placeholder.png");
+  const [selectedImage, setSelectedImage] =
+    useState<string>("/placeholder.png");
 
   useEffect(() => {
     const fetchAddon = async () => {
@@ -96,9 +97,7 @@ export default function AddonDetailPage() {
     router.push(`/${locale}/checkout?buyNow=true&${checkoutParams.toString()}`);
   };
 
-  const liked = addon
-    ? wishItems.some((item) => item.id === addon._id)
-    : false;
+  const liked = addon ? wishItems.some((item) => item.id === addon._id) : false;
 
   const toggleWishlist = () => {
     if (!addon) return;
@@ -113,6 +112,7 @@ export default function AddonDetailPage() {
         price: addon.price,
         size: "N/A",
         maxStock: addon.stock || 0,
+        type: "addons",
       });
     }
   };
@@ -181,7 +181,9 @@ export default function AddonDetailPage() {
   }
 
   const title = isAr ? addon.nameAr || addon.name : addon.name;
-  const desc = isAr ? addon.descriptionAr || addon.description : addon.description;
+  const desc = isAr
+    ? addon.descriptionAr || addon.description
+    : addon.description;
   const images = addon.images?.length ? addon.images : [addon.thumbnailImage];
   const price = addon.price;
   const stock = addon.stock || 0;
@@ -318,8 +320,8 @@ export default function AddonDetailPage() {
                           ? `متوفر في المخزون (${stock})`
                           : `In stock (${stock})`
                         : isAr
-                        ? "نفذت الكمية"
-                        : "Out of stock"}
+                          ? "نفذت الكمية"
+                          : "Out of stock"}
                     </p>
                   </div>
                 </div>
@@ -350,7 +352,9 @@ export default function AddonDetailPage() {
                           {quantity}
                         </span>
                         <button
-                          onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
+                          onClick={() =>
+                            setQuantity((q) => Math.min(stock, q + 1))
+                          }
                           className="w-8 h-8 border border-gray-300 rounded flex items-center justify-center transition hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none disabled:hover:bg-transparent hover:cursor-pointer"
                           disabled={stock < 1 || quantity >= stock}
                         >
