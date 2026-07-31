@@ -92,25 +92,25 @@ export default function NewFabricPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-0">
       <div>
-        <h1 className="text-2xl md:text-3xl font-light text-black tracking-tight">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-light text-black tracking-tight">
           {t.adminFabrics.create.title}
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">
           {t.adminFabrics.create.subtitle}
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-xs sm:text-sm">
           {error}
         </div>
       )}
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6"
       >
         <FabricAdminFormFields
           formData={formData}
@@ -122,11 +122,11 @@ export default function NewFabricPage() {
           onRemoveImage={removeImageField}
         />
 
-        <div className="flex gap-3 pt-6 mt-4 border-t border-gray-100">
+        <div className="flex flex-col-reverse sm:flex-row-reverse gap-2 sm:gap-3 pt-6 mt-4 border-t border-gray-100">
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 hover:cursor-pointer text-sm"
           >
             {loading
               ? t.adminFabrics.create.submitting
@@ -135,7 +135,7 @@ export default function NewFabricPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition hover:cursor-pointer text-sm"
           >
             {t.adminFabrics.form.cancel_button}
           </button>
