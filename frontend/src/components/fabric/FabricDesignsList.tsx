@@ -20,6 +20,7 @@ import {
   Search,
   RefreshCw,
   Image as ImageIcon,
+  Maximize2,
 } from "lucide-react";
 import { ImageModal } from "../shared/ImageModal";
 
@@ -451,11 +452,22 @@ export default function FabricDesignsList() {
                                               <div className="flex items-center gap-2">
                                                 {v.images &&
                                                 v.images.length > 0 ? (
-                                                  <img
-                                                    src={v.images[0]}
-                                                    alt={vName}
-                                                    className="w-8 h-8 rounded-lg object-cover"
-                                                  />
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      setModalImage({
+                                                        url: v.images[0],
+                                                        name,
+                                                      })
+                                                    }
+                                                    className="cursor-pointer"
+                                                  >
+                                                    <img
+                                                      src={v.images[0]}
+                                                      alt={vName}
+                                                      className="w-8 h-8 rounded-lg object-cover"
+                                                    />
+                                                  </button>
                                                 ) : (
                                                   <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
                                                     <ImageIcon className="w-3.5 h-3.5 text-gray-400" />

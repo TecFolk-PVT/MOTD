@@ -231,6 +231,7 @@ export default function ReadyMadeDetailPage() {
         price: product.finalSellingPriceAED || 0,
         size: String(product.metersPerFabric ?? ""),
         maxStock: product.availableFabricStock || 0,
+        type: "readyMade"
       });
     }
   };

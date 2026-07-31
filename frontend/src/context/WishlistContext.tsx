@@ -12,6 +12,7 @@ export type WishlistItem = {
   size: string;
   quantity: number;
   maxStock?: number;
+  type: "design" | "fabric" | "readyMade" | "addons";
 };
 
 type WishlistContextType = {
@@ -21,7 +22,7 @@ type WishlistContextType = {
   ) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
-  toggleItem?: (
+  toggleItem: (
     item: Omit<WishlistItem, "quantity"> & { maxStock?: number },
   ) => void;
   clearWishlist: () => void;
@@ -38,23 +39,19 @@ function normalizeStoredItems(stored: unknown): WishlistItem[] {
   if (!Array.isArray(stored)) return [];
   return stored
     .filter((item) => item && typeof item.id === "string")
-    .map((item) => {
-      const rawMax = item.maxStock;
-      const parsed = Number(rawMax);
-      const maxStock = Number.isFinite(parsed)
-        ? Math.max(0, parsed)
-        : undefined;
-
-      return {
-        id: item.id,
-        slug: item.slug ?? "",
-        name: item.name ?? "",
-        image: item.image ?? "",
-        price: Number(item.price) || 0,
-        quantity: Math.max(1, Number(item.quantity) || 1),
-        maxStock,
-      } as WishlistItem;
-    });
+    .map((item) => ({
+      id: item.id,
+      slug: item.slug ?? "",
+      name: item.name ?? "",
+      image: item.image ?? "",
+      price: Number(item.price) || 0,
+      size: item.size ?? "",
+      quantity: Math.max(1, Number(item.quantity) || 1),
+      maxStock: Number.isFinite(Number(item.maxStock))
+        ? Math.max(0, Number(item.maxStock))
+        : undefined,
+      type: item.type,
+    }));
 }
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
@@ -97,7 +94,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => {
       const existing = prev.find((p) => p.id === item.id);
       if (existing) {
-        // if maxStock is undefined -> treat as unlimited
         if (
           existing.maxStock == null ||
           existing.quantity < existing.maxStock
@@ -121,10 +117,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
         }
       }
       setTimeout(() => showToast(`${item.name} added to wishlist`), 0);
-      // only include maxStock when it's a finite number
-      const parsed = Number(item.maxStock);
-      const maxStock = Number.isFinite(parsed)
-        ? Math.max(0, parsed)
+      const maxStock = Number.isFinite(Number(item.maxStock))
+        ? Math.max(0, Number(item.maxStock))
         : undefined;
       return [
         ...prev,
@@ -133,7 +127,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Toggle: add if not present, remove if present
   const toggleItem = (
     item: Omit<WishlistItem, "quantity"> & { maxStock?: number },
   ) => {
@@ -151,7 +144,6 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const updateQuantity = (id: string, quantity: number) => {
     const item = items.find((p) => p.id === id);
     if (!item) return;
-    // if maxStock is defined and the requested quantity exceeds it, block
     if (item.maxStock != null && quantity > item.maxStock) {
       showToast(`Only ${item.maxStock} in stock`, "error");
       return;

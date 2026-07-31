@@ -333,6 +333,7 @@ export function AddOnsSection() {
                               price: item.price,
                               slug: item.slug,
                               size: "N/A",
+                              type: "addons",
                               quantity: 1,
                               ...(Number.isFinite(item.stock)
                                 ? { maxStock: item.stock }

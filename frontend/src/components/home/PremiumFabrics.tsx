@@ -416,6 +416,7 @@ export function PremiumFabrics() {
                                 slug: item.slug,
                                 size: "Per Meter",
                                 quantity: 1,
+                                type: "fabric",
                                 ...(Number.isFinite(item.stockInMeters)
                                   ? { maxStock: item.stockInMeters }
                                   : {}),
