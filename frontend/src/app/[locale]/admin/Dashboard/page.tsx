@@ -7,49 +7,64 @@ import {
   ShoppingBag,
   Package,
   Activity,
-  Clock,
-  TrendingUp,
-  Users,
   DollarSign,
-  BarChart3,
-  PieChart,
+  Users,
+  AlertTriangle,
+  Store,
+  RefreshCw,
   Search,
   PackageSearch,
   Loader2,
-  Filter,
-  RefreshCw,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
-  Zap,
 } from "lucide-react";
 import LocaleSwitcher from "@/components/shared/LocaleSwitcher";
 import Chart from "chart.js/auto";
+import type { ChartConfiguration } from "chart.js";
+import StatCard from "@/components/dashboard/StatCard";
+import ChartCard from "@/components/dashboard/ChartCard";
+import TimeframePills from "@/components/dashboard/TimeframePills";
+import ActivityFeed from "@/components/dashboard/ActivityFeed";
+import RankList from "@/components/dashboard/RankList";
+import DashboardSkeleton from "@/components/dashboard/DashboardSkeleton";
+import { DASH_PALETTE, withAlpha } from "@/components/dashboard/palette";
+import {
+  chartTooltip,
+  chartLegend,
+  chartGridColor,
+  formatCompact,
+} from "@/components/dashboard/chartDefaults";
 
 interface DashboardStats {
-  retail: {
-    orderCount: number;
-    revenue: number;
-    growth: number;
-  };
-  custom: {
-    orderCount: number;
-    revenue: number;
-    growth: number;
-  };
+  retail: { orderCount: number; revenue: number; growth: number };
+  custom: { orderCount: number; revenue: number; growth: number };
   currency: string;
-  monthlyData?: Array<{
-    month: string;
-    retail: number;
-    custom: number;
-  }>;
+  aov?: number;
+  monthlyData?: Array<{ month: string; retail: number; custom: number }>;
+  monthlyOrders?: Array<{ month: string; retail: number; custom: number }>;
   recentOrders?: Array<{
     id: string;
     type: "retail" | "custom";
     amount: number;
-    status: "completed" | "pending" | "processing";
+    status: string;
     date: string;
   }>;
+  statusBreakdown?: Array<{ status: string; count: number }>;
+  customers?: { total: number; active: number; newThisMonth: number };
+  partners?: {
+    pendingTailors: number;
+    pendingFabricStores: number;
+    pendingTotal: number;
+    activeTailorShops: number;
+    activeFabricShops: number;
+  };
+  inventory?: {
+    lowFabrics: number;
+    lowReadyMade: number;
+    lowAddons: number;
+    lowTotal: number;
+  };
+  topFabrics?: Array<{ id: string; name: string; value: number; meta?: string }>;
+  topProducts?: Array<{ id: string; name: string; value: number; meta?: string }>;
+  topTailors?: Array<{ id: string; name: string; value: number; meta?: string }>;
 }
 
 export default function AdminDashboardPage() {
@@ -57,9 +72,7 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [timeframe, setTimeframe] = useState<"week" | "month" | "year">(
-    "month",
-  );
+  const [timeframe, setTimeframe] = useState<"week" | "month" | "year">("month");
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const [pricingOrders, setPricingOrders] = useState<any[]>([]);
@@ -68,17 +81,16 @@ export default function AdminDashboardPage() {
 
   const revenueChartRef = useRef<Chart | null>(null);
   const ordersChartRef = useRef<Chart | null>(null);
-  const distChartRef = useRef<Chart | null>(null);
+  const statusChartRef = useRef<Chart | null>(null);
+  const channelChartRef = useRef<Chart | null>(null);
 
   const fetchStats = async (showRefresh = false) => {
     try {
       if (showRefresh) setIsRefreshing(true);
       else setLoading(true);
-
       const data = await api.get<DashboardStats>(
         `/api/admin/dashboard?timeframe=${timeframe}&t=${Date.now()}`,
       );
-
       setStats(data);
       setError(null);
     } catch (err: any) {
@@ -112,19 +124,20 @@ export default function AdminDashboardPage() {
 
   const getOrderFees = (order: any) => {
     if (order.items && order.items.length > 0) {
-      const tailorFee = order.items.reduce(
-        (sum: number, item: any) => sum + (item.pricing?.designBase || 0),
-        0,
-      );
-      const tailoringFee = order.items.reduce(
-        (sum: number, item: any) => sum + (item.pricing?.tailoringFee || 0),
-        0,
-      );
-      const fabricFee = order.items.reduce(
-        (sum: number, item: any) => sum + (item.pricing?.fabricCost || 0),
-        0,
-      );
-      return { tailorFee, tailoringFee, fabricFee };
+      return {
+        tailorFee: order.items.reduce(
+          (sum: number, item: any) => sum + (item.pricing?.designBase || 0),
+          0,
+        ),
+        tailoringFee: order.items.reduce(
+          (sum: number, item: any) => sum + (item.pricing?.tailoringFee || 0),
+          0,
+        ),
+        fabricFee: order.items.reduce(
+          (sum: number, item: any) => sum + (item.pricing?.fabricCost || 0),
+          0,
+        ),
+      };
     }
     return {
       tailorFee: order.pricing?.designBase || 0,
@@ -150,321 +163,243 @@ export default function AdminDashboardPage() {
 
   const filteredPricingOrders = useMemo(() => {
     return pricingOrders.filter((order) => {
-      if (pricingSearch.trim()) {
-        const term = pricingSearch.toLowerCase();
-        const customerName = readPartnerName(
-          order.userId && typeof order.userId === "object"
-            ? order.userId
-            : null,
-          "",
-        ).toLowerCase();
-        const customerEmail = (
-          order.userId &&
-          typeof order.userId === "object" &&
-          (order.userId as any).email
-            ? (order.userId as any).email
-            : ""
-        ).toLowerCase();
-        const orderIdHex = order._id.toLowerCase();
-        return (
-          customerName.includes(term) ||
-          customerEmail.includes(term) ||
-          orderIdHex.includes(term)
-        );
-      }
-      return true;
+      if (!pricingSearch.trim()) return true;
+      const term = pricingSearch.toLowerCase();
+      const customerName = readPartnerName(
+        order.userId && typeof order.userId === "object" ? order.userId : null,
+        "",
+      ).toLowerCase();
+      const customerEmail = (
+        order.userId && typeof order.userId === "object"
+          ? (order.userId as any).email || ""
+          : ""
+      ).toLowerCase();
+      return (
+        customerName.includes(term) ||
+        customerEmail.includes(term) ||
+        order._id.toLowerCase().includes(term)
+      );
     });
   }, [pricingOrders, pricingSearch]);
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: stats?.currency || "AED",
       minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
+
+  const formatKpiCurrency = (value: number) => {
+    const amount = new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+    return `${stats?.currency || "AED"} ${amount}`;
   };
 
   useEffect(() => {
     if (!stats) return;
 
-    const currency = stats.currency || "AED";
-
-    // Apex Shadcn color palette - modern gradients
-    const primary = "#6366F1"; // Indigo
-    const primaryLight = "rgba(99, 102, 241, 0.15)";
-    const primaryGradient = "rgba(99, 102, 241, 0.35)";
-    const secondary = "#EC4899"; // Pink
-    const secondaryLight = "rgba(236, 72, 153, 0.15)";
-    const secondaryGradient = "rgba(236, 72, 153, 0.35)";
-    const accent = "#14B8A6"; // Teal
-    const accentLight = "rgba(20, 184, 166, 0.15)";
-    const black = "#0F172A";
-    const white = "#FFFFFF";
-    const gray = "#64748B";
-    const border = "#E2E8F0";
-
-    const formatCurrencyWith = (value: number) => {
-      return new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency,
-        minimumFractionDigits: 0,
-      }).format(value);
+    const destroy = (...charts: (Chart | null)[]) => {
+      charts.forEach((c) => c?.destroy());
     };
-
-    if (revenueChartRef.current) {
-      revenueChartRef.current.destroy();
-      revenueChartRef.current = null;
-    }
-    if (ordersChartRef.current) {
-      ordersChartRef.current.destroy();
-      ordersChartRef.current = null;
-    }
-    if (distChartRef.current) {
-      distChartRef.current.destroy();
-      distChartRef.current = null;
-    }
+    destroy(
+      revenueChartRef.current,
+      ordersChartRef.current,
+      statusChartRef.current,
+      channelChartRef.current,
+    );
+    revenueChartRef.current = null;
+    ordersChartRef.current = null;
+    statusChartRef.current = null;
+    channelChartRef.current = null;
 
     const revenueCanvas = document.getElementById(
-      "revenue-chart",
+      "admin-revenue-chart",
     ) as HTMLCanvasElement | null;
     const ordersCanvas = document.getElementById(
-      "orders-chart",
+      "admin-orders-chart",
     ) as HTMLCanvasElement | null;
-    const distCanvas = document.getElementById(
-      "distribution-chart",
+    const statusCanvas = document.getElementById(
+      "admin-status-chart",
+    ) as HTMLCanvasElement | null;
+    const channelCanvas = document.getElementById(
+      "admin-channel-chart",
     ) as HTMLCanvasElement | null;
 
-    if (!revenueCanvas || !ordersCanvas || !distCanvas) return;
+    if (!revenueCanvas || !ordersCanvas || !statusCanvas || !channelCanvas)
+      return;
 
     const monthlyData = stats.monthlyData || [];
-    const hasData = monthlyData.length > 0;
-
-    const labels = hasData
+    const monthlyOrders = stats.monthlyOrders || [];
+    const labels = monthlyData.length
       ? monthlyData.map((d) => d.month)
       : ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
 
-    const retailData = hasData
-      ? monthlyData.map((d) => d.retail || 0)
-      : [0, 0, 0, 0, 0, 0];
-
-    const customData = hasData
-      ? monthlyData.map((d) => d.custom || 0)
-      : [0, 0, 0, 0, 0, 0];
-
-    // REVENUE CHART
-    revenueChartRef.current = new Chart(revenueCanvas, {
+    const revenueConfig: ChartConfiguration<"line"> = {
       type: "line",
       data: {
-        labels: labels,
+        labels,
         datasets: [
           {
-            label: "Retail Revenue",
-            data: retailData,
-            borderColor: primary,
+            label: "Retail",
+            data: monthlyData.map((d) => d.retail || 0),
+            borderColor: DASH_PALETTE.gold,
             backgroundColor: (ctx) => {
-              const chart = ctx.chart;
-              const { ctx: canvasCtx, chartArea } = chart;
+              const { ctx: c, chartArea } = ctx.chart;
               if (!chartArea) return "transparent";
-              const gradient = canvasCtx.createLinearGradient(
-                0,
-                chartArea.top,
-                0,
-                chartArea.bottom,
-              );
-              gradient.addColorStop(0, "rgba(99, 102, 241, 0.4)");
-              gradient.addColorStop(0.3, "rgba(99, 102, 241, 0.15)");
-              gradient.addColorStop(1, "rgba(99, 102, 241, 0)");
-              return gradient;
-            },
-            borderWidth: 3,
-            tension: 0.4,
-            pointRadius: 4,
-            pointHoverRadius: 8,
-            pointBackgroundColor: white,
-            pointBorderColor: primary,
-            pointBorderWidth: 3,
-            fill: true,
-          },
-          {
-            label: "Custom Revenue",
-            data: customData,
-            borderColor: secondary,
-            backgroundColor: (ctx) => {
-              const chart = ctx.chart;
-              const { ctx: canvasCtx, chartArea } = chart;
-              if (!chartArea) return "transparent";
-              const gradient = canvasCtx.createLinearGradient(
-                0,
-                chartArea.top,
-                0,
-                chartArea.bottom,
-              );
-              gradient.addColorStop(0, "rgba(236, 72, 153, 0.35)");
-              gradient.addColorStop(0.3, "rgba(236, 72, 153, 0.12)");
-              gradient.addColorStop(1, "rgba(236, 72, 153, 0)");
-              return gradient;
+              const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+              g.addColorStop(0, withAlpha(DASH_PALETTE.gold, 0.35));
+              g.addColorStop(1, withAlpha(DASH_PALETTE.gold, 0));
+              return g;
             },
             borderWidth: 2.5,
             tension: 0.4,
             pointRadius: 3,
-            pointHoverRadius: 7,
-            pointBackgroundColor: white,
-            pointBorderColor: secondary,
-            pointBorderWidth: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: DASH_PALETTE.surface,
+            pointBorderColor: DASH_PALETTE.gold,
+            pointBorderWidth: 2,
             fill: true,
-            borderDash: [6, 4],
+          },
+          {
+            label: "Custom",
+            data: monthlyData.map((d) => d.custom || 0),
+            borderColor: DASH_PALETTE.charcoal,
+            backgroundColor: (ctx) => {
+              const { ctx: c, chartArea } = ctx.chart;
+              if (!chartArea) return "transparent";
+              const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+              g.addColorStop(0, withAlpha(DASH_PALETTE.charcoal, 0.2));
+              g.addColorStop(1, withAlpha(DASH_PALETTE.charcoal, 0));
+              return g;
+            },
+            borderWidth: 2,
+            tension: 0.4,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+            pointBackgroundColor: DASH_PALETTE.surface,
+            pointBorderColor: DASH_PALETTE.charcoal,
+            pointBorderWidth: 2,
+            fill: true,
+            borderDash: [5, 4],
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 800, easing: "easeOutQuart" },
-        interaction: {
-          intersect: false,
-          mode: "index",
-        },
+        interaction: { intersect: false, mode: "index" },
         plugins: {
-          legend: {
-            position: "top",
-            labels: {
-              usePointStyle: true,
-              pointStyle: "circle",
-              padding: 20,
-              font: { family: "inherit", size: 12, weight: 500 },
-              color: gray,
-            },
-          },
+          legend: { position: "top", labels: chartLegend.labels },
           tooltip: {
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            titleColor: black,
-            bodyColor: black,
-            borderColor: "rgba(226, 232, 240, 0.8)",
-            borderWidth: 1,
-            padding: 12,
-            cornerRadius: 8,
+            ...chartTooltip,
             callbacks: {
-              label: (ctx) => {
-                const val = Number(ctx.parsed.y);
-                return `${ctx.dataset.label}: ${formatCurrencyWith(val)}`;
-              },
+              label: (ctx) =>
+                `${ctx.dataset.label}: ${formatCurrency(Number(ctx.parsed.y))}`,
             },
           },
         },
         scales: {
           x: {
             grid: { display: false },
-            ticks: {
-              color: gray,
-              font: { family: "inherit", size: 11 },
-              maxRotation: 45,
-              autoSkip: true,
-              maxTicksLimit: 12,
-            },
-            border: { color: border },
+            ticks: { color: DASH_PALETTE.muted, font: { size: 11 } },
+            border: { color: DASH_PALETTE.sandDeep },
           },
           y: {
             beginAtZero: true,
             ticks: {
-              color: gray,
-              font: { family: "inherit", size: 11 },
-              callback: (val) => {
-                const num = Number(val);
-                if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-                if (num >= 1000) return `${(num / 1000).toFixed(0)}K`;
-                return num;
-              },
+              color: DASH_PALETTE.muted,
+              font: { size: 11 },
+              callback: (v) => formatCompact(Number(v)),
             },
-            grid: { color: "rgba(15, 23, 42, 0.06)" },
-            border: { color: border },
+            grid: { color: chartGridColor },
+            border: { color: DASH_PALETTE.sandDeep },
           },
         },
       },
-    });
+    };
 
-    // ORDERS CHART
-    ordersChartRef.current = new Chart(ordersCanvas, {
+    const orderLabels = monthlyOrders.length
+      ? monthlyOrders.map((d) => d.month)
+      : labels;
+    const ordersConfig: ChartConfiguration<"bar"> = {
       type: "bar",
       data: {
-        labels: ["Retail", "Custom"],
+        labels: orderLabels,
         datasets: [
           {
-            label: "Orders",
-            data: [stats.retail.orderCount, stats.custom.orderCount],
-            backgroundColor: [
-              "rgba(99, 102, 241, 0.8)",
-              "rgba(236, 72, 153, 0.8)",
-            ],
-            borderColor: [primary, secondary],
-            borderWidth: 2,
-            borderRadius: 8,
+            label: "Retail",
+            data: monthlyOrders.length
+              ? monthlyOrders.map((d) => d.retail || 0)
+              : [stats.retail.orderCount],
+            backgroundColor: withAlpha(DASH_PALETTE.gold, 0.85),
+            borderRadius: 6,
             borderSkipped: false,
-            hoverBackgroundColor: [
-              "rgba(99, 102, 241, 1)",
-              "rgba(236, 72, 153, 1)",
-            ],
+          },
+          {
+            label: "Custom",
+            data: monthlyOrders.length
+              ? monthlyOrders.map((d) => d.custom || 0)
+              : [stats.custom.orderCount],
+            backgroundColor: withAlpha(DASH_PALETTE.charcoal, 0.8),
+            borderRadius: 6,
+            borderSkipped: false,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 800, easing: "easeOutQuart" },
         plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            titleColor: black,
-            bodyColor: black,
-            borderColor: "rgba(226, 232, 240, 0.8)",
-            borderWidth: 1,
-            padding: 12,
-            cornerRadius: 8,
-            displayColors: false,
-            callbacks: {
-              label: (ctx) => {
-                const y = ctx.parsed?.y;
-                const orders =
-                  typeof y === "number"
-                    ? y
-                    : typeof ctx.raw === "number"
-                      ? ctx.raw
-                      : Number(ctx.raw);
-                return ` ${orders.toLocaleString()} orders`;
-              },
-            },
-          },
+          legend: { position: "top", labels: chartLegend.labels },
+          tooltip: chartTooltip,
         },
         scales: {
           x: {
-            ticks: {
-              color: gray,
-              font: { family: "inherit", weight: 500, size: 12 },
-            },
             grid: { display: false },
-            border: { color: border },
+            ticks: { color: DASH_PALETTE.muted, font: { size: 11 } },
+            border: { color: DASH_PALETTE.sandDeep },
           },
           y: {
             beginAtZero: true,
-            ticks: {
-              color: gray,
-              font: { family: "inherit", size: 11 },
-              stepSize: Math.max(
-                1,
-                Math.ceil(
-                  (stats.retail.orderCount + stats.custom.orderCount) / 10,
-                ),
-              ),
-            },
-            grid: { color: "rgba(15, 23, 42, 0.06)" },
-            border: { color: border },
+            ticks: { color: DASH_PALETTE.muted, font: { size: 11 }, stepSize: 1 },
+            grid: { color: chartGridColor },
+            border: { color: DASH_PALETTE.sandDeep },
           },
         },
       },
-    });
+    };
 
-    // DISTRIBUTION CHART
-    distChartRef.current = new Chart(distCanvas, {
+    const statusData = stats.statusBreakdown || [];
+    const statusConfig: ChartConfiguration<"doughnut"> = {
+      type: "doughnut",
+      data: {
+        labels: statusData.map((s) => s.status.replace(/_/g, " ")),
+        datasets: [
+          {
+            data: statusData.map((s) => s.count),
+            backgroundColor: statusData.map(
+              (_, i) => DASH_PALETTE.series[i % DASH_PALETTE.series.length],
+            ),
+            borderColor: DASH_PALETTE.surface,
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: "62%",
+        plugins: {
+          legend: { position: "bottom", labels: chartLegend.labels },
+          tooltip: chartTooltip,
+        },
+      },
+    };
+
+    const channelConfig: ChartConfiguration<"doughnut"> = {
       type: "doughnut",
       data: {
         labels: ["Retail", "Custom"],
@@ -472,15 +407,11 @@ export default function AdminDashboardPage() {
           {
             data: [stats.retail.orderCount, stats.custom.orderCount],
             backgroundColor: [
-              "rgba(99, 102, 241, 0.85)",
-              "rgba(236, 72, 153, 0.85)",
+              withAlpha(DASH_PALETTE.gold, 0.9),
+              withAlpha(DASH_PALETTE.charcoal, 0.85),
             ],
-            borderColor: [white, white],
+            borderColor: DASH_PALETTE.surface,
             borderWidth: 3,
-            hoverBackgroundColor: [
-              "rgba(99, 102, 241, 1)",
-              "rgba(236, 72, 153, 1)",
-            ],
           },
         ],
       },
@@ -488,108 +419,45 @@ export default function AdminDashboardPage() {
         responsive: true,
         maintainAspectRatio: false,
         cutout: "65%",
-        animation: { duration: 800, easing: "easeOutQuart" },
         plugins: {
-          legend: {
-            position: "bottom",
-            labels: {
-              padding: 20,
-              usePointStyle: true,
-              pointStyle: "circle",
-              font: { family: "inherit", size: 12, weight: 500 },
-              color: "#1E293B",
-            },
-          },
-          tooltip: {
-            backgroundColor: "rgba(255, 255, 255, 0.95)",
-            titleColor: black,
-            bodyColor: black,
-            borderColor: "rgba(226, 232, 240, 0.8)",
-            borderWidth: 1,
-            padding: 12,
-            cornerRadius: 8,
-            callbacks: {
-              label: (ctx) => {
-                const total = (ctx.dataset.data as number[]).reduce(
-                  (a, b) => a + b,
-                  0,
-                );
-                const parsed =
-                  typeof ctx.parsed === "number"
-                    ? ctx.parsed
-                    : Number(ctx.parsed);
-                const percentage =
-                  total > 0 ? ((parsed / total) * 100).toFixed(1) : "0.0";
-                return ` ${ctx.label}: ${parsed} orders (${percentage}%)`;
-              },
-            },
-          },
+          legend: { position: "bottom", labels: chartLegend.labels },
+          tooltip: chartTooltip,
         },
       },
-    });
+    };
+
+    revenueChartRef.current = new Chart(revenueCanvas, revenueConfig);
+    ordersChartRef.current = new Chart(ordersCanvas, ordersConfig);
+    statusChartRef.current = new Chart(statusCanvas, statusConfig);
+    channelChartRef.current = new Chart(channelCanvas, channelConfig);
 
     return () => {
-      if (revenueChartRef.current) {
-        revenueChartRef.current.destroy();
-        revenueChartRef.current = null;
-      }
-      if (ordersChartRef.current) {
-        ordersChartRef.current.destroy();
-        ordersChartRef.current = null;
-      }
-      if (distChartRef.current) {
-        distChartRef.current.destroy();
-        distChartRef.current = null;
-      }
+      destroy(
+        revenueChartRef.current,
+        ordersChartRef.current,
+        statusChartRef.current,
+        channelChartRef.current,
+      );
+      revenueChartRef.current = null;
+      ordersChartRef.current = null;
+      statusChartRef.current = null;
+      channelChartRef.current = null;
     };
   }, [stats]);
 
-  if (loading) {
-    return (
-      <div className="space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-          <div className="h-10 w-32 bg-gray-200 rounded animate-pulse mt-4 sm:mt-0" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-32"
-            >
-              <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-              <div className="h-9 w-32 bg-gray-200 rounded mt-3 animate-pulse" />
-              <div className="h-4 w-20 bg-gray-200 rounded mt-2 animate-pulse" />
-            </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 h-80"
-            >
-              <div className="h-5 w-32 bg-gray-200 rounded animate-pulse mb-4" />
-              <div className="h-60 w-full bg-gray-200 rounded animate-pulse" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <DashboardSkeleton kpiCount={6} />;
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md">
-          <Activity className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <p className="font-normal text-xl text-black">
-            Unable to load dashboard
-          </p>
-          <p className="text-gray-500 mt-2 text-sm">{error}</p>
+      <div className="flex h-full items-center justify-center">
+        <div className="max-w-md rounded-[var(--dash-radius)] border border-[var(--dash-border)] bg-[var(--dash-surface)] p-8 text-center shadow-sm">
+          <Activity className="mx-auto mb-4 h-12 w-12 text-[var(--dash-muted)]" />
+          <p className="text-xl text-[var(--dash-ink)]">Unable to load dashboard</p>
+          <p className="mt-2 text-sm text-[var(--dash-muted)]">{error}</p>
           <button
-            onClick={() => window.location.reload()}
-            className="mt-6 px-6 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition text-sm"
+            type="button"
+            onClick={() => fetchStats()}
+            className="mt-6 rounded-xl bg-[var(--dash-charcoal)] px-6 py-2 text-sm text-[var(--dash-gold)] transition hover:opacity-90"
           >
             Try again
           </button>
@@ -603,399 +471,264 @@ export default function AdminDashboardPage() {
   const { retail, custom } = stats;
   const totalOrders = retail.orderCount + custom.orderCount;
   const totalRevenue = retail.revenue + custom.revenue;
-  const retailGrowth = retail.growth ?? 0;
-  const customGrowth = custom.growth ?? 0;
-  const avgGrowth = (retailGrowth + customGrowth) / 2;
-
-  const StatCard = ({
-    icon: Icon,
-    label,
-    value,
-    subValue,
-    trend,
-    trendUp,
-  }: any) => (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-            {label}
-          </p>
-          <p className="text-2xl sm:text-3xl font-light text-black mt-2 truncate">
-            {value}
-          </p>
-          {subValue && <p className="text-xs text-gray-400 mt-1">{subValue}</p>}
-        </div>
-        <div
-          className={`p-3 rounded-xl shrink-0 ${
-            trendUp ? "bg-emerald-50" : "bg-rose-50"
-          }`}
-        >
-          <Icon
-            className={`w-5 h-5 ${trendUp ? "text-emerald-600" : "text-rose-600"}`}
-            strokeWidth={1.5}
-          />
-        </div>
-      </div>
-      {trend && (
-        <div className="flex items-center gap-1.5 mt-3">
-          <span
-            className={`text-xs font-medium ${
-              trendUp ? "text-emerald-600" : "text-rose-600"
-            }`}
-          >
-            {trend}
-          </span>
-          {trendUp ? (
-            <ArrowUpRight className="w-3 h-3 text-emerald-600" />
-          ) : (
-            <ArrowDownRight className="w-3 h-3 text-rose-600" />
-          )}
-          <span className="text-xs text-gray-400 ml-1">vs last month</span>
-        </div>
-      )}
-    </div>
-  );
+  const aov =
+    stats.aov ?? (totalOrders > 0 ? totalRevenue / totalOrders : 0);
+  const avgGrowth = ((retail.growth ?? 0) + (custom.growth ?? 0)) / 2;
 
   return (
-    <div className="space-y-8 pb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h1 className="text-3xl md:text-4xl font-light text-black tracking-tight">
-            Dashboard
-          </h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Welcome back,{" "}
-            <span className="text-black font-medium">
-              {user?.name?.split(" ")[0] || "Admin"}
-            </span>
+          <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-[0.28em] text-[var(--dash-muted)]">
+            Operations overview
           </p>
-        </div>
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="flex bg-white rounded-full border border-gray-200 p-1 shadow-sm">
-            {["week", "month", "year"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTimeframe(t as any)}
-                className={`px-4 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  timeframe === t
-                    ? "bg-indigo-600 text-white shadow-sm"
-                    : "text-gray-500 hover:text-black hover:bg-gray-50"
-                }`}
-              >
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => fetchStats(true)}
-            disabled={isRefreshing}
-            className="p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 transition disabled:opacity-50"
-          >
-            <RefreshCw
-              className={`w-4 h-4 text-gray-500 ${
-                isRefreshing ? "animate-spin" : ""
-              }`}
-            />
-          </button>
-          <LocaleSwitcher />
-          <div className="text-xs text-gray-400 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm hidden md:flex items-center gap-2">
-            <Calendar className="w-3.5 h-3.5" />
+          <h1 className="[font-family:var(--font-display)] mt-1 text-3xl text-[var(--dash-ink)] sm:text-4xl">
+            Welcome{user?.name ? `, ${user.name}` : ""}
+          </h1>
+          <p className="mt-1 text-sm text-[var(--dash-muted)]">
             {new Date().toLocaleDateString("en-US", {
               weekday: "long",
               year: "numeric",
               month: "long",
               day: "numeric",
             })}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          icon={ShoppingBag}
-          label="Total Orders"
-          value={totalOrders.toLocaleString()}
-          subValue={`${
-            totalOrders > 0
-              ? ((retail.orderCount / totalOrders) * 100).toFixed(0)
-              : 0
-          }% retail`}
-          trend="+12.5%"
-          trendUp
-        />
-        <StatCard
-          icon={DollarSign}
-          label="Total Revenue"
-          value={formatCurrency(totalRevenue)}
-          subValue={`${
-            totalRevenue > 0
-              ? ((retail.revenue / totalRevenue) * 100).toFixed(0)
-              : 0
-          }% from retail`}
-          trend="+8.3%"
-          trendUp
-        />
-        <StatCard
-          icon={Package}
-          label="Retail Orders"
-          value={retail.orderCount.toLocaleString()}
-          subValue={formatCurrency(retail.revenue)}
-          trend={`${retailGrowth > 0 ? "+" : ""}${retailGrowth.toFixed(1)}%`}
-          trendUp={retailGrowth > 0}
-        />
-        <StatCard
-          icon={Users}
-          label="Custom Orders"
-          value={custom.orderCount.toLocaleString()}
-          subValue={formatCurrency(custom.revenue)}
-          trend={`${customGrowth > 0 ? "+" : ""}${customGrowth.toFixed(1)}%`}
-          trendUp={customGrowth > 0}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-linear-to-br from-indigo-500 to-indigo-600 rounded-2xl p-4 text-white">
-          <p className="text-xs opacity-80 font-medium">Avg Order Value</p>
-          <p className="text-2xl font-light mt-1">
-            {formatCurrency(totalOrders > 0 ? totalRevenue / totalOrders : 0)}
           </p>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <p className="text-xs text-gray-400 font-medium">Growth Rate</p>
-          <p className="text-2xl font-light mt-1 text-black">
-            {avgGrowth.toFixed(1)}%
-          </p>
-          <p className="text-xs text-emerald-600 mt-1">↑ 2.4% this week</p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <p className="text-xs text-gray-400 font-medium">Conversion</p>
-          <p className="text-2xl font-light mt-1 text-black">24.6%</p>
-          <p className="text-xs text-emerald-600 mt-1">↑ 1.2%</p>
-        </div>
-        <div className="bg-white rounded-2xl p-4 border border-gray-100">
-          <p className="text-xs text-gray-400 font-medium">Active Users</p>
-          <p className="text-2xl font-light mt-1 text-black">1,284</p>
-          <p className="text-xs text-emerald-600 mt-1">+43 today</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <TrendingUp
-                className="w-4 h-4 text-indigo-600"
-                strokeWidth={1.5}
-              />
-              <h3 className="text-sm font-medium text-black uppercase tracking-wider">
-                Revenue
-              </h3>
-            </div>
-            <button className="text-xs text-gray-400 hover:text-black transition p-1.5 hover:bg-gray-50 rounded">
-              <Filter className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="relative h-56 sm:h-64 lg:h-60 xl:h-64 2xl:h-72 overflow-hidden">
-            <canvas id="revenue-chart" />
-          </div>
-        </div>
-
-        <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4 text-pink-600" strokeWidth={1.5} />
-              <h3 className="text-sm font-medium text-black uppercase tracking-wider">
-                Orders
-              </h3>
-            </div>
-          </div>
-          <div className="relative h-56 sm:h-64 lg:h-60 xl:h-64 2xl:h-72 overflow-hidden">
-            <canvas id="orders-chart" />
-          </div>
-        </div>
-
-        <div className="lg:col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="flex items-center gap-2 mb-5">
-            <PieChart className="w-4 h-4 text-teal-600" strokeWidth={1.5} />
-            <h3 className="text-sm font-medium text-black uppercase tracking-wider">
-              Distribution
-            </h3>
-          </div>
-          <div className="relative h-56 sm:h-64 lg:h-60 xl:h-64 2xl:h-72 overflow-hidden">
-            <canvas id="distribution-chart" />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="flex items-center gap-2 mb-5">
-          <Clock className="w-4 h-4 text-indigo-600" strokeWidth={1.5} />
-          <h3 className="text-sm font-medium text-black uppercase tracking-wider">
-            Recent Activity
-          </h3>
-        </div>
-        <div className="space-y-4">
-          {(stats.recentOrders || []).slice(0, 5).map((order, i) => (
-            <div key={i} className="flex gap-4">
-              <div className="relative flex flex-col items-center">
-                <div
-                  className={`w-2 h-2 rounded-full ${
-                    order.status === "completed"
-                      ? "bg-emerald-500"
-                      : order.status === "processing"
-                        ? "bg-amber-500"
-                        : "bg-gray-300"
-                  } mt-1.5`}
-                />
-                {i < 4 && <div className="w-px h-full bg-gray-200 mt-2" />}
-              </div>
-              <div className="pb-4">
-                <p className="text-sm text-black">
-                  {order.type === "retail" ? "Retail order" : "Custom order"}
-                  <span className="font-mono text-gray-400 ml-1.5">
-                    #{order.id}
-                  </span>
-                  <span
-                    className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-                      order.status === "completed"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : order.status === "processing"
-                          ? "bg-amber-50 text-amber-700"
-                          : "bg-gray-50 text-gray-600"
-                    }`}
-                  >
-                    {order.status}
-                  </span>
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {formatCurrency(order.amount)} · {order.date}
-                </p>
-              </div>
-            </div>
-          ))}
-          <button className="w-full mt-2 text-center text-xs text-gray-400 hover:text-black transition py-2 border-t border-gray-100">
-            View all activity →
+        <div className="flex flex-wrap items-center gap-3">
+          <LocaleSwitcher />
+          <TimeframePills value={timeframe} onChange={setTimeframe} />
+          <button
+            type="button"
+            onClick={() => fetchStats(true)}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-2 rounded-xl border border-[var(--dash-border)] bg-[var(--dash-surface)] px-3 py-2 text-xs text-[var(--dash-ink)] transition hover:border-[var(--dash-gold)]"
+          >
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+            Refresh
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-50 p-6 mt-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-          <div>
-            <h3 className="text-sm font-medium text-black uppercase tracking-wider flex items-center gap-2">
-              <DollarSign
-                className="w-4 h-4 text-indigo-600"
-                strokeWidth={1.5}
-              />
-              Pricing & Fees
-            </h3>
-            <p className="text-xs text-gray-400 mt-1">
-              Consolidated breakdown of tailor fees, tailoring fees, and fabric
-              costs per order.
-            </p>
+      {/* KPI row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        <StatCard
+          icon={DollarSign}
+          label="Total Revenue"
+          value={formatKpiCurrency(totalRevenue)}
+          subValue={`Retail ${formatKpiCurrency(retail.revenue)}`}
+          trend={avgGrowth}
+          delay={0}
+        />
+        <StatCard
+          icon={ShoppingBag}
+          label="Total Orders"
+          value={totalOrders.toLocaleString()}
+          subValue={`${retail.orderCount} retail · ${custom.orderCount} custom`}
+          trend={retail.growth}
+          delay={0.05}
+        />
+        <StatCard
+          icon={Package}
+          label="Avg Order Value"
+          value={formatKpiCurrency(aov)}
+          subValue="Across all channels"
+          delay={0.1}
+        />
+        <StatCard
+          icon={Users}
+          label="Customers"
+          value={(stats.customers?.total ?? 0).toLocaleString()}
+          subValue={`${stats.customers?.newThisMonth ?? 0} new this month`}
+          delay={0.15}
+        />
+        <StatCard
+          icon={Store}
+          label="Pending Approvals"
+          value={String(stats.partners?.pendingTotal ?? 0)}
+          subValue={`${stats.partners?.pendingTailors ?? 0} tailor · ${stats.partners?.pendingFabricStores ?? 0} fabric`}
+          delay={0.2}
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="Low Stock"
+          value={String(stats.inventory?.lowTotal ?? 0)}
+          subValue={`${stats.inventory?.lowFabrics ?? 0} fabrics · ${stats.inventory?.lowReadyMade ?? 0} ready`}
+          delay={0.25}
+        />
+      </div>
+
+      {/* Charts row 1 */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <ChartCard
+          title="Revenue Trend"
+          subtitle="Retail vs custom — last 6 months"
+          delay={0.1}
+        >
+          <div className="h-72">
+            <canvas id="admin-revenue-chart" />
           </div>
-          <div className="relative max-w-xs w-full">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search customer or order..."
-              value={pricingSearch}
-              onChange={(e) => setPricingSearch(e.target.value)}
-              className="w-full border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-xs focus:outline-none focus:border-indigo-500 text-black bg-white transition"
-            />
+        </ChartCard>
+        <ChartCard
+          title="Order Volume"
+          subtitle="Monthly order counts by channel"
+          delay={0.15}
+        >
+          <div className="h-72">
+            <canvas id="admin-orders-chart" />
           </div>
+        </ChartCard>
+      </div>
+
+      {/* Charts row 2 */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <ChartCard title="Order Status" subtitle="Current period mix" delay={0.18}>
+          <div className="mx-auto h-64 max-w-xs">
+            <canvas id="admin-status-chart" />
+          </div>
+        </ChartCard>
+        <ChartCard title="Channel Mix" subtitle="Retail vs custom share" delay={0.22}>
+          <div className="mx-auto h-64 max-w-xs">
+            <canvas id="admin-channel-chart" />
+          </div>
+        </ChartCard>
+      </div>
+
+      {/* Rankings */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <RankList
+          title="Top Fabrics"
+          items={stats.topFabrics || []}
+          formatValue={formatCurrency}
+          delay={0.12}
+        />
+        <RankList
+          title="Top Ready-Made"
+          items={stats.topProducts || []}
+          formatValue={formatCurrency}
+          delay={0.16}
+        />
+        <RankList
+          title="Top Tailors"
+          items={stats.topTailors || []}
+          formatValue={formatCurrency}
+          delay={0.2}
+        />
+      </div>
+
+      {/* Activity + Pricing */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        <div className="xl:col-span-1">
+          <ActivityFeed
+            items={stats.recentOrders || []}
+            formatCurrency={formatCurrency}
+          />
         </div>
 
-        {pricingLoading && pricingOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-600 mb-3" />
-            <p className="text-xs text-gray-400 uppercase tracking-widest font-mono">
-              Loading data...
-            </p>
+        <div className="rounded-[var(--dash-radius)] border border-[var(--dash-border)] bg-[var(--dash-surface)] p-5 shadow-sm sm:p-6 xl:col-span-2">
+          <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="[font-family:var(--font-display)] text-lg text-[var(--dash-ink)]">
+                Pricing & Fees
+              </h3>
+              <p className="mt-1 text-xs text-[var(--dash-muted)]">
+                Custom order fee breakdown across tailor, tailoring, and fabric.
+              </p>
+            </div>
+            <div className="relative w-full max-w-xs">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--dash-muted)]" />
+              <input
+                type="text"
+                placeholder="Search customer or order..."
+                value={pricingSearch}
+                onChange={(e) => setPricingSearch(e.target.value)}
+                className="w-full rounded-xl border border-[var(--dash-border)] bg-white py-1.5 pl-9 pr-3 text-xs text-[var(--dash-ink)] outline-none transition focus:border-[var(--dash-gold)]"
+              />
+            </div>
           </div>
-        ) : filteredPricingOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <PackageSearch
-              className="w-12 h-12 text-gray-300 mb-3"
-              strokeWidth={1}
-            />
-            <p className="text-xs text-gray-400">
-              No orders found matching filters.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left text-xs text-gray-500">
-              <thead className="bg-gray-50/70 text-[9px] uppercase tracking-wider text-gray-400 font-semibold border-b border-gray-100">
-                <tr>
-                  <th className="px-4 py-3">Order ID</th>
-                  <th className="px-4 py-3">Customer</th>
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Tailor Fee</th>
-                  <th className="px-4 py-3">Tailoring Fee</th>
-                  <th className="px-4 py-3">Fabric Fee</th>
-                  <th className="px-4 py-3">Total</th>
-                  <th className="px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredPricingOrders.map((order: any) => {
-                  const customerName = readPartnerName(
-                    typeof order.userId === "object" ? order.userId : null,
-                    "Unknown Customer",
-                  );
-                  const { tailorFee, tailoringFee, fabricFee } =
-                    getOrderFees(order);
-                  const orderTotal = tailorFee + tailoringFee + fabricFee;
 
-                  return (
-                    <tr
-                      key={order._id}
-                      className="hover:bg-gray-50/50 transition-colors"
-                    >
-                      <td className="px-4 py-3 font-mono font-medium text-black text-2xs">
-                        #{order._id.slice(-8).toUpperCase()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="font-medium text-black block">
-                          {customerName}
-                        </span>
-                        {order.userId &&
-                          typeof order.userId === "object" &&
-                          (order.userId as any).email && (
-                            <span className="text-3xs text-gray-400 block">
-                              {(order.userId as any).email}
-                            </span>
-                          )}
-                      </td>
-                      <td className="px-4 py-3 text-2xs">
-                        {formatOrderDateLocal(order.createdAt)}
-                      </td>
-                      <td className="px-4 py-3 text-black">
-                        {formatCurrency(tailorFee)}
-                      </td>
-                      <td className="px-4 py-3 text-black">
-                        {formatCurrency(tailoringFee)}
-                      </td>
-                      <td className="px-4 py-3 text-black">
-                        {formatCurrency(fabricFee)}
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-black">
-                        {formatCurrency(orderTotal)}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 rounded-full text-3xs font-medium bg-gray-100 text-gray-700 capitalize">
-                          {order.status.replace(/_/g, " ")}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+          {pricingLoading && pricingOrders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="mb-3 h-8 w-8 animate-spin text-[var(--dash-charcoal)]" />
+              <p className="[font-family:var(--font-ui)] text-[10px] uppercase tracking-widest text-[var(--dash-muted)]">
+                Loading data...
+              </p>
+            </div>
+          ) : filteredPricingOrders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <PackageSearch
+                className="mb-3 h-12 w-12 text-[var(--dash-border)]"
+                strokeWidth={1}
+              />
+              <p className="text-xs text-[var(--dash-muted)]">
+                No orders found matching filters.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left text-xs text-[var(--dash-muted)]">
+                <thead className="border-b border-[var(--dash-border)] text-[9px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
+                  <tr>
+                    <th className="px-3 py-2">Order / Customer</th>
+                    <th className="px-3 py-2">Date</th>
+                    <th className="px-3 py-2 text-right">Tailor Fee</th>
+                    <th className="px-3 py-2 text-right">Tailoring</th>
+                    <th className="px-3 py-2 text-right">Fabric</th>
+                    <th className="px-3 py-2 text-right">Total</th>
+                    <th className="px-3 py-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredPricingOrders.slice(0, 12).map((order) => {
+                    const fees = getOrderFees(order);
+                    return (
+                      <tr
+                        key={order._id}
+                        className="border-b border-[var(--dash-border)] transition hover:bg-[var(--dash-bg)]"
+                      >
+                        <td className="px-3 py-2.5">
+                          <p className="font-medium text-[var(--dash-ink)]">
+                            #{order._id.slice(-6)}
+                          </p>
+                          <p className="text-[10px]">
+                            {readPartnerName(
+                              typeof order.userId === "object"
+                                ? order.userId
+                                : null,
+                              "Customer",
+                            )}
+                          </p>
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          {formatOrderDateLocal(order.createdAt)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-[var(--dash-ink)]">
+                          {formatCurrency(fees.tailorFee)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-[var(--dash-ink)]">
+                          {formatCurrency(fees.tailoringFee)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-[var(--dash-ink)]">
+                          {formatCurrency(fees.fabricFee)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-medium text-[var(--dash-ink)]">
+                          {formatCurrency(order.pricing?.total || 0)}
+                        </td>
+                        <td className="px-3 py-2.5 capitalize">
+                          <span className="rounded-md bg-[var(--dash-bg)] px-2 py-0.5 text-[10px] text-[var(--dash-ink)]">
+                            {(order.status || "").replace(/_/g, " ")}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

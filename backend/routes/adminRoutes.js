@@ -1647,6 +1647,206 @@ adminRouter.get(
       })
       .slice(0, 5);
 
+    // Monthly order counts (for volume chart)
+    const retailMonthlyOrderMap = new Map();
+    for (const row of retailMonthlyAgg) {
+      const key = `${row._id.year}-${row._id.month}`;
+      retailMonthlyOrderMap.set(key, row.orderCount || 0);
+    }
+    const customMonthlyOrderMap = new Map();
+    for (const row of customMonthlyAgg) {
+      const key = `${row._id.year}-${row._id.month}`;
+      customMonthlyOrderMap.set(key, row.orderCount || 0);
+    }
+    const monthlyOrders = monthStarts.map((d) => {
+      const key = monthKey(d);
+      return {
+        month: monthLabel(d),
+        retail: retailMonthlyOrderMap.get(key) || 0,
+        custom: customMonthlyOrderMap.get(key) || 0,
+      };
+    });
+
+    const totalOrders =
+      retailNowResult.orderCount + customNowResult.orderCount;
+    const totalRevenue =
+      retailNowResult.revenue + customNowResult.revenue;
+    const aov = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+
+    const LOW_FABRIC_STOCK = 10;
+    const LOW_READY_STOCK = 5;
+    const LOW_ADDON_STOCK = 5;
+    const monthStartCustomers = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1,
+    );
+
+    const [
+      retailStatusAgg,
+      customStatusAgg,
+      totalCustomers,
+      activeCustomers,
+      newCustomersThisMonth,
+      pendingTailors,
+      pendingFabricStores,
+      activeTailorShops,
+      activeFabricShops,
+      lowFabricCount,
+      lowReadyMadeCount,
+      lowAddonCount,
+      topFabricsAgg,
+      topProductsAgg,
+      topTailorsAgg,
+    ] = await Promise.all([
+      RetailOrder.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      CustomOrder.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+      User.countDocuments({ role: "customer" }),
+      User.countDocuments({ role: "customer", isActive: true }),
+      User.countDocuments({
+        role: "customer",
+        createdAt: { $gte: monthStartCustomers },
+      }),
+      User.countDocuments({ role: "tailor", approvalStatus: "pending" }),
+      User.countDocuments({
+        role: "fabric_store",
+        approvalStatus: "pending",
+      }),
+      TailorShop.countDocuments({ isActive: true }),
+      FabricShop.countDocuments({ isActive: true }),
+      Fabric.countDocuments({
+        stockInMeters: { $lte: LOW_FABRIC_STOCK },
+        isActive: true,
+      }),
+      ReadyMadeProduct.countDocuments({
+        availableFabricStock: { $lte: LOW_READY_STOCK },
+        isActive: true,
+      }),
+      AddOn.countDocuments({
+        stock: { $lte: LOW_ADDON_STOCK },
+        isActive: true,
+      }),
+      CustomOrder.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        { $unwind: { path: "$items", preserveNullAndEmptyArrays: true } },
+        {
+          $group: {
+            _id: {
+              $ifNull: [
+                "$items.fabricSnapshot.name",
+                { $ifNull: ["$fabricSnapshot.name", "Unknown"] },
+              ],
+            },
+            revenue: {
+              $sum: {
+                $ifNull: [
+                  "$items.pricing.fabricCost",
+                  { $ifNull: ["$pricing.fabricCost", 0] },
+                ],
+              },
+            },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 },
+      ]),
+      RetailOrder.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        { $unwind: "$orderItems" },
+        {
+          $group: {
+            _id: {
+              id: "$orderItems.productId",
+              name: "$orderItems.name",
+            },
+            revenue: {
+              $sum: {
+                $multiply: ["$orderItems.price", "$orderItems.quantity"],
+              },
+            },
+            quantity: { $sum: "$orderItems.quantity" },
+          },
+        },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 },
+      ]),
+      CustomOrder.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: start, $lte: end },
+            tailorShopId: { $ne: null },
+          },
+        },
+        {
+          $group: {
+            _id: "$tailorShopId",
+            revenue: { $sum: { $ifNull: ["$pricing.total", 0] } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 },
+        {
+          $lookup: {
+            from: "tailorshops",
+            localField: "_id",
+            foreignField: "_id",
+            as: "shop",
+          },
+        },
+        {
+          $project: {
+            revenue: 1,
+            count: 1,
+            name: {
+              $ifNull: [{ $arrayElemAt: ["$shop.name", 0] }, "Unknown tailor"],
+            },
+          },
+        },
+      ]),
+    ]);
+
+    const statusMap = new Map();
+    for (const row of retailStatusAgg) {
+      const key = row._id || "unknown";
+      statusMap.set(key, (statusMap.get(key) || 0) + (row.count || 0));
+    }
+    for (const row of customStatusAgg) {
+      const key = row._id || "unknown";
+      statusMap.set(key, (statusMap.get(key) || 0) + (row.count || 0));
+    }
+    const statusBreakdown = Array.from(statusMap.entries())
+      .map(([status, count]) => ({ status, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const topFabrics = (topFabricsAgg || []).map((row, i) => ({
+      id: String(row._id || i),
+      name: row._id || "Unknown",
+      value: row.revenue || 0,
+      meta: `${row.count || 0} orders`,
+    }));
+
+    const topProducts = (topProductsAgg || []).map((row, i) => ({
+      id: row._id?.id ? String(row._id.id) : String(i),
+      name: row._id?.name || "Unknown",
+      value: row.revenue || 0,
+      meta: `${row.quantity || 0} sold`,
+    }));
+
+    const topTailors = (topTailorsAgg || []).map((row) => ({
+      id: row._id ? String(row._id) : row.name,
+      name: row.name || "Unknown tailor",
+      value: row.revenue || 0,
+      meta: `${row.count || 0} orders`,
+    }));
+
     res.send({
       retail: {
         orderCount: retailNowResult.orderCount,
@@ -1659,8 +1859,32 @@ adminRouter.get(
         growth: customGrowth,
       },
       currency: "AED",
+      aov,
       monthlyData,
+      monthlyOrders,
       recentOrders,
+      statusBreakdown,
+      customers: {
+        total: totalCustomers,
+        active: activeCustomers,
+        newThisMonth: newCustomersThisMonth,
+      },
+      partners: {
+        pendingTailors,
+        pendingFabricStores,
+        pendingTotal: pendingTailors + pendingFabricStores,
+        activeTailorShops,
+        activeFabricShops,
+      },
+      inventory: {
+        lowFabrics: lowFabricCount,
+        lowReadyMade: lowReadyMadeCount,
+        lowAddons: lowAddonCount,
+        lowTotal: lowFabricCount + lowReadyMadeCount + lowAddonCount,
+      },
+      topFabrics,
+      topProducts,
+      topTailors,
     });
   }),
 );

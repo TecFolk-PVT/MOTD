@@ -2,6 +2,8 @@ import express from 'express';
 import expressAsyncHandler from 'express-async-handler';
 import TailorShop from '../models/TailorShop.js';
 import CustomOrder, { CUSTOM_STATUSES } from '../models/CustomOrder.js';
+import Design from '../models/Design.js';
+import PlatformSettings from '../models/PlatformSettings.js';
 import tailorDesignRoutes from './tailorDesignRoutes.js';
 import {
   uploadReadyMadeImageMiddleware,
@@ -348,6 +350,225 @@ tailorPortalRouter.patch(
       order,
     });
   })
+);
+
+// ==========================================
+// GET /api/tailor/dashboard
+// ==========================================
+function getPartnerTimeframeWindow(timeframe) {
+  const now = new Date();
+  const end = new Date(now);
+  end.setUTCHours(23, 59, 59, 999);
+
+  let start;
+  if (timeframe === 'week') {
+    start = new Date(end);
+    start.setUTCDate(start.getUTCDate() - 6);
+  } else if (timeframe === 'year') {
+    start = new Date(end);
+    start.setUTCMonth(start.getUTCMonth() - 11);
+  } else {
+    start = new Date(end);
+    start.setUTCDate(start.getUTCDate() - 29);
+  }
+  start.setUTCHours(0, 0, 0, 0);
+  return { start, end };
+}
+
+tailorPortalRouter.get(
+  '/dashboard',
+  expressAsyncHandler(async (req, res) => {
+    const timeframeRaw = req.query.timeframe;
+    const timeframe =
+      timeframeRaw === 'week' ||
+      timeframeRaw === 'month' ||
+      timeframeRaw === 'year'
+        ? timeframeRaw
+        : 'month';
+    const { start, end } = getPartnerTimeframeWindow(timeframe);
+
+    const shop = await findOwnShop(req.user._id);
+    const settings = await PlatformSettings.findOne({}).lean();
+    const defaultTailoringFee = Number(settings?.defaultTailoringFee || 0);
+
+    if (!shop) {
+      res.json({
+        success: true,
+        currency: 'AED',
+        tailorShopId: null,
+        tailoringFeeEnabled: defaultTailoringFee > 0,
+        kpis: {
+          designFees: 0,
+          tailoringFees: 0,
+          orderCount: 0,
+          activeDesigns: 0,
+          inProgress: 0,
+        },
+        monthlyData: [],
+        statusBreakdown: [],
+        feeSplit: { designFees: 0, tailoringFees: 0 },
+        recentOrders: [],
+        pricingOrders: [],
+      });
+      return;
+    }
+
+    const shopId = shop._id;
+    const orderMatch = {
+      $or: [{ tailorShopId: shopId }, { 'items.tailorShopId': shopId }],
+    };
+
+    const [ordersInWindow, allScopedOrders, activeDesigns] = await Promise.all([
+      CustomOrder.find({
+        ...orderMatch,
+        createdAt: { $gte: start, $lte: end },
+      })
+        .populate('userId', 'name email')
+        .sort({ createdAt: -1 })
+        .lean(),
+      CustomOrder.find(orderMatch)
+        .populate('userId', 'name email')
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .lean(),
+      Design.countDocuments({ tailorShopId: shopId, isActive: true }),
+    ]);
+
+    const getDesignFee = (order) => {
+      if (order.items && order.items.length > 0) {
+        return order.items
+          .filter((item) => {
+            const sid =
+              item.tailorShopId?._id?.toString?.() ||
+              item.tailorShopId?.toString?.() ||
+              '';
+            return sid === shopId.toString();
+          })
+          .reduce((sum, item) => sum + (item.pricing?.designBase || 0), 0);
+      }
+      const orderShopId =
+        order.tailorShopId?._id?.toString?.() ||
+        order.tailorShopId?.toString?.() ||
+        '';
+      return orderShopId === shopId.toString()
+        ? order.pricing?.designBase || 0
+        : 0;
+    };
+
+    const getTailoringFee = (order) => {
+      if (order.items && order.items.length > 0) {
+        return order.items
+          .filter((item) => {
+            const sid =
+              item.tailorShopId?._id?.toString?.() ||
+              item.tailorShopId?.toString?.() ||
+              '';
+            return sid === shopId.toString();
+          })
+          .reduce((sum, item) => sum + (item.pricing?.tailoringFee || 0), 0);
+      }
+      const orderShopId =
+        order.tailorShopId?._id?.toString?.() ||
+        order.tailorShopId?.toString?.() ||
+        '';
+      return orderShopId === shopId.toString()
+        ? order.pricing?.tailoringFee || 0
+        : 0;
+    };
+
+    let designFees = 0;
+    let tailoringFees = 0;
+    const statusMap = new Map();
+    const IN_PROGRESS = new Set([
+      'confirmed',
+      'fabric_delivered',
+      'at_tailor',
+      'in_production',
+      'ready',
+      'out_for_delivery',
+    ]);
+    let inProgress = 0;
+
+    for (const order of ordersInWindow) {
+      designFees += getDesignFee(order);
+      tailoringFees += getTailoringFee(order);
+      const st = order.status || 'unknown';
+      statusMap.set(st, (statusMap.get(st) || 0) + 1);
+      if (IN_PROGRESS.has(st)) inProgress += 1;
+    }
+
+    const monthEnd = new Date();
+    const monthStarts = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      const d = new Date(monthEnd);
+      d.setUTCMonth(d.getUTCMonth() - i);
+      d.setUTCDate(1);
+      d.setUTCHours(0, 0, 0, 0);
+      monthStarts.push(d);
+    }
+    const rangeStart = monthStarts[0];
+    const monthlyOrders = await CustomOrder.find({
+      ...orderMatch,
+      createdAt: { $gte: rangeStart, $lte: end },
+    }).lean();
+
+    const monthlyMap = new Map();
+    for (const order of monthlyOrders) {
+      const d = new Date(order.createdAt);
+      const key = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}`;
+      const prev = monthlyMap.get(key) || { design: 0, tailoring: 0 };
+      monthlyMap.set(key, {
+        design: prev.design + getDesignFee(order),
+        tailoring: prev.tailoring + getTailoringFee(order),
+      });
+    }
+
+    const monthlyData = monthStarts.map((d) => {
+      const key = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}`;
+      const row = monthlyMap.get(key) || { design: 0, tailoring: 0 };
+      return {
+        month: d.toLocaleString('en-US', { month: 'short' }),
+        design: row.design,
+        tailoring: row.tailoring,
+        revenue: row.design + row.tailoring,
+      };
+    });
+
+    const statusBreakdown = Array.from(statusMap.entries())
+      .map(([status, count]) => ({ status, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const recentOrders = allScopedOrders.map((o) => ({
+      id: o._id.toString(),
+      amount: getDesignFee(o) + getTailoringFee(o),
+      status: o.status,
+      date: o.createdAt ? new Date(o.createdAt).toISOString() : '',
+      type: 'custom',
+    }));
+
+    // Optional platform fee: show only if admin default > 0 or this period has any charged.
+    const tailoringFeeEnabled =
+      defaultTailoringFee > 0 || tailoringFees > 0;
+
+    res.json({
+      success: true,
+      currency: 'AED',
+      tailorShopId: shopId,
+      tailoringFeeEnabled,
+      kpis: {
+        designFees,
+        tailoringFees,
+        orderCount: ordersInWindow.length,
+        activeDesigns,
+        inProgress,
+      },
+      monthlyData,
+      statusBreakdown,
+      feeSplit: { designFees, tailoringFees },
+      recentOrders,
+      pricingOrders: allScopedOrders,
+    });
+  }),
 );
 
 export default tailorPortalRouter;
