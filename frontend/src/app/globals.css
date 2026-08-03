@@ -56,6 +56,20 @@
   /* Radius — brand is zero-radius */
   --radius: 0px;
 
+  /* Dashboard surfaces (admin / fabric / tailor portals) */
+  --dash-bg: #f5f0e8;
+  --dash-surface: #fffcf7;
+  --dash-ink: #1c1917;
+  --dash-muted: #78716c;
+  --dash-border: #e7e0d4;
+  --dash-gold: #c9a227;
+  --dash-gold-soft: #e8d5a3;
+  --dash-charcoal: #292524;
+  --dash-charcoal-deep: #1c1917;
+  --dash-success: #3f7d5a;
+  --dash-danger: #b54a3f;
+  --dash-radius: 12px;
+
   /* Spacing */
   --space-4: 4px;
   --space-8: 8px;

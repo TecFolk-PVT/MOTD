@@ -1225,4 +1225,250 @@ fabricPortalRouter.patch(
   })
 );
 
+// ==========================================
+// GET /api/fabric/dashboard
+// ==========================================
+function getPartnerTimeframeWindow(timeframe) {
+  const now = new Date();
+  const end = new Date(now);
+  end.setUTCHours(23, 59, 59, 999);
+
+  let start;
+  if (timeframe === "week") {
+    start = new Date(end);
+    start.setUTCDate(start.getUTCDate() - 6);
+  } else if (timeframe === "year") {
+    start = new Date(end);
+    start.setUTCMonth(start.getUTCMonth() - 11);
+  } else {
+    start = new Date(end);
+    start.setUTCDate(start.getUTCDate() - 29);
+  }
+  start.setUTCHours(0, 0, 0, 0);
+  return { start, end };
+}
+
+fabricPortalRouter.get(
+  "/dashboard",
+  expressAsyncHandler(async (req, res) => {
+    const timeframeRaw = req.query.timeframe;
+    const timeframe =
+      timeframeRaw === "week" ||
+      timeframeRaw === "month" ||
+      timeframeRaw === "year"
+        ? timeframeRaw
+        : "month";
+    const { start, end } = getPartnerTimeframeWindow(timeframe);
+
+    const shop = await findOwnShop(req.user._id);
+    const storeFabricIds = await Fabric.find({
+      listedByStore: req.user._id,
+    }).select("_id stockInMeters isActive name");
+    const storeFabricIdValues = storeFabricIds.map((f) => f._id);
+
+    const storeAddonIds = shop
+      ? await AddOn.find({
+          $or: [{ fabricShopId: shop._id }, { ownerName: shop.name }],
+        }).select("_id")
+      : [];
+    const storeAddonIdValues = storeAddonIds.map((a) => a._id);
+
+    const primaryMatch = {
+      $or: [
+        { fabricStoreId: req.user._id },
+        { "items.fabricStoreId": req.user._id },
+        ...(storeAddonIdValues.length
+          ? [{ "addons.addonId": { $in: storeAddonIdValues } }]
+          : []),
+      ],
+    };
+    const legacyMatch = storeFabricIdValues.length
+      ? {
+          $or: [
+            { fabricId: { $in: storeFabricIdValues } },
+            { "items.fabricId": { $in: storeFabricIdValues } },
+          ],
+        }
+      : null;
+    const orderMatch = legacyMatch
+      ? { $or: [primaryMatch, legacyMatch] }
+      : primaryMatch;
+
+    const ownerUserId = req.user._id;
+    const shopIdStr = shop?._id?.toString?.() || "";
+
+    const ordersInWindow = await CustomOrder.find({
+      ...orderMatch,
+      createdAt: { $gte: start, $lte: end },
+    })
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const allScopedOrders = await CustomOrder.find(orderMatch)
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .lean();
+
+    const sumFabricFee = (order) => {
+      if (order.items && order.items.length > 0) {
+        return order.items
+          .filter((item) => {
+            const sid =
+              item.fabricStoreId?._id?.toString?.() ||
+              item.fabricStoreId?.toString?.() ||
+              "";
+            return (
+              sid === ownerUserId.toString() ||
+              (shopIdStr && sid === shopIdStr)
+            );
+          })
+          .reduce((sum, item) => sum + (item.pricing?.fabricCost || 0), 0);
+      }
+      return order.pricing?.fabricCost || 0;
+    };
+
+    const sumMeters = (order) => {
+      if (order.items && order.items.length > 0) {
+        return order.items
+          .filter((item) => {
+            const sid =
+              item.fabricStoreId?._id?.toString?.() ||
+              item.fabricStoreId?.toString?.() ||
+              "";
+            return (
+              sid === ownerUserId.toString() ||
+              (shopIdStr && sid === shopIdStr)
+            );
+          })
+          .reduce(
+            (sum, item) =>
+              sum +
+              (item.pricing?.fabricMeters || item.fabricMeters || 0),
+            0,
+          );
+      }
+      return order.pricing?.fabricMeters || order.fabricMeters || 0;
+    };
+
+    let fabricRevenue = 0;
+    let metersSold = 0;
+    const statusMap = new Map();
+    const fabricRevenueMap = new Map();
+
+    for (const order of ordersInWindow) {
+      const fee = sumFabricFee(order);
+      fabricRevenue += fee;
+      metersSold += sumMeters(order);
+      const st = order.status || "unknown";
+      statusMap.set(st, (statusMap.get(st) || 0) + 1);
+
+      if (order.items && order.items.length > 0) {
+        for (const item of order.items) {
+          const sid =
+            item.fabricStoreId?._id?.toString?.() ||
+            item.fabricStoreId?.toString?.() ||
+            "";
+          if (
+            sid !== ownerUserId.toString() &&
+            !(shopIdStr && sid === shopIdStr)
+          ) {
+            continue;
+          }
+          const name = item.fabricSnapshot?.name || "Unknown fabric";
+          const cost = item.pricing?.fabricCost || 0;
+          const prev = fabricRevenueMap.get(name) || { value: 0, count: 0 };
+          fabricRevenueMap.set(name, {
+            value: prev.value + cost,
+            count: prev.count + 1,
+          });
+        }
+      } else if (order.fabricSnapshot?.name) {
+        const name = order.fabricSnapshot.name;
+        const cost = order.pricing?.fabricCost || 0;
+        const prev = fabricRevenueMap.get(name) || { value: 0, count: 0 };
+        fabricRevenueMap.set(name, {
+          value: prev.value + cost,
+          count: prev.count + 1,
+        });
+      }
+    }
+
+    // Monthly fabric revenue (last 6 months)
+    const monthEnd = new Date();
+    const monthStarts = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      const d = new Date(monthEnd);
+      d.setUTCMonth(d.getUTCMonth() - i);
+      d.setUTCDate(1);
+      d.setUTCHours(0, 0, 0, 0);
+      monthStarts.push(d);
+    }
+    const rangeStart = monthStarts[0];
+    const monthlyOrders = await CustomOrder.find({
+      ...orderMatch,
+      createdAt: { $gte: rangeStart, $lte: end },
+    }).lean();
+
+    const monthlyMap = new Map();
+    for (const order of monthlyOrders) {
+      const d = new Date(order.createdAt);
+      const key = `${d.getUTCFullYear()}-${d.getUTCMonth() + 1}`;
+      monthlyMap.set(key, (monthlyMap.get(key) || 0) + sumFabricFee(order));
+    }
+
+    const monthlyData = monthStarts.map((d) => ({
+      month: d.toLocaleString("en-US", { month: "short" }),
+      revenue: monthlyMap.get(`${d.getUTCFullYear()}-${d.getUTCMonth() + 1}`) || 0,
+    }));
+
+    const LOW_STOCK = 10;
+    const activeSkus = storeFabricIds.filter((f) => f.isActive !== false).length;
+    const lowStock = storeFabricIds.filter(
+      (f) => (f.stockInMeters || 0) <= LOW_STOCK && f.isActive !== false,
+    ).length;
+
+    const topFabrics = Array.from(fabricRevenueMap.entries())
+      .map(([name, data], i) => ({
+        id: String(i),
+        name,
+        value: data.value,
+        meta: `${data.count} orders`,
+      }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+
+    const statusBreakdown = Array.from(statusMap.entries())
+      .map(([status, count]) => ({ status, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const recentOrders = allScopedOrders.map((o) => ({
+      id: o._id.toString(),
+      amount: sumFabricFee(o),
+      status: o.status,
+      date: o.createdAt ? new Date(o.createdAt).toISOString() : "",
+      type: "custom",
+    }));
+
+    res.json({
+      success: true,
+      currency: "AED",
+      fabricShopId: ownerUserId,
+      kpis: {
+        fabricRevenue,
+        orderCount: ordersInWindow.length,
+        metersSold,
+        activeSkus,
+        lowStock,
+      },
+      monthlyData,
+      statusBreakdown,
+      topFabrics,
+      recentOrders,
+      pricingOrders: allScopedOrders,
+    });
+  }),
+);
+
 export default fabricPortalRouter;

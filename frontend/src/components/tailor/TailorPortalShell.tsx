@@ -81,10 +81,10 @@ export default function TailorPortalShell({ children }: TailorPortalShellProps) 
                             key={item.href}
                             href={item.href}
                             onClick={() => setIsSidebarOpen(false)}
-                            className={`flex items-center gap-3 px-4 py-3 text-[11px] uppercase tracking-[0.18em] transition [font-family:var(--font-ui)] ${
+                            className={`flex items-center gap-3 px-4 py-3 text-[11px] uppercase tracking-[0.18em] transition [font-family:var(--font-ui)] rounded-xl ${
                                 isActive
-                                    ? "bg-black text-white"
-                                    : "text-black hover:bg-[#F0EBE3]"
+                                    ? "bg-[var(--dash-charcoal)] text-[var(--dash-gold)]"
+                                    : "text-[var(--dash-ink)] hover:bg-[var(--dash-bg)]"
                             }`}
                         >
                             <Icon className="w-4 h-4" />
@@ -109,8 +109,8 @@ export default function TailorPortalShell({ children }: TailorPortalShellProps) 
     );
 
     return (
-        <div className="bg-[#FDFAF5] text-black lg:flex lg:h-dvh lg:overflow-hidden">
-            <aside className="fixed left-0 top-0 z-20 hidden h-dvh w-72 shrink-0 flex-col overflow-y-auto border-r border-(--color-border) bg-white p-6 lg:sticky lg:flex">
+        <div className="bg-[var(--dash-bg)] text-[var(--dash-ink)] lg:flex lg:h-dvh lg:overflow-hidden">
+            <aside className="fixed left-0 top-0 z-20 hidden h-dvh w-72 shrink-0 flex-col overflow-y-auto border-r border-[var(--dash-border)] bg-[var(--dash-surface)] p-6 lg:sticky lg:flex">
                 <SidebarContent />
             </aside>
 
@@ -121,14 +121,14 @@ export default function TailorPortalShell({ children }: TailorPortalShellProps) 
                 onClick={() => setIsSidebarOpen(false)}
             />
             <aside
-                className={`fixed left-0 top-0 z-40 flex h-dvh w-72 flex-col overflow-y-auto border-r border-(--color-border) bg-white p-6 transition-transform duration-300 ease-in-out lg:hidden ${
+                className={`fixed left-0 top-0 z-40 flex h-dvh w-72 flex-col overflow-y-auto border-r border-[var(--dash-border)] bg-[var(--dash-surface)] p-6 transition-transform duration-300 ease-in-out lg:hidden ${
                     isSidebarOpen ? "translate-x-0" : "-translate-x-full"
                 }`}
             >
                 <button
                     type="button"
                     onClick={() => setIsSidebarOpen(false)}
-                    className="absolute top-4 right-4 p-2 text-(--color-grey-muted) hover:text-black"
+                    className="absolute top-4 right-4 p-2 text-[var(--dash-muted)] hover:text-[var(--dash-ink)]"
                     aria-label="Close menu"
                 >
                     <X className="w-5 h-5" />
@@ -142,7 +142,7 @@ export default function TailorPortalShell({ children }: TailorPortalShellProps) 
                 <button
                     type="button"
                     onClick={() => setIsSidebarOpen(true)}
-                    className="fixed top-4 left-4 z-20 bg-black p-2 text-white transition hover:bg-[#2A2A28] lg:hidden"
+                    className="fixed top-4 left-4 z-20 bg-[var(--dash-charcoal)] p-2 text-[var(--dash-gold)] transition hover:bg-[var(--dash-charcoal-deep)] lg:hidden rounded-md"
                     aria-label="Open menu"
                 >
                     <Menu className="w-5 h-5" />
