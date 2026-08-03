@@ -86,7 +86,7 @@ export default function AdminLayout({
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black text-white">
+      <div className="h-screen flex items-center justify-center bg-[var(--dash-charcoal-deep)] text-[var(--dash-gold)]">
         Loading admin panel...
       </div>
     );
@@ -143,7 +143,7 @@ export default function AdminLayout({
           />
           <span className="sr-only">MOTD Admin</span>
         </Link>
-        <p className="text-white/50 text-xs mt-3">Control Panel</p>
+        <p className="text-[var(--dash-gold-soft)]/70 text-xs mt-3 tracking-wide">Control Panel</p>
       </div>
 
       {/* NAV */}
@@ -159,8 +159,8 @@ export default function AdminLayout({
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition
                             ${
                               isActive
-                                ? "bg-white text-black shadow-md"
-                                : "text-white/70 hover:bg-white/10"
+                                ? "bg-[var(--dash-gold)] text-[var(--dash-charcoal-deep)] shadow-md font-medium"
+                                : "text-white/70 hover:bg-white/10 hover:text-[var(--dash-gold-soft)]"
                             }`}
             >
               <div className="relative flex items-center">
@@ -169,7 +169,7 @@ export default function AdminLayout({
               {item.label}
               {item.href === "/admin/notifications" &&
                 unreadNotificationCount > 0 && (
-                  <span className="min-w-5 h-5 px-1 rounded-full bg-white text-black text-[11px] font-semibold flex items-center justify-center shadow-sm">
+                  <span className="min-w-5 h-5 px-1 rounded-full bg-[var(--dash-gold)] text-[var(--dash-charcoal-deep)] text-[11px] font-semibold flex items-center justify-center shadow-sm">
                     {unreadNotificationCount > 99
                       ? "99+"
                       : unreadNotificationCount}
@@ -189,8 +189,8 @@ export default function AdminLayout({
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition hover:cursor-pointer
               ${
                 isSettingsActive
-                  ? "bg-white text-black shadow-md"
-                  : "text-white/70 hover:bg-white/10"
+                  ? "bg-[var(--dash-gold)] text-[var(--dash-charcoal-deep)] shadow-md font-medium"
+                  : "text-white/70 hover:bg-white/10 hover:text-[var(--dash-gold-soft)]"
               }`}
           >
             <Settings className="w-4 h-4" />
@@ -213,7 +213,7 @@ export default function AdminLayout({
                 transition={{ duration: 0.25, ease: "easeInOut" }}
                 className="overflow-hidden"
               >
-                <div className="ml-3 mt-1 space-y-1 border-l border-white/20 pl-3">
+                <div className="ml-3 mt-1 space-y-1 border-l border-[var(--dash-gold)]/30 pl-3">
                   {settingsSubItems.map((subItem) => {
                     const SubIcon = subItem.icon;
                     const isSubActive = isActiveLink(subItem.href);
@@ -230,8 +230,8 @@ export default function AdminLayout({
                           className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition
                             ${
                               isSubActive
-                                ? "bg-white/20 text-white shadow-sm"
-                                : "text-white/60 hover:bg-white/10"
+                                ? "bg-[var(--dash-gold)]/20 text-[var(--dash-gold-soft)] shadow-sm"
+                                : "text-white/60 hover:bg-white/10 hover:text-[var(--dash-gold-soft)]"
                             }`}
                         >
                           <SubIcon className="w-3.5 h-3.5" />
@@ -253,7 +253,7 @@ export default function AdminLayout({
           logout();
           router.push(`/${locale}/auth/login`);
         }}
-        className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition hover:cursor-pointer mt-4"
+        className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400/90 hover:bg-red-500/10 transition hover:cursor-pointer mt-4"
       >
         <LogOut className="w-4 h-4" />
         LogOut
@@ -263,11 +263,11 @@ export default function AdminLayout({
 
   // ===================== UI =====================
   return (
-    <div className="relative min-h-screen bg-black text-white">
+    <div className="relative min-h-screen bg-[var(--dash-charcoal-deep)] text-white">
       {/* Desktop Sidebar (always visible on lg+) */}
       <aside
         data-sidebar
-        className="fixed left-0 top-0 w-72 h-full border-r border-white/10 flex-col p-6 bg-black z-20 overflow-y-auto hidden lg:flex"
+        className="fixed left-0 top-0 w-72 h-full border-r border-white/10 flex-col p-6 bg-[var(--dash-charcoal)] z-20 overflow-y-auto hidden lg:flex"
       >
         <SidebarContent />
       </aside>
@@ -283,13 +283,13 @@ export default function AdminLayout({
       />
       <aside
         data-sidebar
-        className={`fixed left-0 top-0 w-72 h-full bg-black border-r border-white/10 flex flex-col p-6 z-40 transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
+        className={`fixed left-0 top-0 w-72 h-full bg-[var(--dash-charcoal)] border-r border-white/10 flex flex-col p-6 z-40 transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <button
           onClick={() => setIsSidebarOpen(false)}
-          className="absolute top-4 right-4 p-2 text-white/70 hover:text-white lg:hidden"
+          className="absolute top-4 right-4 p-2 text-white/70 hover:text-[var(--dash-gold)] lg:hidden"
           aria-label="Close menu"
         >
           <X className="w-5 h-5" />
@@ -300,15 +300,15 @@ export default function AdminLayout({
       </aside>
       {/* Main Content Area */}
       <main
-        className={`min-h-screen bg-gray-100 text-black p-4 xs:p-6 sm:p-8 md:p-10 pb-16 transition-all duration-300 lg:ml-72`}
+        className={`min-h-screen bg-[var(--dash-bg)] text-[var(--dash-ink)] p-4 xs:p-6 sm:p-8 md:p-10 pb-16 transition-all duration-300 lg:ml-72`}
       >
         {/* Mobile Toggle Button */}
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-black rounded-md shadow-md hover:bg-gray-800 transition"
+          className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-[var(--dash-charcoal)] rounded-md shadow-md hover:bg-[var(--dash-charcoal-deep)] transition"
           aria-label="Open menu"
         >
-          <Menu className="w-5 h-5 text-white" />
+          <Menu className="w-5 h-5 text-[var(--dash-gold)]" />
         </button>
 
         {/* Add top padding on mobile so content isn't hidden behind toggle */}
