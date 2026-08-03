@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import { env } from "./config/env.js";
 import { ensureUploadDirs, UPLOADS_ROOT } from "./utils/uploads.js";
 import { tryServeUploadFromBlob } from "./utils/imageStorage.js";
@@ -28,8 +29,12 @@ import filterRoutes from "./routes/filterRoutes.js";
 
 const app = express();
 
+// Behind Vercel / reverse proxies so req.ip (rate limits, etc.) is correct
+app.set("trust proxy", 1);
+
 ensureUploadDirs();
 
+app.use(helmet());
 app.use(
   cors({
     origin: env.corsOrigin,
