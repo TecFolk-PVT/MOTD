@@ -44,7 +44,7 @@ export default function AdminLayout({
         router.push(`/${locale}/auth/login`);
         return;
       }
-      if (user.role !== "sub-admin") {
+      if (user.role !== "sub-admin" && user.role !== "admin") {
         router.push("/");
       }
     }
@@ -60,7 +60,7 @@ export default function AdminLayout({
   }
 
   // ===================== REDIRECT FOR NON-ADMIN =====================
-  if (!user || user.role !== "sub-admin") {
+  if (!user || (user.role !== "sub-admin" && user.role !== "admin")) {
     return null;
   }
 
