@@ -1,6 +1,13 @@
 import app from "../backend/app.js";
 import { connectDB } from "../backend/db/connect.js";
 
+// Required so Stripe webhook signature verification receives the raw body on Vercel.
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 export default async function handler(req, res) {
   const url = req.url || "";
 

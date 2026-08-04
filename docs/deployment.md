@@ -103,6 +103,8 @@ In **Project → Settings → Environment Variables**, add these for **Productio
 |---|---|
 | `GOOGLE_CLIENT_ID` | Google sign-in (backend) |
 | `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Same Client ID (frontend) |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID (`G-…`); loads only after cookie consent |
+| `NEXT_PUBLIC_SITE_URL` | Canonical site URL for SEO (`https://your-domain.com`) |
 | `SMTP_HOST` | `smtp.gmail.com` |
 | `SMTP_PORT` | `587` |
 | `SMTP_SECURE` | `false` |
@@ -111,10 +113,28 @@ In **Project → Settings → Environment Variables**, add these for **Productio
 | `SMTP_FROM` | Gmail address |
 | `STRIPE_SECRET_KEY` | Stripe backend |
 | `STRIPE_PUBLISHABLE_KEY` | Stripe frontend (if needed) |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhooks |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret (see Stripe webhooks below) |
 | `BLOB_READ_WRITE_TOKEN` | Auto-set when Blob store is linked to the Vercel project |
 
 You do **not** need `NEXT_PUBLIC_API_URL` on Vercel — frontend and API share the same domain, so requests go to `/api/...` automatically.
+
+### Stripe webhooks (required for live card / Apple Pay)
+
+MOTD saves a **PendingCheckout** snapshot when a PaymentIntent is created. If the customer’s browser closes after Stripe charges them but before the order POST finishes, the webhook (or `/api/payments/reconcile`) still creates the order.
+
+1. Stripe Dashboard → **Developers → Webhooks → Add endpoint**
+2. URL: `https://your-app.vercel.app/api/payments/webhook`
+3. Events to send:
+   - `payment_intent.succeeded`
+   - `payment_intent.payment_failed`
+   - `charge.refunded` (optional logging)
+4. Copy the endpoint **Signing secret** → set `STRIPE_WEBHOOK_SECRET` on Vercel → redeploy
+
+**Local testing:**
+```bash
+stripe listen --forward-to localhost:5000/api/payments/webhook
+```
+Put the CLI `whsec_…` value into `backend/.env` as `STRIPE_WEBHOOK_SECRET`.
 
 ---
 

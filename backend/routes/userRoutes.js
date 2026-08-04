@@ -15,6 +15,7 @@ import {
   sendContactMessageEmail,
 } from "../services/emailService.js";
 import { createAdminNotificationForNewUser } from "../services/adminNotificationService.js";
+import { clearAuthCookie, setAuthCookie } from "../utils/authCookie.js";
 
 const userRouter = express.Router();
 const BCRYPT_ROUNDS = 10;
@@ -43,7 +44,8 @@ const linkGoogleToUser = (user, { googleId, name }) => {
   }
 };
 
-const sendUserResponse = (res, user) => {
+const sendUserResponse = (res, user, { isGuest = false } = {}) => {
+  setAuthCookie(res, generateToken(user, isGuest));
   res.send({
     _id: user._id,
     name: user.name,
@@ -55,7 +57,6 @@ const sendUserResponse = (res, user) => {
     isActive: user.isActive,
     authProvider: user.authProvider,
     hasPassword: Boolean(user.password),
-    token: generateToken(user),
   });
 };
 
@@ -105,6 +106,8 @@ userRouter.get(
       if (subAdmin) perms = subAdmin.perms || {};
     }
 
+    const isGuest = req.user?.isGuest || false;
+    setAuthCookie(res, generateToken(user, isGuest));
     res.json({
       _id: user._id,
       name: user.name,
@@ -117,9 +120,16 @@ userRouter.get(
       authProvider: user.authProvider,
       hasPassword: Boolean(user.password),
       perms,
-      isGuest: req.user?.isGuest || false,
-      token: generateToken(user, req.user?.isGuest || false),
+      isGuest,
     });
+  }),
+);
+
+userRouter.post(
+  "/logout",
+  expressAsyncHandler(async (_req, res) => {
+    clearAuthCookie(res);
+    res.json({ message: "Logged out" });
   }),
 );
 
@@ -161,6 +171,7 @@ userRouter.post(
       const subAdmin = await SubAdmin.findOne({ email });
       if (subAdmin) perms = subAdmin.perms || {};
     }
+    setAuthCookie(res, generateToken(user, isGuest));
     res.json({
       _id: user._id,
       name: user.name,
@@ -174,7 +185,6 @@ userRouter.post(
       hasPassword: Boolean(user.password),
       perms,
       isGuest,
-      token: generateToken(user, isGuest),
     });
   }),
 );

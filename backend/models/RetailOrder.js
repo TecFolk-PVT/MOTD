@@ -102,6 +102,15 @@ const retailOrderSchema = new mongoose.Schema(
 
 retailOrderSchema.index({ userId: 1, createdAt: -1 });
 retailOrderSchema.index({ status: 1, createdAt: -1 });
+retailOrderSchema.index(
+  { stripePaymentIntentId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      stripePaymentIntentId: { $type: "string", $gt: "" },
+    },
+  },
+);
 
 const RetailOrder = mongoose.model("RetailOrder", retailOrderSchema);
 

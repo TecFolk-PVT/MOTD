@@ -40,10 +40,12 @@ import {
   prepareRetailOrder,
   deductRetailProductStock,
 } from "../services/retailOrderService.js";
+import { isStripeConfigured } from "../services/stripeService.js";
 import {
-  isStripeConfigured,
-  verifyStripePaymentIntent,
-} from "../services/stripeService.js";
+  fulfillPaidCheckout,
+  savePendingCheckout,
+} from "../services/pendingCheckoutService.js";
+import { getCustomOrderTotalFromBody } from "../services/customPaidOrderService.js";
 
 const orderRoutes = express.Router();
 
@@ -420,27 +422,6 @@ async function getAddonsCost(addonIds = []) {
   return dbAddons.reduce((sum, item) => sum + item.price, 0);
 }
 
-async function getCustomOrderTotalFromBody(body) {
-  const { deliveryType = "delivery", addonIds = [] } = body;
-  const addonsCost = await getAddonsCost(addonIds);
-
-  if (isMultiItemPayload(body)) {
-    const orderInput = validateMultiItemOrderInput(body);
-    const { pricing } = await getMultiItemCustomOrderPricing({
-      ...orderInput,
-      deliveryType,
-    });
-    return applyAddonsToCustomOrderPricing(pricing, addonsCost).total;
-  }
-
-  const orderInput = validateFabricOrderInput(body);
-  const pricing = await getCustomOrderPricing({
-    ...orderInput,
-    deliveryType,
-  });
-  return applyAddonsToCustomOrderPricing(pricing, addonsCost).total;
-}
-
 orderRoutes.post("/custom/preview", async (req, res) => {
   try {
     const { deliveryType = "delivery", addonIds = [] } = req.body;
@@ -535,12 +516,7 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
       });
     }
 
-    let paymentDetails = {
-      isPaid: false,
-      paidAt: null,
-      stripePaymentIntentId: null,
-    };
-
+    // Online payments: shared idempotent path (client + webhook + reconcile)
     if (isStripePaymentMethod(paymentMethod)) {
       if (!isStripeConfigured()) {
         return res.status(503).json({
@@ -556,20 +532,44 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
         });
       }
 
-      const orderTotal = await getCustomOrderTotalFromBody(req.body);
-      await verifyStripePaymentIntent({
+      const {
+        paymentIntentId: _pi,
+        paymentMethod: _pm,
+        ...customPayload
+      } = req.body;
+
+      // Refresh snapshot in case address/measurements changed after PI create
+      const amountAed = await getCustomOrderTotalFromBody(customPayload);
+      await savePendingCheckout({
         paymentIntentId,
         userId: req.user._id,
         orderType: "custom",
-        expectedAmountAed: orderTotal,
+        amountAed,
+        payload: customPayload,
       });
 
-      paymentDetails = {
-        isPaid: true,
-        paidAt: new Date(),
-        stripePaymentIntentId: paymentIntentId,
-      };
+      const { order, created } = await fulfillPaidCheckout({
+        paymentIntentId,
+        paymentMethod,
+        fulfilledBy: "client",
+      });
+
+      return res.status(created ? 201 : 200).json({
+        success: true,
+        message: created
+          ? "Custom order created successfully"
+          : "Order already exists for this payment",
+        orderId: order._id,
+        order,
+      });
     }
+
+    // COD path below
+    let paymentDetails = {
+      isPaid: false,
+      paidAt: null,
+      stripePaymentIntentId: null,
+    };
 
     // Build conditional address based on deliveryType
     const deliveryAddr =
@@ -663,19 +663,6 @@ orderRoutes.post("/custom", isAuth, async (req, res) => {
         order,
       });
     }
-
-    console.log("POST /api/orders/custom payload (sanitized):", {
-      designId,
-      fabricSource,
-      fabricId,
-      fabricMeters,
-      paymentMethod,
-      deliveryType,
-      customerDeliveryAddressKeys: customerDeliveryAddress
-        ? Object.keys(customerDeliveryAddress)
-        : null,
-      pickupAddressProvided: Boolean(pickupAddress),
-    });
 
     const orderInput = validateFabricOrderInput({
       designId,
@@ -903,15 +890,6 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
       });
     }
 
-    const prepared = await prepareRetailOrder(orderItems);
-
-    let paymentDetails = {
-      isPaid: false,
-      paidAt: null,
-      stripePaymentIntentId: null,
-    };
-    let orderStatus = "pending";
-
     if (isStripePaymentMethod(paymentMethod)) {
       if (!isStripeConfigured()) {
         return res.status(503).json({
@@ -927,20 +905,33 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
         });
       }
 
-      await verifyStripePaymentIntent({
+      const prepared = await prepareRetailOrder(orderItems);
+      await savePendingCheckout({
         paymentIntentId,
         userId: req.user._id,
         orderType: "retail",
-        expectedAmountAed: prepared.totalPrice,
+        amountAed: prepared.totalPrice,
+        payload: { orderItems, shippingAddress },
       });
 
-      paymentDetails = {
-        isPaid: true,
-        paidAt: new Date(),
-        stripePaymentIntentId: paymentIntentId,
-      };
-      orderStatus = "confirmed";
+      const { order, created } = await fulfillPaidCheckout({
+        paymentIntentId,
+        paymentMethod,
+        fulfilledBy: "client",
+      });
+
+      return res.status(created ? 201 : 200).json({
+        success: true,
+        message: created
+          ? "Order created successfully"
+          : "Order already exists for this payment",
+        orderId: order._id,
+        order,
+      });
     }
+
+    // COD path
+    const prepared = await prepareRetailOrder(orderItems);
 
     await deductRetailProductStock(orderItems);
 
@@ -954,18 +945,17 @@ orderRoutes.post("/retail", isAuth, async (req, res) => {
       vatRate: prepared.vatRate,
       vatAmount: prepared.vatAmount,
       totalPrice: prepared.totalPrice,
-      status: orderStatus,
-      ...paymentDetails,
+      status: "pending",
+      isPaid: false,
+      paidAt: null,
+      stripePaymentIntentId: null,
     });
 
-    // Notify admins about ready-made order placement
     const customerName = req.user?.name || "Customer";
     const itemNames = (prepared.finalOrderItems || [])
       .map((i) => i?.name)
       .filter(Boolean);
 
-    // Friendly message format required by UI:
-    // "{name} has placed order for {item name} for AED {price}"
     const message = `${customerName} has placed order for ${itemNames.join(", ")} for AED ${Number(
       prepared.totalPrice,
     ).toFixed(2)}`;
