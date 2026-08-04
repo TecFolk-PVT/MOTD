@@ -10,16 +10,18 @@ import type { Locale } from "@/i18n/routing";
 import {
   type FabricDetailItem,
   formatMaterialLabel,
-  formatPricePerMeter,
+  formatPriceWithUnit,
+  formatStockDisplay,
   getFabricDisplayFields,
 } from "@/lib/fabrics";
+import { useMeasurementUnit } from "@/hooks/useMeasurementUnit";
 import { Share2 } from "lucide-react";
 import StoreAttribution from "@/components/fabric/StoreAttribution";
 import { resolveMediaUrl } from "@/lib/media";
-import { COLOR_OPTIONS } from "@/lib/createFabricAdmin";
 import ZoomImageEffect from "../shared/ZoomImageEffect";
 import { useCart } from "@/context/CartContext";
 import { useWishlist } from "@/context/WishlistContext";
+import colors from "../shared/colors";
 
 type FabricDetailViewProps = {
   fabric: FabricDetailItem;
@@ -42,7 +44,8 @@ export default function FabricDetailView({
   locale,
   labels,
 }: FabricDetailViewProps) {
-  const { title, description } = getFabricDisplayFields(fabric, locale);
+const { title, description } = getFabricDisplayFields(fabric, locale);
+  const { unit, formatLength } = useMeasurementUnit();
   const router = useRouter();
   const { addItem: addToCart } = useCart();
   const {
@@ -72,7 +75,7 @@ export default function FabricDetailView({
         price: fabric.pricePerMeter,
         size: "Per Meter",
         maxStock: fabric.stockInMeters,
-        type: "fabric"
+        type: "fabric",
       });
     }
   };
@@ -362,8 +365,8 @@ export default function FabricDetailView({
                     </svg>
                   </button>
                 </div>
-                <p className="[font-family:var(--font-ui)] text-2xl text-black font-medium">
-                  {formatPricePerMeter(fabric.pricePerMeter, locale)}
+<p className="[font-family:var(--font-ui)] text-2xl text-black font-medium">
+                  {formatPriceWithUnit(fabric.pricePerMeter, unit, locale)}
                 </p>
               </motion.div>
 
@@ -401,7 +404,7 @@ export default function FabricDetailView({
                     {fabric.color && fabric.color.length > 0 ? (
                       <>
                         {fabric.color.slice(0, 6).map((color, index) => {
-                          const colorObj = COLOR_OPTIONS.find(
+                          const colorObj = colors.find(
                             (c: any) =>
                               c.value.toLowerCase() === color.toLowerCase(),
                           );
@@ -451,19 +454,26 @@ export default function FabricDetailView({
                   <div className="flex gap-3 flex-wrap">
                     {fabric.variations.map((v) => {
                       const isActive = v._id === fabric._id;
-                      const vTitle = locale === "ar" ? v.nameAr || v.name : v.name;
-                      const imageSrc = resolveMediaUrl(v.images?.[0]) || "/images/placeholder-fabric.jpg";
+                      const vTitle =
+                        locale === "ar" ? v.nameAr || v.name : v.name;
+                      const imageSrc =
+                        resolveMediaUrl(v.images?.[0]) ||
+                        "/images/placeholder-fabric.jpg";
                       return (
                         <Link
                           key={v._id}
                           href={`/fabrics/${v.slug}`}
                           className={`group block w-16 sm:w-20 text-center transition-all ${
-                            isActive ? "opacity-100 pointer-events-none" : "opacity-60 hover:opacity-100"
+                            isActive
+                              ? "opacity-100 pointer-events-none"
+                              : "opacity-60 hover:opacity-100"
                           }`}
                         >
                           <div
                             className={`w-16 h-16 sm:w-20 sm:h-20 overflow-hidden rounded-sm border-2 ${
-                              isActive ? "border-black" : "border-transparent group-hover:border-black/30"
+                              isActive
+                                ? "border-black"
+                                : "border-transparent group-hover:border-black/30"
                             } transition`}
                           >
                             <img
@@ -533,16 +543,19 @@ export default function FabricDetailView({
                     </span>
                     <p
                       className={`[font-family:var(--font-body)] text-[14px] font-medium ${
-                        fabric.stockInMeters > 0 ? "text-green-700" : "text-red-600"
+                        fabric.stockInMeters > 0
+                          ? "text-green-700"
+                          : "text-red-600"
                       }`}
                     >
-                      {fabric.stockInMeters > 0
-                        ? locale === "ar"
-                          ? `متوفر في المخزون (${fabric.stockInMeters} متر)`
-                          : `In stock (${fabric.stockInMeters} meters)`
+{fabric.stockInMeters > 0
+                        ? `In stock (${formatStockDisplay(
+                            fabric.stockInMeters,
+                            unit,
+                          )})`
                         : locale === "ar"
-                        ? "نفذت الكمية"
-                        : "Out of stock"}
+                          ? "نفذت الكمية"
+                          : "Out of stock"}
                     </p>
                   </div>
 
@@ -560,14 +573,21 @@ export default function FabricDetailView({
                         {quantity}
                       </span>
                       <button
-                        onClick={() => setQuantity((q) => Math.min(fabric.stockInMeters, q + 1))}
+                        onClick={() =>
+                          setQuantity((q) =>
+                            Math.min(fabric.stockInMeters, q + 1),
+                          )
+                        }
                         className="w-8 h-8 border border-gray-300 rounded flex items-center justify-center transition hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
-                        disabled={fabric.stockInMeters < 1 || quantity >= fabric.stockInMeters}
+                        disabled={
+                          fabric.stockInMeters < 1 ||
+                          quantity >= fabric.stockInMeters
+                        }
                       >
                         <span className="text-lg">+</span>
                       </button>
-                      <span className="text-[10px] text-gray-500 uppercase tracking-wider font-ui shrink-0">
-                        {locale === "ar" ? "متر" : "Meters"}
+<span className="text-[10px] text-gray-500 uppercase tracking-wider font-ui shrink-0">
+                        {unit === "wara" ? "Wara" : locale === "ar" ? "متر" : "Meters"}
                       </span>
                     </div>
                     <button

@@ -134,7 +134,10 @@ export default function EditFabricPage() {
       toast.success("Fabric updated successfully");
       router.push("/admin/fabrics");
     } catch (err: unknown) {
-      const message = getApiErrorMessage(err, t.adminFabrics.errors.update_failed);
+      const message = getApiErrorMessage(
+        err,
+        t.adminFabrics.errors.update_failed,
+      );
       setError(message);
       toast.error(message);
     } finally {
@@ -195,11 +198,11 @@ export default function EditFabricPage() {
           onRemoveImage={removeImageField}
         />
 
-        <div className="flex gap-3 pt-6 mt-4 border-t border-gray-100">
+        <div className="flex flex-col-reverse sm:flex-row-reverse gap-2 sm:gap-3 pt-6 mt-4 border-t border-gray-100">
           <button
             type="submit"
             disabled={submitting}
-            className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 cursor-pointer"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 hover:cursor-pointer text-sm"
           >
             {submitting
               ? t.adminFabrics.edit.submitting
@@ -208,7 +211,7 @@ export default function EditFabricPage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition cursor-pointer"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition hover:cursor-pointer text-sm"
           >
             {t.adminFabrics.form.cancel_button}
           </button>

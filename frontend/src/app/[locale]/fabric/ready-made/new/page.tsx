@@ -13,125 +13,9 @@ import {
 } from "@/lib/readyMadeAdmin";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import colors from "@/components/shared/colors";
 
-// Predefined tag and color options
-const TAG_OPTIONS = [
-  { value: "new", en: "New", ar: "جديد" },
-  { value: "bestseller", en: "Bestseller", ar: "الأكثر مبيعاً" },
-  { value: "premium", en: "Premium", ar: "ممتاز" },
-  { value: "limited", en: "Limited", ar: "محدود" },
-  { value: "exclusive", en: "Exclusive", ar: "حصري" },
-  { value: "trending", en: "Trending", ar: "رائج" },
-  { value: "handmade", en: "Handmade", ar: "يدوي" },
-];
-
-const COLOR_OPTIONS = [
-  { value: "aqua", en: "Aqua", ar: "أزرق مائي" },
-  { value: "aquamarine", en: "Aquamarine", ar: "أزرق بحري" },
-  { value: "beige", en: "Beige", ar: "بيج" },
-  { value: "bisque", en: "Bisque", ar: "بسكويتي" },
-  { value: "black", en: "Black", ar: "أسود" },
-  { value: "blue", en: "Blue", ar: "أزرق" },
-  { value: "blueviolet", en: "Blue Violet", ar: "بنفسجي مزرق" },
-  { value: "brown", en: "Brown", ar: "بني" },
-  { value: "burlywood", en: "Burlywood", ar: "بني فاتح" },
-  { value: "cadetblue", en: "Cadet Blue", ar: "أزرق كاديت" },
-  { value: "chocolate", en: "Chocolate", ar: "شوكولاتة" },
-  { value: "coral", en: "Coral", ar: "مرجاني" },
-  { value: "cornflowerblue", en: "Cornflower Blue", ar: "أزرق ردة الذرة" },
-  { value: "cornsilk", en: "Cornsilk", ar: "حرير الذرة" },
-  { value: "crimson", en: "Crimson", ar: "قرمزي" },
-  { value: "cyan", en: "Cyan", ar: "سيان" },
-  { value: "darkblue", en: "Dark Blue", ar: "أزرق غامق" },
-  { value: "darkcyan", en: "Dark Cyan", ar: "سيان غامق" },
-  { value: "darkgoldenrod", en: "Dark Goldenrod", ar: "ذهبي غامق" },
-  { value: "darkgray", en: "Dark Gray", ar: "رمادي غامق" },
-  { value: "darkgreen", en: "Dark Green", ar: "أخضر غامق" },
-  { value: "darkkhaki", en: "Dark Khaki", ar: "كاكي غامق" },
-  { value: "darkmagenta", en: "Dark Magenta", ar: "أرجواني غامق" },
-  { value: "darkorchid", en: "Dark Orchid", ar: "أوركيد غامق" },
-  { value: "darkred", en: "Dark Red", ar: "أحمر غامق" },
-  { value: "darksalmon", en: "Dark Salmon", ar: "سلمون غامق" },
-  { value: "darkseagreen", en: "Dark Sea Green", ar: "أخضر بحري غامق" },
-  { value: "darkslateblue", en: "Dark Slate Blue", ar: "أزرق أردوازي غامق" },
-  { value: "darkslategray", en: "Dark Slate Gray", ar: "رمادي أردوازي غامق" },
-  { value: "darkturquoise", en: "Dark Turquoise", ar: "فيروزي غامق" },
-  { value: "darkviolet", en: "Dark Violet", ar: "بنفسجي غامق" },
-  { value: "deeppink", en: "Deep Pink", ar: "وردي غامق" },
-  { value: "deepskyblue", en: "Deep Sky Blue", ar: "أزرق سماوي غامق" },
-  { value: "dimgray", en: "Dim Gray", ar: "رمادي خافت" },
-  { value: "dodgerblue", en: "Dodger Blue", ar: "أزرق دودجر" },
-  { value: "firebrick", en: "Firebrick", ar: "أحمر طوب" },
-  { value: "fuchsia", en: "Fuchsia", ar: "فوشيا" },
-  { value: "gainsboro", en: "Gainsboro", ar: "رمادي فاتح" },
-  { value: "gold", en: "Gold", ar: "ذهبي" },
-  { value: "goldenrod", en: "Goldenrod", ar: "ذهبي محمر" },
-  { value: "gray", en: "Gray", ar: "رمادي" },
-  { value: "green", en: "Green", ar: "أخضر" },
-  { value: "greenyellow", en: "Green Yellow", ar: "أصفر مخضر" },
-  { value: "grey", en: "Grey", ar: "رمادي" },
-  { value: "hotpink", en: "Hot Pink", ar: "وردي ساخن" },
-  { value: "indianred", en: "Indian Red", ar: "أحمر هندي" },
-  { value: "indigo", en: "Indigo", ar: "نيلي" },
-  { value: "ivory", en: "Ivory", ar: "عاجي" },
-  { value: "khaki", en: "Khaki", ar: "كاكي" },
-  { value: "lavender", en: "Lavender", ar: "لافندر" },
-  { value: "lightblue", en: "Light Blue", ar: "أزرق فاتح" },
-  { value: "lightgray", en: "Light Gray", ar: "رمادي فاتح" },
-  { value: "lightgreen", en: "Light Green", ar: "أخضر فاتح" },
-  { value: "lightpink", en: "Light Pink", ar: "وردي فاتح" },
-  { value: "lightsalmon", en: "Light Salmon", ar: "سلمون فاتح" },
-  { value: "lightseagreen", en: "Light Sea Green", ar: "أخضر بحري فاتح" },
-  { value: "lightskyblue", en: "Light Sky Blue", ar: "أزرق سماوي فاتح" },
-  { value: "lightslategray", en: "Light Slate Gray", ar: "رمادي أردوازي فاتح" },
-  { value: "lightsteelblue", en: "Light Steel Blue", ar: "أزرق فولاذي فاتح" },
-  { value: "maroon", en: "Maroon", ar: "كستنائي" },
-  { value: "mediumblue", en: "Medium Blue", ar: "أزرق متوسط" },
-  { value: "mediumpurple", en: "Medium Purple", ar: "بنفسجي متوسط" },
-  { value: "mediumseagreen", en: "Medium Sea Green", ar: "أخضر بحري متوسط" },
-  { value: "mediumslate" + "blue", en: "Medium Slate Blue", ar: "أزرق أردوازي متوسط" },
-  { value: "mediumturquoise", en: "Medium Turquoise", ar: "فيروزي متوسط" },
-  { value: "mediumviolet" + "red", en: "Medium Violet Red", ar: "أحمر بنفسجي متوسط" },
-  { value: "midnightblue", en: "Midnight Blue", ar: "أزرق منتصف الليل" },
-  { value: "moccasin", en: "Moccasin", ar: "موكاسين" },
-  { value: "navy", en: "Navy Blue", ar: "كحلي" },
-  { value: "olive", en: "Olive", ar: "زيتوني" },
-  { value: "olivedrab", en: "Olive Drab", ar: "زيتوني باهت" },
-  { value: "orange", en: "Orange", ar: "برتقالي" },
-  { value: "orchid", en: "Orchid", ar: "أوركيد" },
-  { value: "palegoldenrod", en: "Pale Goldenrod", ar: "ذهبي باهت" },
-  { value: "palegreen", en: "Pale Green", ar: "أخضر باهت" },
-  { value: "paleturquoise", en: "Pale Turquoise", ar: "فيروزي باهت" },
-  { value: "paleviolet" + "red", en: "Pale Violet Red", ar: "أحمر بنفسجي باهت" },
-  { value: "peachpuff", en: "Peach Puff", ar: "خوخي" },
-  { value: "pink", en: "Pink", ar: "وردي" },
-  { value: "plum", en: "Plum", ar: "برقوقي" },
-  { value: "powderblue", en: "Powder Blue", ar: "أزرق بودرة" },
-  { value: "purple", en: "Purple", ar: "بنفسجي" },
-  { value: "rebeccapurple", en: "Rebecca Purple", ar: "بنفسجي ريبيكا" },
-  { value: "red", en: "Red", ar: "أحمر" },
-  { value: "rosybrown", en: "Rosy Brown", ar: "بني وردي" },
-  { value: "royalblue", en: "Royal Blue", ar: "أزرق ملكي" },
-  { value: "saddlebrown", en: "Saddle Brown", ar: "بني السرج" },
-  { value: "salmon", en: "Salmon", ar: "سلمون" },
-  { value: "sandybrown", en: "Sandy Brown", ar: "بني رملي" },
-  { value: "seagreen", en: "Sea Green", ar: "أخضر بحري" },
-  { value: "silver", en: "Silver", ar: "فضي" },
-  { value: "skyblue", en: "Sky Blue", ar: "أزرق سماوي" },
-  { value: "slateblue", en: "Slate Blue", ar: "أزرق أردوازي" },
-  { value: "slategray", en: "Slate Gray", ar: "رمادي أردوازي" },
-  { value: "steelblue", en: "Steel Blue", ar: "أزرق فولاذي" },
-  { value: "tan", en: "Tan", ar: "سمراء" },
-  { value: "teal", en: "Teal", ar: "بطي" },
-  { value: "thistle", en: "Thistle", ar: "شوكي" },
-  { value: "tomato", en: "Tomato", ar: "طماطمي" },
-  { value: "turquoise", en: "Turquoise", ar: "فيروزي" },
-  { value: "violet", en: "Violet", ar: "بنفسجي" },
-  { value: "wheat", en: "Wheat", ar: "قمحي" },
-  { value: "white", en: "White", ar: "أبيض" },
-  { value: "yellow", en: "Yellow", ar: "أصفر" },
-  { value: "yellowgreen", en: "Yellow Green", ar: "أصفر مخضر" },
-];
+const COLOR_OPTIONS = colors;
 
 const sanitizeName = (value: string) =>
   value.replace(/[^a-zA-Z\u0600-\u06FF\s\-']/g, "");
@@ -159,27 +43,41 @@ export default function NewReadyMadePage() {
   const [allFabrics, setAllFabrics] = useState<any[]>([]);
   const [tailorShops, setTailorShops] = useState<any[]>([]);
   const [allDesigns, setAllDesigns] = useState<any[]>([]);
+  const [dbTags, setDbTags] = useState<
+    { name: string; nameAr: string; _id: string }[]
+  >([]);
+  const [tagsLoading, setTagsLoading] = useState(true);
 
   // Load dropdown data
   useEffect(() => {
     const loadDropdownData = async () => {
       try {
-        const [shopRes, fabricsRes, tailorsRes, designsRes] =
+        const [shopRes, fabricsRes, tailorsRes, designsRes, tagsRes] =
           await Promise.all([
             api.get<{ success: boolean; item: any }>("/api/fabric/shop"),
             api.get<{ success: boolean; items: any[] }>("/api/fabric/fabrics"),
             api.get<{ success: boolean; items: any[] }>("/api/tailors"),
-            api.get<{ success: boolean; items: any[] }>("/api/tailors/designs/all"),
+            api.get<{ success: boolean; items: any[] }>(
+              "/api/tailors/designs/all",
+            ),
+            api.get<{ name: string; nameAr: string; _id: string }[]>(
+              "/api/filters/tags",
+            ),
           ]);
-        
+
         const shopId = shopRes.item?._id || "";
         setFormData((prev) => ({ ...prev, fabricShopId: shopId }));
-        
+
         setAllFabrics(fabricsRes.items || fabricsRes || []);
         setTailorShops(tailorsRes.items || []);
         setAllDesigns(designsRes.items || []);
+        if (Array.isArray(tagsRes) && tagsRes.length > 0) {
+          setDbTags(tagsRes);
+        }
       } catch (err) {
         toast.error("Failed to load store or catalog data for dropdowns");
+      } finally {
+        setTagsLoading(false);
       }
     };
     loadDropdownData();
@@ -200,6 +98,13 @@ export default function NewReadyMadePage() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Tag options - from DB only
+  const tagOptionsEn = dbTags.map((t) => ({
+    value: t.name,
+    label: t.name,
+    arLabel: t.nameAr || t.name,
+  }));
 
   const handleChange = (field: keyof ReadyMadeFormData, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -320,21 +225,21 @@ export default function NewReadyMadePage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-0">
       <div>
-        <h1 className="text-2xl md:text-3xl font-light text-black tracking-tight">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-light text-black tracking-tight">
           Create Ready-to-Wear
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">
           Add a new ready-made piece to your store inventory
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* NAME */}
           <FormField
             label="Name (ENG)"
@@ -346,7 +251,7 @@ export default function NewReadyMadePage() {
               value={formData.name}
               onChange={(e) => handleNameChange("name", e.target.value)}
               placeholder="Chiffon Silk Mukhawar"
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start text-xs sm:text-sm hover:cursor-text"
             />
           </FormField>
 
@@ -361,29 +266,39 @@ export default function NewReadyMadePage() {
               value={formData.nameAr}
               onChange={(e) => handleNameChange("nameAr", e.target.value)}
               placeholder="مخاوير شيفون حرير"
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end text-xs sm:text-sm hover:cursor-text"
             />
           </FormField>
 
           {/* DESCRIPTION (EN) */}
           <FormField label="Description">
             <textarea
-              rows={2}
+              rows={1}
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
               placeholder="Buy our Premium Mukhawar ...."
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent resize-none overflow-hidden leading-[1.6] text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent resize-none overflow-hidden leading-[1.6] text-xs sm:text-sm hover:cursor-text min-h-10"
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = target.scrollHeight + "px";
+              }}
             />
           </FormField>
 
           {/* DESCRIPTION (AR) */}
           <FormField label="Description (AR)">
             <textarea
-              rows={2}
+              rows={1}
               value={formData.descriptionAr}
               onChange={(e) => handleChange("descriptionAr", e.target.value)}
               placeholder="... اشترِ مخورنا الفاخر"
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent resize-none overflow-hidden leading-[1.6] text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent resize-none overflow-hidden leading-[1.6] text-xs sm:text-sm hover:cursor-text min-h-10"
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = target.scrollHeight + "px";
+              }}
             />
           </FormField>
 
@@ -393,7 +308,7 @@ export default function NewReadyMadePage() {
               value={formData.code}
               onChange={(e) => handleChange("code", e.target.value)}
               placeholder="0000"
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-xs sm:text-sm hover:cursor-text"
             />
           </FormField>
 
@@ -412,7 +327,7 @@ export default function NewReadyMadePage() {
               onChange={(e) =>
                 handleNumberChange("availableFabricStock", e.target.value)
               }
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-xs sm:text-sm hover:cursor-text"
             />
           </FormField>
 
@@ -426,7 +341,7 @@ export default function NewReadyMadePage() {
             <select
               value={formData.fabricId}
               onChange={(e) => handleChange("fabricId", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-xs sm:text-sm"
               disabled={!formData.fabricShopId}
             >
               <option value="">Select Fabric</option>
@@ -449,9 +364,9 @@ export default function NewReadyMadePage() {
               onChange={(e) => {
                 const shopId = e.target.value;
                 handleChange("tailorShopId", shopId);
-                handleChange("designId", ""); // Reset selected design
+                handleChange("designId", "");
               }}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-xs sm:text-sm"
             >
               <option value="">Select Tailor Shop</option>
               {tailorShops.map((shop) => (
@@ -471,7 +386,7 @@ export default function NewReadyMadePage() {
             <select
               value={formData.designId}
               onChange={(e) => handleChange("designId", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-xs sm:text-sm"
               disabled={!formData.tailorShopId}
             >
               <option value="">Select Design</option>
@@ -513,42 +428,42 @@ export default function NewReadyMadePage() {
                   }
                 }
               }}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-sm"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-xs sm:text-sm hover:cursor-text"
             />
           </FormField>
 
           {/* FABRIC WIDTH – radio buttons */}
           <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+            <label className="block text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 mb-2">
               Fabric Width
             </label>
-            <div className="flex gap-6 text-sm">
-              <label className="flex items-center gap-2">
+            <div className="flex gap-4 sm:gap-6 text-xs sm:text-sm">
+              <label className="flex items-center gap-1.5 sm:gap-2 hover:cursor-pointer">
                 <input
                   type="radio"
                   name="fabricWidth"
                   value="single"
                   checked={fabricWidth === "single"}
                   onChange={() => setFabricWidth("single")}
-                  className="accent-black"
+                  className="accent-black hover:cursor-pointer w-3.5 h-3.5 sm:w-4 sm:h-4"
                 />
-                Single Width
+                <span className="hover:cursor-pointer">Single Width</span>
               </label>
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-1.5 sm:gap-2 hover:cursor-pointer">
                 <input
                   type="radio"
                   name="fabricWidth"
                   value="double"
                   checked={fabricWidth === "double"}
                   onChange={() => setFabricWidth("double")}
-                  className="accent-black"
+                  className="accent-black hover:cursor-pointer w-3.5 h-3.5 sm:w-4 sm:h-4"
                 />
-                Double Width
+                <span className="hover:cursor-pointer">Double Width</span>
               </label>
             </div>
           </div>
 
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <FormField
               label="Fabric Price AED"
               error={fieldErrors.fabricPriceAED}
@@ -562,7 +477,7 @@ export default function NewReadyMadePage() {
                 onChange={(e) =>
                   handleNumberChange("fabricPriceAED", e.target.value)
                 }
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-sm"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-xs sm:text-sm hover:cursor-text"
               />
             </FormField>
 
@@ -579,7 +494,7 @@ export default function NewReadyMadePage() {
                 onChange={(e) =>
                   handleNumberChange("mukhawarPriceAED", e.target.value)
                 }
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-sm"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-xs sm:text-sm hover:cursor-text"
               />
             </FormField>
 
@@ -597,23 +512,23 @@ export default function NewReadyMadePage() {
                 onChange={(e) =>
                   handleNumberChange("finalSellingPriceAED", e.target.value)
                 }
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-sm"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-xs sm:text-sm hover:cursor-text"
               />
             </FormField>
           </div>
 
-          {/* TAG + Color in one line (md+) */}
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* TAG + Color */}
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
             <FormField label="Tag (ENG)" name="tag">
               <select
                 value={formData.tag}
                 onChange={(e) => handleChange("tag", e.target.value)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent text-sm"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent text-xs sm:text-sm hover:cursor-pointer"
               >
                 <option value="">Select tag</option>
-                {TAG_OPTIONS.map((opt) => (
+                {tagOptionsEn.map((opt) => (
                   <option key={opt.value} value={opt.value}>
-                     {opt.en}
+                    {opt.label}
                   </option>
                 ))}
               </select>
@@ -623,12 +538,12 @@ export default function NewReadyMadePage() {
               <select
                 value={formData.tagAr}
                 onChange={(e) => handleChange("tagAr", e.target.value)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent text-sm"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent text-xs sm:text-sm hover:cursor-pointer"
               >
                 <option value="">اختر الوسم</option>
-                {TAG_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.ar}
+                {tagOptionsEn.map((opt) => (
+                  <option key={opt.value} value={opt.arLabel}>
+                    {opt.arLabel}
                   </option>
                 ))}
               </select>
@@ -639,14 +554,14 @@ export default function NewReadyMadePage() {
                 <button
                   type="button"
                   onClick={() => setColorsOpen((prev) => !prev)}
-                  className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center"
+                  className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center hover:cursor-pointer"
                 >
                   {formData.colors.length === 0 ? (
-                    <span className="text-xs text-black/60 leading-none">
+                    <span className="text-[10px] sm:text-xs text-black/60 leading-none">
                       Select colors
                     </span>
                   ) : (
-                    <div className="flex flex-wrap gap-2 items-center">
+                    <div className="flex flex-wrap gap-1 sm:gap-1.5 items-center">
                       {COLOR_OPTIONS.filter((c) =>
                         formData.colors.includes(c.value),
                       ).map((c) => (
@@ -656,8 +571,8 @@ export default function NewReadyMadePage() {
                           title={c.en}
                         >
                           <span
-                            className="w-5 h-5 rounded-full border border-gray-200"
-                            style={{ background: c.value }}
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-gray-200 shrink-0"
+                            style={{ background: c.hex }}
                           />
                         </span>
                       ))}
@@ -666,30 +581,28 @@ export default function NewReadyMadePage() {
                 </button>
 
                 {colorsOpen && (
-                  <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3 z-50">
-                    <div className="max-h-44 overflow-auto flex flex-col gap-2">
+                  <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-1.5 sm:p-3 z-50 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full">
+                    <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-2 sm:gap-1">
                       {COLOR_OPTIONS.map((opt) => {
                         const selected = formData.colors.includes(opt.value);
-
                         return (
                           <label
                             key={opt.value}
-                            className="flex items-center gap-2 cursor-pointer text-sm"
+                            className="flex items-center gap-1 sm:gap-1.5 cursor-pointer px-1 py-0.5 hover:bg-gray-50 rounded hover:cursor-pointer"
                           >
                             <input
                               type="checkbox"
                               checked={selected}
                               onChange={() => toggleColor(opt.value)}
-                              className="accent-black"
+                              className="accent-black w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 hover:cursor-pointer"
                             />
-
-                            <span className="inline-flex items-center gap-2">
+                            <span className="inline-flex items-center gap-1 sm:gap-1.5 min-w-0">
                               <span
-                                className="w-4 h-4 rounded-full border border-gray-200"
-                                style={{ background: opt.value }}
+                                className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full border border-gray-200 shrink-0"
+                                style={{ background: opt.hex }}
                               />
-                              <span className="text-xs">
-                                {opt.en} / {opt.ar}
+                              <span className="text-[8px] sm:text-[10px] lg:text-xs truncate hover:cursor-pointer">
+                                {localeParam === "ar" ? opt.ar : opt.en}
                               </span>
                             </span>
                           </label>
@@ -702,26 +615,25 @@ export default function NewReadyMadePage() {
             </FormField>
 
             {/* USER (OWNER) */}
-            <FormField
-              label="User"
-              name="ownerName"
-            >
+            <FormField label="User" name="ownerName">
               <input
                 value={userName}
                 disabled
                 readOnly
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-gray-50 text-gray-500 cursor-not-allowed text-start"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-gray-50 text-gray-500 cursor-not-allowed text-start text-xs sm:text-sm"
               />
             </FormField>
           </div>
 
           {/* IMAGES */}
           <div className="md:col-span-2">
-            <div className="mb-2 text-xs uppercase tracking-widest text-gray-500">
+            <div className="mb-2 text-[10px] sm:text-xs uppercase tracking-widest text-gray-500">
               Images (max 5) *
             </div>
             {fieldErrors.images && (
-              <p className="text-red-500 text-sm mb-2">{fieldErrors.images}</p>
+              <p className="text-red-500 text-xs sm:text-sm mb-2">
+                {fieldErrors.images}
+              </p>
             )}
 
             {formData.images.map((img, idx) => (
@@ -739,7 +651,7 @@ export default function NewReadyMadePage() {
                   <button
                     type="button"
                     onClick={() => removeImage(idx)}
-                    className="text-xs text-red-500 mt-1"
+                    className="text-[10px] sm:text-xs text-red-500 mt-1 hover:cursor-pointer"
                   >
                     Remove
                   </button>
@@ -751,7 +663,7 @@ export default function NewReadyMadePage() {
               <button
                 type="button"
                 onClick={addImage}
-                className="text-xs underline cursor-pointer"
+                className="text-[10px] sm:text-xs underline hover:cursor-pointer"
               >
                 + Add Image
               </button>
@@ -760,11 +672,11 @@ export default function NewReadyMadePage() {
         </div>
 
         {/* SUBMIT */}
-        <div className="flex gap-3 pt-6 mt-3 border-t border-gray-100 text-sm">
+        <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-6 mt-3 border-t border-gray-100 text-sm">
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-black text-white rounded-lg hover:cursor-pointer disabled:opacity-50"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-black text-white rounded-lg hover:cursor-pointer hover:bg-gray-800 transition disabled:opacity-50 text-xs sm:text-sm"
           >
             {loading ? "Saving..." : "Create Product"}
           </button>
@@ -772,7 +684,7 @@ export default function NewReadyMadePage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:cursor-pointer"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 border border-gray-300 rounded-lg hover:cursor-pointer hover:bg-gray-50 transition text-xs sm:text-sm"
           >
             Cancel
           </button>

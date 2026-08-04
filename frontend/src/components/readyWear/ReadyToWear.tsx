@@ -14,6 +14,7 @@ import {
 } from "@/lib/readyMade";
 import WishlistButton from "../shared/wishlistButton";
 import { Share2 } from "lucide-react";
+import { useMeasurementUnit } from "@/hooks/useMeasurementUnit";
 
 const TAG_COLORS: Record<string, { bg: string; text: string }> = {
   new: { bg: "#2D5A3D", text: "#FFFFFF" },
@@ -35,6 +36,7 @@ export function ReadyToWearSection() {
   const params = useParams();
   const locale = params.locale === "ar" ? "ar" : "en";
   const t = getTranslation(locale);
+  const { isWara, formatLength } = useMeasurementUnit();
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const [products, setProducts] = useState<ReadyMadeListItem[]>([]);
@@ -352,7 +354,7 @@ export function ReadyToWearSection() {
                               image: image,
                               price: item.finalSellingPriceAED || 0,
                               slug: item.slug,
-                              size: String(item.metersPerFabric ?? ""),
+                              size: formatLength(item.metersPerFabric),
                               type: "readyMade",
                               quantity: 1,
                               ...(Number.isFinite(item.availableFabricStock)

@@ -11,13 +11,14 @@ import {
   type FabricFilter,
   type FabricListItem,
   filterFabricsByMaterial,
-  formatPricePerMeter,
+  formatPriceWithUnit,
   getFabricDisplayFields,
 } from "@/lib/fabrics";
 import { resolveMediaUrl } from "@/lib/media";
 import { Share2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import WishlistButton from "../shared/wishlistButton";
+import { useMeasurementUnit } from "@/hooks/useMeasurementUnit";
 
 async function copyToClipboard(text: string) {
   if (typeof navigator === "undefined") return;
@@ -61,6 +62,7 @@ export function PremiumFabrics() {
   const params = useParams();
 
   const locale = params.locale === "ar" ? "ar" : "en";
+  const { unit } = useMeasurementUnit();
 
   const [fabrics, setFabrics] = useState<FabricListItem[]>([]);
   const [materials, setMaterials] = useState<MaterialOption[]>([]);
@@ -439,7 +441,11 @@ export function PremiumFabrics() {
                               {title}
                             </h3>
                             <span className="[font-family:var(--font-ui)] text-[12px] xs:text-[13px] sm:text-[14px] md:text-[13px] lg:text-[14px] xl:text-[15px] 2xl:text-[16px] tracking-[0.24em] text-black font-normal whitespace-nowrap">
-                              {formatPricePerMeter(item.pricePerMeter, locale)}
+{formatPriceWithUnit(
+                                item.pricePerMeter,
+                                unit,
+                                locale,
+                              )}
                             </span>
                           </div>
 

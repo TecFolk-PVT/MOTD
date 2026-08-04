@@ -18,6 +18,11 @@ import {
   Eye,
   Image as ImageIcon,
   MoreVertical,
+  DollarSign,
+  Box,
+  Tag,
+  Store,
+  MapPin,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { ConfirmationModal } from "@/components/shared/ConfirmationModal";
@@ -59,6 +64,7 @@ export default function AdminFabricsPage() {
     top: number;
     right: number;
   } | null>(null);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
@@ -80,6 +86,7 @@ export default function AdminFabricsPage() {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMenuPosition(null);
         setMenuItem(null);
+        setMenuAnchor(null);
       }
     }
     if (menuPosition) {
@@ -94,6 +101,7 @@ export default function AdminFabricsPage() {
       if (event.key === "Escape") {
         setMenuPosition(null);
         setMenuItem(null);
+        setMenuAnchor(null);
       }
     }
     if (menuPosition) {
@@ -101,6 +109,28 @@ export default function AdminFabricsPage() {
     }
     return () => document.removeEventListener("keydown", handleEscape);
   }, [menuPosition]);
+
+  // Reposition menu on scroll/resize
+  useEffect(() => {
+    function updateMenuPosition() {
+      if (menuAnchor && menuPosition) {
+        const rect = menuAnchor.getBoundingClientRect();
+        setMenuPosition({
+          top: rect.bottom + 8,
+          right: window.innerWidth - rect.right,
+        });
+      }
+    }
+
+    if (menuPosition) {
+      window.addEventListener("scroll", updateMenuPosition, true);
+      window.addEventListener("resize", updateMenuPosition);
+      return () => {
+        window.removeEventListener("scroll", updateMenuPosition, true);
+        window.removeEventListener("resize", updateMenuPosition);
+      };
+    }
+  }, [menuPosition, menuAnchor]);
 
   useEffect(() => {
     fetchItems();
@@ -122,6 +152,7 @@ export default function AdminFabricsPage() {
   const openDeleteModal = (item: FabricItem) => {
     setMenuPosition(null);
     setMenuItem(null);
+    setMenuAnchor(null);
     setItemToDelete(item);
     setModalOpen(true);
   };
@@ -177,9 +208,22 @@ export default function AdminFabricsPage() {
   const activeCount = items.filter((i) => i.isActive).length;
   const inactiveCount = items.filter((i) => !i.isActive).length;
 
+  const handleMenuOpen = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    item: FabricItem,
+  ) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuAnchor(e.currentTarget);
+    setMenuPosition({
+      top: rect.bottom + 8,
+      right: window.innerWidth - rect.right,
+    });
+    setMenuItem(item);
+  };
+
   const StatusBadge = ({ isActive }: { isActive: boolean }) => (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium ${
         isActive
           ? "bg-white text-black border border-black/30"
           : "bg-gray-100 text-gray-500 border border-gray-200"
@@ -205,43 +249,46 @@ export default function AdminFabricsPage() {
         <img
           src={item.images[0]}
           alt={item.name}
-          className="w-10 h-10 rounded-lg object-cover hover:cursor-pointer"
+          className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover hover:cursor-pointer"
           onClick={() => handleImageClick(item.images?.[0])}
         />
       );
     }
     return (
-      <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-        <ImageIcon className="w-5 h-5 text-gray-400" />
+      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+        <ImageIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
       </div>
     );
   };
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="animate-pulse">
-          <div className="flex justify-between items-center mb-6">
-            <div className="h-8 w-48 bg-gray-200 rounded"></div>
-            <div className="h-10 w-28 bg-gray-200 rounded-lg"></div>
+          <div className="flex justify-between items-center mb-4 sm:mb-6">
+            <div className="h-6 sm:h-8 w-32 sm:w-48 bg-gray-200 rounded"></div>
+            <div className="h-8 sm:h-10 w-24 sm:w-28 bg-gray-200 rounded-lg"></div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100"
+                className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100"
               >
-                <div className="h-4 w-24 bg-gray-200 rounded mb-2"></div>
-                <div className="h-7 w-16 bg-gray-200 rounded"></div>
+                <div className="h-3 sm:h-4 w-16 sm:w-24 bg-gray-200 rounded mb-2"></div>
+                <div className="h-5 sm:h-7 w-12 sm:w-16 bg-gray-200 rounded"></div>
               </div>
             ))}
           </div>
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="p-4 border-b border-gray-100">
+              <div key={i} className="p-3 sm:p-4 border-b border-gray-100">
                 <div className="grid grid-cols-7 gap-4">
                   {[...Array(7)].map((_, j) => (
-                    <div key={j} className="h-4 bg-gray-200 rounded"></div>
+                    <div
+                      key={j}
+                      className="h-3 sm:h-4 bg-gray-200 rounded"
+                    ></div>
                   ))}
                 </div>
               </div>
@@ -255,12 +302,12 @@ export default function AdminFabricsPage() {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md">
-          <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <p className="font-normal text-xl text-black">
+        <div className="text-center bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md">
+          <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-gray-400" />
+          <p className="font-normal text-lg sm:text-xl text-black">
             {t.adminFabrics.list.load_error_title}
           </p>
-          <p className="text-gray-500 mt-2 text-sm">{error}</p>
+          <p className="text-gray-500 mt-2 text-xs sm:text-sm">{error}</p>
           <button
             onClick={fetchItems}
             className="mt-6 px-6 py-2 bg-black text-white rounded-full hover:bg-gray-800 transition text-sm"
@@ -273,7 +320,7 @@ export default function AdminFabricsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Confirmation Modal */}
       <ConfirmationModal
         isOpen={modalOpen}
@@ -300,46 +347,22 @@ export default function AdminFabricsPage() {
                 right: menuPosition.right,
                 zIndex: 50,
               }}
-              initial={{
-                opacity: 0,
-                scale: 0.95,
-                y: menuPosition.top > 200 ? -8 : 8,
-              }}
+              initial={{ opacity: 0, scale: 0.95, y: -8 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{
-                opacity: 0,
-                scale: 0.95,
-                y: menuPosition.top > 200 ? -8 : 8,
-              }}
+              exit={{ opacity: 0, scale: 0.95, y: -8 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="w-fit bg-white rounded-xl shadow-lg border border-gray-200 py-1 px-2 overflow-hidden"
+              className="w-fit min-w-30 sm:min-w-35 bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
             >
-              {menuItem.variants && menuItem.variants.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setExpandedRows((prev) => ({
-                      ...prev,
-                      [menuItem._id]: !prev[menuItem._id],
-                    }));
-                    setMenuPosition(null);
-                    setMenuItem(null);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left hover:cursor-pointer"
-                >
-                  <Eye className="w-4 h-4 shrink-0" />
-                  <span>{expandedRows[menuItem._id] ? "Hide Variants" : `Show Variants (${menuItem.variants.length})`}</span>
-                </button>
-              )}
               <Link
                 href={`/admin/fabrics/${menuItem._id}/edit`}
                 onClick={() => {
                   setMenuPosition(null);
                   setMenuItem(null);
+                  setMenuAnchor(null);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left"
+                className="w-full flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-200 transition-colors text-left hover:cursor-pointer whitespace-nowrap"
               >
-                <Edit className="w-4 h-4 shrink-0" />
+                <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span>Edit</span>
               </Link>
               <Link
@@ -347,20 +370,21 @@ export default function AdminFabricsPage() {
                 onClick={() => {
                   setMenuPosition(null);
                   setMenuItem(null);
+                  setMenuAnchor(null);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left"
+                className="w-full flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 hover:bg-gray-200 transition-colors text-left hover:cursor-pointer whitespace-nowrap"
               >
-                <Eye className="w-4 h-4 shrink-0" />
+                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span>Details</span>
               </Link>
-              <div className="border-t border-gray-100 my-1"></div>
+              <div className="border-gray-100 my-1"></div>
               <button
                 onClick={() => {
                   openDeleteModal(menuItem);
                 }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors text-left hover:cursor-pointer"
+                className="w-full flex items-center gap-2 sm:gap-2.5 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-red-600 hover:bg-red-100 transition-colors text-left hover:cursor-pointer whitespace-nowrap"
               >
-                <Trash2 className="w-4 h-4 shrink-0" />
+                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                 <span>Delete</span>
               </button>
             </motion.div>
@@ -368,67 +392,77 @@ export default function AdminFabricsPage() {
           document.body,
         )}
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-light text-black tracking-tight">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-light text-black tracking-tight">
             {t.adminFabrics.list.title}
           </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-xs sm:text-sm mt-1">
             {t.adminFabrics.list.subtitle}
           </p>
         </div>
         <Link
           href="/admin/fabrics/new"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition text-sm shadow-sm"
+          className="inline-flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-black text-white rounded-lg hover:bg-gray-800 transition text-xs sm:text-sm shadow-sm shrink-0 min-h-9 sm:min-h-10"
         >
-          <Plus className="w-4 h-4" /> {t.adminFabrics.list.new_button}
+          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <span className="leading-none">{t.adminFabrics.list.new_button}</span>
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100">
+          <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">
             {t.adminFabrics.list.total}
           </p>
-          <p className="text-2xl font-light text-black mt-1">{items.length}</p>
+          <p className="text-xl sm:text-2xl font-light text-black mt-1">
+            {items.length}
+          </p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">
+        <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100">
+          <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">
             {t.adminFabrics.list.active}
           </p>
-          <p className="text-2xl font-light text-black mt-1">{activeCount}</p>
+          <p className="text-xl sm:text-2xl font-light text-black mt-1">
+            {activeCount}
+          </p>
         </div>
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <p className="text-xs text-gray-400 uppercase tracking-wider">
+        <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-sm border border-gray-100 col-span-2 md:col-span-1">
+          <p className="text-[10px] sm:text-xs text-gray-400 uppercase tracking-wider">
             {t.adminFabrics.list.inactive}
           </p>
-          <p className="text-2xl font-light text-black mt-1">{inactiveCount}</p>
+          <p className="text-xl sm:text-2xl font-light text-black mt-1">
+            {inactiveCount}
+          </p>
         </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+        <div className="relative flex-1 max-w-full sm:max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
           <input
             type="text"
             placeholder={t.adminFabrics.list.search_placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition"
+            className="w-full pl-8 sm:pl-9 pr-3 sm:pr-4 py-1.5 sm:py-2 bg-white border border-gray-200 rounded-lg text-xs sm:text-sm text-black placeholder:text-gray-400 focus:outline-none focus:border-black transition"
           />
         </div>
         <button
           onClick={fetchItems}
-          className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-black transition text-sm border border-gray-200 rounded-lg bg-white hover:cursor-pointer"
+          className="inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 text-gray-600 hover:text-black transition text-xs sm:text-sm border border-gray-200 rounded-lg bg-white shrink-0 hover:cursor-pointer"
         >
-          <RefreshCw className="w-4 h-4" /> {t.adminFabrics.list.refresh}
+          <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
+          <span className="hidden xs:inline">
+            {t.adminFabrics.list.refresh}
+          </span>
         </button>
       </div>
 
       {filteredItems.length === 0 ? (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-          <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 sm:p-12 text-center">
+          <Package className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-gray-300" />
+          <p className="text-gray-500 text-sm sm:text-base">
             {searchTerm
               ? t.adminFabrics.list.empty_search
               : t.adminFabrics.list.empty}
@@ -436,198 +470,333 @@ export default function AdminFabricsPage() {
           {!searchTerm && (
             <Link
               href="/admin/fabrics/new"
-              className="inline-block mt-4 text-black underline underline-offset-4 hover:text-gray-600"
+              className="inline-block mt-4 text-black underline underline-offset-4 hover:text-gray-600 text-sm"
             >
               {t.adminFabrics.list.create_first}
             </Link>
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-100">
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t.adminFabrics.list.col_name}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t.adminFabrics.list.col_material}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t.adminFabrics.list.col_price}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t.adminFabrics.list.col_store}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t.adminFabrics.list.col_city}
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t.adminFabrics.list.col_status}
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {t.adminFabrics.list.col_actions}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filteredItems.map((item) => (
-                  <Fragment key={item._id}>
-                    <tr
-                      className="group hover:bg-gray-50 transition-all duration-200"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-3">
-                          {getItemImage(item)}
-                          <span className="text-sm font-medium text-black">
-                            {item.name || "—"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {item.material}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        AED {item.pricePerMeter.toLocaleString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {getStoreDisplay(item.listedByStore)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {item.storePickupAddress.emirate || "—"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge isActive={item.isActive} />
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                        {item.variants && item.variants.length > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setExpandedRows((prev) => ({
-                                ...prev,
-                                [item._id]: !prev[item._id],
-                              }));
-                            }}
-                            className="px-2.5 py-1 border border-black/25 text-[10px] font-semibold uppercase tracking-wider hover:bg-black hover:text-white transition rounded cursor-pointer"
-                          >
-                            {expandedRows[item._id] ? "Hide variants" : `Show variant (${item.variants.length})`}
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const menuHeight = 180; // approximate menu height
-                            const spaceBelow = window.innerHeight - rect.bottom;
-                            const top =
-                              spaceBelow >= menuHeight
-                                ? rect.bottom + 8
-                                : rect.top - menuHeight;
-                            setMenuPosition({
-                              top: Math.max(8, top),
-                              right: window.innerWidth - rect.right,
-                            });
-                            setMenuItem(item);
-                          }}
-                          className="text-gray-400 hover:text-black transition-colors p-1.5 rounded-lg hover:bg-gray-100 inline-flex items-center justify-center"
-                          title="Actions"
-                        >
-                          <MoreVertical className="w-5 h-5 hover:cursor-pointer" />
-                        </button>
-                      </td>
-                    </tr>
-                    {expandedRows[item._id] && item.variants && item.variants.length > 0 && (
-                      <tr className="bg-[#FAF9F5]/40">
-                        <td colSpan={7} className="px-6 py-4">
-                          <div className="pl-8 space-y-2.5">
-                            <span className="text-[10px] font-semibold uppercase tracking-widest text-black/55 block">
-                              Variations
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t.adminFabrics.list.col_name}
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t.adminFabrics.list.col_material}
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t.adminFabrics.list.col_price}
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t.adminFabrics.list.col_store}
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t.adminFabrics.list.col_city}
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t.adminFabrics.list.col_status}
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {t.adminFabrics.list.col_actions}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {filteredItems.map((item) => (
+                    <Fragment key={item._id}>
+                      <tr className="group hover:bg-gray-50 transition-all duration-200">
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            {getItemImage(item)}
+                            <span className="text-sm font-medium text-black">
+                              {item.name || "—"}
                             </span>
-                            <div className="border border-gray-200/60 rounded-xl bg-white shadow-sm overflow-hidden">
-                              <table className="min-w-full divide-y divide-gray-100">
-                                <thead className="bg-gray-50/70">
-                                  <tr>
-                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_name}</th>
-                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_material}</th>
-                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_price}</th>
-                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_store}</th>
-                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_city}</th>
-                                    <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_status}</th>
-                                    <th className="px-4 py-2.5 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{t.adminFabrics.list.col_actions}</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100 bg-white">
-                                  {item.variants.map((v) => (
-                                    <tr key={v._id} className="hover:bg-gray-50/60 transition-colors">
-                                      <td className="px-4 py-3 whitespace-nowrap text-xs font-semibold text-black">
-                                        <div className="flex items-center gap-2">
-                                          {v.images && v.images.length > 0 ? (
-                                            <img
-                                              src={v.images[0]}
-                                              alt={v.name}
-                                              className="w-8 h-8 rounded-lg object-cover cursor-pointer"
-                                              onClick={() => handleImageClick(v.images[0])}
-                                            />
-                                          ) : (
-                                            <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-                                              <ImageIcon className="w-3.5 h-3.5 text-gray-400" />
-                                            </div>
-                                          )}
-                                          <span>{v.name}</span>
-                                        </div>
-                                      </td>
-                                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600">{v.material}</td>
-                                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600">AED {v.pricePerMeter.toLocaleString()}</td>
-                                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600">{getStoreDisplay(v.listedByStore || item.listedByStore)}</td>
-                                      <td className="px-4 py-3 whitespace-nowrap text-xs text-gray-600">{(v.storePickupAddress?.emirate || item.storePickupAddress?.emirate) || "—"}</td>
-                                      <td className="px-4 py-3 whitespace-nowrap">
-                                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-medium ${
-                                          v.isActive ? "bg-white text-black border border-black/30" : "bg-gray-100 text-gray-500"
-                                        }`}>
-                                          {v.isActive ? "Active" : "Inactive"}
-                                        </span>
-                                      </td>
-                                      <td className="px-4 py-3 whitespace-nowrap text-right text-xs">
-                                        <div className="flex items-center justify-end gap-3">
-                                          <Link
-                                            href={`/admin/fabrics/${v._id}/edit`}
-                                            className="text-gray-400 hover:text-black transition-colors"
-                                            title="Edit Variant"
-                                          >
-                                            <Edit className="w-4 h-4" />
-                                          </Link>
-                                          <button
-                                            type="button"
-                                            onClick={() => openDeleteModal(v)}
-                                            className="text-gray-400 hover:text-red-500 transition-colors hover:cursor-pointer"
-                                            title="Delete Variant"
-                                          >
-                                            <Trash2 className="w-4 h-4" />
-                                          </button>
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
                           </div>
                         </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {item.material}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
+                          AED {item.pricePerMeter.toLocaleString()}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {getStoreDisplay(item.listedByStore)}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {item.storePickupAddress.emirate || "—"}
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                          <StatusBadge isActive={item.isActive} />
+                        </td>
+                        <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right space-x-2">
+                          {item.variants && item.variants.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setExpandedRows((prev) => ({
+                                  ...prev,
+                                  [item._id]: !prev[item._id],
+                                }));
+                              }}
+                              className="px-2.5 py-1 border border-black/25 text-[10px] font-semibold uppercase tracking-wider hover:bg-black hover:text-white transition rounded cursor-pointer"
+                            >
+                              {expandedRows[item._id]
+                                ? "Hide variants"
+                                : `Show variant (${item.variants.length})`}
+                            </button>
+                          )}
+                          <button
+                            onClick={(e) => handleMenuOpen(e, item)}
+                            className="text-gray-400 hover:text-black transition-colors p-1.5 rounded-lg hover:bg-gray-100 inline-flex items-center justify-center hover:cursor-pointer"
+                            title="Actions"
+                          >
+                            <MoreVertical className="w-5 h-5" />
+                          </button>
+                        </td>
                       </tr>
-                    )}
-                  </Fragment>
-                ))}
-              </tbody>
-            </table>
+                      {expandedRows[item._id] &&
+                        item.variants &&
+                        item.variants.length > 0 && (
+                          <tr className="bg-[#FAF9F5]/40">
+                            <td colSpan={7} className="px-4 sm:px-6 py-4">
+                              <div className="pl-4 sm:pl-8 space-y-2.5">
+                                <span className="text-[10px] font-semibold uppercase tracking-widest text-black/55 block">
+                                  Variations
+                                </span>
+                                <div className="border border-gray-200/60 rounded-xl bg-white shadow-sm overflow-hidden">
+                                  <table className="min-w-full divide-y divide-gray-100">
+                                    <thead className="bg-gray-50/70">
+                                      <tr>
+                                        <th className="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                          {t.adminFabrics.list.col_name}
+                                        </th>
+                                        <th className="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                          {t.adminFabrics.list.col_material}
+                                        </th>
+                                        <th className="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                          {t.adminFabrics.list.col_price}
+                                        </th>
+                                        <th className="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                          {t.adminFabrics.list.col_store}
+                                        </th>
+                                        <th className="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                          {t.adminFabrics.list.col_city}
+                                        </th>
+                                        <th className="px-3 sm:px-4 py-2.5 text-left text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                          {t.adminFabrics.list.col_status}
+                                        </th>
+                                        <th className="px-3 sm:px-4 py-2.5 text-right text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                                          {t.adminFabrics.list.col_actions}
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100 bg-white">
+                                      {item.variants.map((v) => (
+                                        <tr
+                                          key={v._id}
+                                          className="hover:bg-gray-50/60 transition-colors"
+                                        >
+                                          <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs font-semibold text-black">
+                                            <div className="flex items-center gap-2">
+                                              {v.images &&
+                                              v.images.length > 0 ? (
+                                                <img
+                                                  src={v.images[0]}
+                                                  alt={v.name}
+                                                  className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover cursor-pointer"
+                                                  onClick={() =>
+                                                    handleImageClick(
+                                                      v.images[0],
+                                                    )
+                                                  }
+                                                />
+                                              ) : (
+                                                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
+                                                  <ImageIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-400" />
+                                                </div>
+                                              )}
+                                              <span className="text-xs sm:text-sm">
+                                                {v.name}
+                                              </span>
+                                            </div>
+                                          </td>
+                                          <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs text-gray-600">
+                                            {v.material}
+                                          </td>
+                                          <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs text-gray-600">
+                                            AED{" "}
+                                            {v.pricePerMeter.toLocaleString()}
+                                          </td>
+                                          <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs text-gray-600">
+                                            {getStoreDisplay(v.listedByStore)}
+                                          </td>
+                                          <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-xs text-gray-600">
+                                            {v.storePickupAddress?.emirate ||
+                                              "—"}
+                                          </td>
+                                          <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                                            <StatusBadge
+                                              isActive={v.isActive}
+                                            />
+                                          </td>
+                                          <td className="px-3 sm:px-4 py-3 whitespace-nowrap text-right">
+                                            <button
+                                              onClick={(e) =>
+                                                handleMenuOpen(e, v)
+                                              }
+                                              className="text-gray-400 hover:text-black transition-colors p-1.5 rounded-lg hover:bg-gray-100 inline-flex items-center justify-center hover:cursor-pointer"
+                                              title="Actions"
+                                            >
+                                              <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" />
+                                            </button>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                    </Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3 sm:space-y-4">
+            {filteredItems.map((item) => (
+              <div
+                key={item._id}
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-3 sm:p-4"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    {getItemImage(item)}
+                    <div className="min-w-0">
+                      <h3 className="text-xs sm:text-sm font-medium text-black truncate">
+                        {item.name || "—"}
+                      </h3>
+                      <StatusBadge isActive={item.isActive} />
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => handleMenuOpen(e, item)}
+                    className="text-gray-400 hover:text-black transition-colors p-1.5 rounded-lg hover:bg-gray-100 inline-flex items-center justify-center hover:cursor-pointer shrink-0"
+                    title="Actions"
+                  >
+                    <MoreVertical className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </button>
+                </div>
+
+                <div className="mt-2 sm:mt-3 space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-gray-600 min-w-0">
+                    <Tag className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">{item.material || "—"}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-gray-600">
+                    <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                    <span>AED {item.pricePerMeter.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-gray-600">
+                    <Store className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                    <span className="truncate">
+                      {getStoreDisplay(item.listedByStore)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-gray-500">
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                    <span>{item.storePickupAddress.emirate || "—"}</span>
+                  </div>
+                </div>
+
+                {item.variants && item.variants.length > 0 && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setExpandedRows((prev) => ({
+                          ...prev,
+                          [item._id]: !prev[item._id],
+                        }));
+                      }}
+                      className="text-[10px] font-medium text-gray-500 hover:text-black transition"
+                    >
+                      {expandedRows[item._id]
+                        ? "Hide variants"
+                        : `Show variants (${item.variants.length})`}
+                    </button>
+                    {expandedRows[item._id] && (
+                      <div className="mt-2 space-y-2">
+                        {item.variants.map((v) => (
+                          <div
+                            key={v._id}
+                            className="bg-gray-50 rounded-lg p-3"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0">
+                                {v.images && v.images.length > 0 ? (
+                                  <img
+                                    src={v.images[0]}
+                                    alt={v.name}
+                                    className="w-7 h-7 rounded-lg object-cover cursor-pointer"
+                                    onClick={() =>
+                                      handleImageClick(v.images[0])
+                                    }
+                                  />
+                                ) : (
+                                  <div className="w-7 h-7 rounded-lg bg-gray-200 flex items-center justify-center shrink-0">
+                                    <ImageIcon className="w-3 h-3 text-gray-400" />
+                                  </div>
+                                )}
+                                <span className="text-xs font-medium truncate">
+                                  {v.name}
+                                </span>
+                              </div>
+                              <button
+                                onClick={(e) => handleMenuOpen(e, v)}
+                                className="text-gray-400 hover:text-black p-1"
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </button>
+                            </div>
+                            <div className="mt-1.5 grid grid-cols-2 gap-1 text-[10px] text-gray-600">
+                              <span>Material: {v.material}</span>
+                              <span>
+                                Price: AED {v.pricePerMeter.toLocaleString()}
+                              </span>
+                              <span>
+                                Store: {getStoreDisplay(v.listedByStore)}
+                              </span>
+                              <span>
+                                City: {v.storePickupAddress?.emirate || "—"}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <ImageModal
         isOpen={imageModalOpen}
         imageUrl={selectedImage}
-        alt="Fabrics Image"
+        alt="Fabric Image"
         onClose={() => setImageModalOpen(false)}
       />
     </div>

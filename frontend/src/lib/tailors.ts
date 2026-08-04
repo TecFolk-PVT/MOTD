@@ -1,6 +1,6 @@
 import type { Locale } from "@/i18n/routing";
 import { formatCurrency } from "@/lib/format";
-import { resolveFabricImage } from "@/lib/fabrics";
+import { resolveFabricImage, WARA_TO_METERS } from "@/lib/fabrics";
 import { resolveMediaUrl } from "@/lib/media";
 
 export interface TailorShopListItem {
@@ -162,12 +162,18 @@ export function formatDesignBasePrice(
   basePrice: number,
   locale: Locale,
   priceType?: string,
+  unit?: "meters" | "wara",
 ): string {
-  const formatted = formatCurrency(basePrice, locale);
   if (priceType === "per_meter") {
+    if (unit === "wara") {
+      const waraPrice = basePrice / WARA_TO_METERS;
+      const formatted = formatCurrency(waraPrice, locale);
+      return locale === "ar" ? `${formatted} / وارة` : `${formatted} / wara`;
+    }
+    const formatted = formatCurrency(basePrice, locale);
     return locale === "ar" ? `${formatted} / متر` : `${formatted} / meter`;
   }
-  return formatted;
+  return formatCurrency(basePrice, locale);
 }
 
 export function buildCustomOrderDesignHref(
