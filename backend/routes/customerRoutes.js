@@ -8,6 +8,7 @@ import {
   processCustomerImage,
 } from "../middleware/uploadCustomerImage.js";
 import expressAsyncHandler from "express-async-handler";
+import CustomerSettings from "../models/CustomerSettings.js";
 
 const calculateAge = (dob) => {
   if (!dob || Number.isNaN(new Date(dob).getTime())) return null;
@@ -174,7 +175,9 @@ customerRouter.put("/profile", isAuth, async (req, res) => {
         email: req.user.email,
         role: req.user.role,
         phone: undefined,
-        addresses: address ? [{ ...address, _id: new mongoose.Types.ObjectId() }] : [],
+        addresses: address
+          ? [{ ...address, _id: new mongoose.Types.ObjectId() }]
+          : [],
       });
     }
 
@@ -774,5 +777,46 @@ customerRouter.put(
     });
   }),
 );
+
+// GET user measurement unit
+customerRouter.get('/customerSettings', isAuth, async (req, res) => {
+  try {
+    const userId = new mongoose.Types.ObjectId(req.user._id);
+    const settings = await CustomerSettings.findOne({ userId });
+
+    res.json({
+      measurementUnit: settings?.measurementUnit || 'meters',
+    });
+  } catch (error) {
+    console.error('❌ Error fetching settings:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+customerRouter.put('/customerSettings', isAuth, async (req, res) => {
+  try {
+    const { measurementUnit } = req.body;
+
+    if (!['meters', 'wara'].includes(measurementUnit)) {
+      return res.status(400).json({ error: 'Invalid measurement unit' });
+    }
+
+    const userId = new mongoose.Types.ObjectId(req.user._id);
+
+    const settings = await CustomerSettings.findOneAndUpdate(
+      { userId },
+      { userId, measurementUnit },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    );
+
+    res.json({
+      success: true,
+      measurementUnit: settings.measurementUnit,
+    });
+  } catch (error) {
+    console.error('❌ Error updating settings:', error);
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
 
 export default customerRouter;

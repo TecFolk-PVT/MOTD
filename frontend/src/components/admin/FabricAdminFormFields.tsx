@@ -6,33 +6,16 @@ import { ChevronDown } from "lucide-react";
 import FormField from "@/components/admin/FormField";
 import FabricImageUpload from "@/components/admin/FabricImageUpload";
 import StorePartnerPicker from "@/components/admin/StorePartnerPicker";
+import AnimatedDropdown from "@/components/shared/AnimatedDropdown";
+import colors from "@/components/shared/colors";
 import {
-  FABRIC_MATERIALS,
   FabricFormData,
-  FabricMaterialValue,
-  FABRIC_TAGS,
   PickupAddress,
   UAE_EMIRATES,
-  COLOR_OPTIONS,
 } from "@/lib/createFabricAdmin";
-import { FabricUnitValue, WARA_TO_METERS } from "@/lib/fabrics";
 import { api } from "@/lib/api/client";
 
-const dropdownVariants = {
-  hidden: { opacity: 0, y: -6, scaleY: 0.95 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scaleY: 1,
-    transition: { duration: 0.15, ease: "easeOut" as const },
-  },
-  exit: {
-    opacity: 0,
-    y: -4,
-    scaleY: 0.95,
-    transition: { duration: 0.1, ease: "easeIn" as const },
-  },
-};
+const COLOR_OPTIONS = colors;
 
 type FabricAdminFormFieldsProps = {
   formData: FabricFormData;
@@ -53,9 +36,9 @@ export default function FabricAdminFormFields({
   onAddImage,
   onRemoveImage,
 }: FabricAdminFormFieldsProps) {
-  const [isColorDropdownOpen, setIsColorDropdownOpen] = useState(false);
-  const colorDropdownRef = useRef<HTMLDivElement>(null);
-  const [openVariantColorDropdown, setOpenVariantColorDropdown] = useState<number | null>(null);
+  const [openVariantColorDropdown, setOpenVariantColorDropdown] = useState<
+    number | null
+  >(null);
   const [dbMaterials, setDbMaterials] = useState<
     { name: string; nameAr: string; _id: string }[]
   >([]);
@@ -65,21 +48,13 @@ export default function FabricAdminFormFields({
   >([]);
   const [tagsLoading, setTagsLoading] = useState(true);
 
-  // Dropdown open states for animated dropdowns
+  // Dropdown states for AnimatedDropdown
   const [openMaterialEn, setOpenMaterialEn] = useState(false);
   const [openMaterialAr, setOpenMaterialAr] = useState(false);
   const [openTagEn, setOpenTagEn] = useState(false);
   const [openTagAr, setOpenTagAr] = useState(false);
   const [openEmirate, setOpenEmirate] = useState(false);
-  const [openUnit, setOpenUnit] = useState(false);
-
-  // Dropdown refs
-  const materialEnRef = useRef<HTMLDivElement>(null);
-  const materialArRef = useRef<HTMLDivElement>(null);
-  const tagEnRef = useRef<HTMLDivElement>(null);
-  const tagArRef = useRef<HTMLDivElement>(null);
-  const emirateRef = useRef<HTMLDivElement>(null);
-  const unitRef = useRef<HTMLDivElement>(null);
+  const [openColors, setOpenColors] = useState(false);
 
   // Fetch materials from DB
   useEffect(() => {
@@ -90,11 +65,11 @@ export default function FabricAdminFormFields({
         const data = await api.get<
           { name: string; nameAr: string; _id: string }[]
         >("/api/filters/materials");
-        if (!cancelled) {
-          setDbMaterials(Array.isArray(data) ? data : []);
+        if (!cancelled && Array.isArray(data)) {
+          setDbMaterials(data);
         }
       } catch {
-        // Silently fall back to FABRIC_MATERIALS
+        // Silently fall back to empty array
       } finally {
         if (!cancelled) setMaterialsLoading(false);
       }
@@ -115,11 +90,11 @@ export default function FabricAdminFormFields({
           await api.get<{ name: string; nameAr: string; _id: string }[]>(
             "/api/filters/tags",
           );
-        if (!cancelled) {
-          setDbTags(Array.isArray(data) ? data : []);
+        if (!cancelled && Array.isArray(data)) {
+          setDbTags(data);
         }
       } catch {
-        // Silently fall back to FABRIC_TAGS
+        // Silently fall back to empty array
       } finally {
         if (!cancelled) setTagsLoading(false);
       }
@@ -140,49 +115,23 @@ export default function FabricAdminFormFields({
     onFieldChange("colors", newSelected);
   };
 
-  const handleUnitChange = (newUnit: FabricUnitValue) => {
-    // Convert stock when switching units
-    const currentStock = Number(formData.stockInMeters);
-    if (currentStock > 0) {
-      let convertedStock: number;
-      if (newUnit === "wara") {
-        // Convert meters to wara
-        convertedStock = currentStock / WARA_TO_METERS;
-      } else {
-        // Convert wara to meters
-        convertedStock = currentStock * WARA_TO_METERS;
-      }
-      onFieldChange("stockInMeters", Number(convertedStock.toFixed(2)));
-    }
-    onFieldChange("fabricUnit", newUnit);
-  };
-
   const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-
-    // Allow empty string
     if (val === "") {
-      onFieldChange("pricePerUnit", val);
+      onFieldChange("pricePerMeter", val);
       return;
     }
-
-    // Allow: 9.87, 9.8, 9, .87, 9. (typing in progress)
-    // Disallow: 9..87, 9.8.7, 9.87. (multiple decimals)
     if (/^\d*\.?\d*$/.test(val)) {
-      onFieldChange("pricePerUnit", val);
+      onFieldChange("pricePerMeter", val);
     }
   };
 
   const handleStockChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-
-    // Allow empty string
     if (val === "") {
       onFieldChange("stockInMeters", val);
       return;
     }
-
-    // Allow only valid decimal numbers (single decimal point, digits only)
     if (/^\d*\.?\d+$/.test(val) || /^\d+\.?\d*$/.test(val)) {
       const num = Number(val);
       if (!isNaN(num) && num >= 0) {
@@ -191,81 +140,52 @@ export default function FabricAdminFormFields({
     }
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        colorDropdownRef.current &&
-        !colorDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsColorDropdownOpen(false);
-      }
-      if (
-        materialEnRef.current &&
-        !materialEnRef.current.contains(event.target as Node)
-      ) {
-        setOpenMaterialEn(false);
-      }
-      if (
-        materialArRef.current &&
-        !materialArRef.current.contains(event.target as Node)
-      ) {
-        setOpenMaterialAr(false);
-      }
-      if (
-        tagEnRef.current &&
-        !tagEnRef.current.contains(event.target as Node)
-      ) {
-        setOpenTagEn(false);
-      }
-      if (
-        tagArRef.current &&
-        !tagArRef.current.contains(event.target as Node)
-      ) {
-        setOpenTagAr(false);
-      }
-      if (
-        emirateRef.current &&
-        !emirateRef.current.contains(event.target as Node)
-      ) {
-        setOpenEmirate(false);
-      }
-      if (unitRef.current && !unitRef.current.contains(event.target as Node)) {
-        setOpenUnit(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Material options – use DB materials if loaded, fall back to FABRIC_MATERIALS
-  const materialOptionsEn = (
-    dbMaterials.length > 0 ? dbMaterials : FABRIC_MATERIALS
-  ).map((m) => ({
-    value:
-      "name" in m ? m.name : (m as (typeof FABRIC_MATERIALS)[number]).value,
-    label: "name" in m ? m.name : (m as (typeof FABRIC_MATERIALS)[number]).en,
+  // Material options - from DB only
+  const materialOptionsEn = dbMaterials.map((m) => ({
+    value: m.name,
+    label: m.name,
   }));
-  const materialOptionsAr = (
-    dbMaterials.length > 0 ? dbMaterials : FABRIC_MATERIALS
-  ).map((m) => ({
-    value:
-      "nameAr" in m ? m.nameAr! : (m as (typeof FABRIC_MATERIALS)[number]).ar,
-    label:
-      "nameAr" in m ? m.nameAr! : (m as (typeof FABRIC_MATERIALS)[number]).ar,
+  const materialOptionsAr = dbMaterials.map((m) => ({
+    value: m.nameAr || m.name,
+    label: m.nameAr || m.name,
   }));
 
-  // Tag options – use DB tags if loaded, fall back to FABRIC_TAGS
-  const tagOptionsEn = (dbTags.length > 0 ? dbTags : FABRIC_TAGS).map((t) => ({
-    value: "name" in t ? t.name : (t as (typeof FABRIC_TAGS)[number]).value,
-    label: "name" in t ? t.name : (t as (typeof FABRIC_TAGS)[number]).en,
+  // Tag options - from DB only
+  const tagOptionsEn = dbTags.map((t) => ({
+    value: t.name,
+    label: t.name,
   }));
-  const tagOptionsAr = (dbTags.length > 0 ? dbTags : FABRIC_TAGS).map((t) => ({
-    value: "nameAr" in t ? t.nameAr! : (t as (typeof FABRIC_TAGS)[number]).ar,
-    label: "nameAr" in t ? t.nameAr! : (t as (typeof FABRIC_TAGS)[number]).ar,
+  const tagOptionsAr = dbTags.map((t) => ({
+    value: t.nameAr || t.name,
+    label: t.nameAr || t.name,
   }));
+
+  // Custom trigger for select fields
+  const SelectTrigger = ({
+    value,
+    placeholder,
+    displayValue,
+    onClick,
+  }: {
+    value: string;
+    placeholder: string;
+    displayValue: string;
+    onClick: () => void;
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent text-xs sm:text-[14px] flex items-center justify-between hover:cursor-pointer"
+    >
+      <span className={value ? "text-black" : "text-gray-400"}>
+        {displayValue || placeholder}
+      </span>
+      <span className="text-gray-400">▾</span>
+    </button>
+  );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
       {/* Name (EN) */}
       <FormField
         label="Name (EN)"
@@ -277,7 +197,7 @@ export default function FabricAdminFormFields({
           type="text"
           value={formData.name}
           onChange={(e) => onFieldChange("name", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
+          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none hover:cursor-text text-xs sm:text-sm"
           placeholder="Silk Fabric"
         />
       </FormField>
@@ -293,12 +213,12 @@ export default function FabricAdminFormFields({
           type="text"
           value={formData.nameAr}
           onChange={(e) => onFieldChange("nameAr", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right"
+          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right hover:cursor-text text-xs sm:text-sm"
           placeholder="قماش حرير"
         />
       </FormField>
 
-      {/* Description (EN) – optional */}
+      {/* Description (EN) */}
       <FormField
         label="Description (EN)"
         name="description"
@@ -308,12 +228,12 @@ export default function FabricAdminFormFields({
           type="text"
           value={formData.description}
           onChange={(e) => onFieldChange("description", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
+          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none hover:cursor-text text-xs sm:text-sm"
           placeholder="Describe the fabric..."
         />
       </FormField>
 
-      {/* Description (AR) – optional */}
+      {/* Description (AR) */}
       <FormField
         label="Description (AR)"
         name="descriptionAr"
@@ -323,184 +243,162 @@ export default function FabricAdminFormFields({
           type="text"
           value={formData.descriptionAr}
           onChange={(e) => onFieldChange("descriptionAr", e.target.value)}
-          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right"
+          className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none text-right hover:cursor-text text-xs sm:text-sm"
           placeholder="وصف القماش..."
         />
       </FormField>
 
-      {/* Row for Material (EN), Material (AR), Colors */}
-      <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Material (EN) */}
-        <FormField
-          label="Material (EN)"
-          name="material"
-          required
-          error={fieldErrors.material}
+      {/* Material (EN) - from DB */}
+      <FormField
+        label="Material (EN)"
+        name="material"
+        required
+        error={fieldErrors.material}
+      >
+        <AnimatedDropdown
+          isOpen={openMaterialEn}
+          onClose={() => setOpenMaterialEn(false)}
+          trigger={
+            <SelectTrigger
+              value={formData.material}
+              placeholder={materialsLoading ? "Loading..." : "Select material"}
+              displayValue={
+                materialOptionsEn.find((o) => o.value === formData.material)
+                  ?.label || ""
+              }
+              onClick={() => setOpenMaterialEn(!openMaterialEn)}
+            />
+          }
+          dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+          position="bottom-left"
         >
-          <div className="relative" ref={materialEnRef}>
+          {materialsLoading ? (
+            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-500">
+              Loading materials...
+            </div>
+          ) : materialOptionsEn.length === 0 ? (
+            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-500">
+              No materials found
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  onFieldChange("material", "");
+                  setOpenMaterialEn(false);
+                }}
+                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+              >
+                Select material
+              </button>
+              {materialOptionsEn.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onFieldChange("material", opt.value);
+                    setOpenMaterialEn(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </>
+          )}
+        </AnimatedDropdown>
+      </FormField>
+
+      {/* Material (AR) - from DB */}
+      <FormField
+        label="Material (AR)"
+        name="materialAr"
+        required
+        error={fieldErrors.materialAr}
+      >
+        <AnimatedDropdown
+          isOpen={openMaterialAr}
+          onClose={() => setOpenMaterialAr(false)}
+          trigger={
             <button
               type="button"
-              onClick={() => setOpenMaterialEn((prev) => !prev)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between"
+              onClick={() => setOpenMaterialAr(!openMaterialAr)}
+              className="w-full py-1 border-b border-gray-300 focus:border-black text-right bg-transparent text-xs sm:text-[14px] flex items-center justify-between flex-row-reverse hover:cursor-pointer"
             >
               <span
-                className={`text-xs ${formData.material ? "text-black" : "text-black/60"}`}
+                className={formData.materialAr ? "text-black" : "text-gray-400"}
               >
-                {formData.material
-                  ? materialOptionsEn.find((o) => o.value === formData.material)
-                      ?.label || formData.material
-                  : "Select material"}
+                {materialOptionsAr.find((o) => o.value === formData.materialAr)
+                  ?.label ||
+                  (materialsLoading ? "جاري التحميل..." : "اختر النوع")}
               </span>
-              <svg
-                className={`w-3 h-3 transition-transform ${openMaterialEn ? "rotate-180" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <span className="text-gray-400">▾</span>
             </button>
-            <AnimatePresence>
-              {openMaterialEn && (
-                <motion.div
-                  key="material-en-dropdown"
-                  variants={dropdownVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onFieldChange("material", "" as FabricMaterialValue);
-                      setOpenMaterialEn(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${!formData.material ? "bg-gray-50 font-medium" : ""}`}
-                  >
-                    Select material
-                  </button>
-                  {materialOptionsEn.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => {
-                        onFieldChange(
-                          "material",
-                          opt.value as FabricMaterialValue,
-                        );
-                        setOpenMaterialEn(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.material === opt.value ? "bg-gray-50 font-medium" : ""}`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </FormField>
-
-        {/* Material (AR) – dropdown with Arabic labels */}
-        <FormField
-          label="Material (AR)"
-          name="materialAr"
-          error={fieldErrors.materialAr}
-          required
+          }
+          dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+          position="bottom-left"
         >
-          <div className="relative" ref={materialArRef}>
+          {materialsLoading ? (
+            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm text-gray-500">
+              جاري التحميل...
+            </div>
+          ) : materialOptionsAr.length === 0 ? (
+            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm text-gray-500">
+              لا توجد مواد
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  onFieldChange("materialAr", "");
+                  setOpenMaterialAr(false);
+                }}
+                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+              >
+                اختر النوع
+              </button>
+              {materialOptionsAr.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onFieldChange("materialAr", opt.value);
+                    setOpenMaterialAr(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </>
+          )}
+        </AnimatedDropdown>
+      </FormField>
+
+      {/* Colors */}
+      <FormField
+        label="Colors"
+        name="colors"
+        required
+        error={fieldErrors.color}
+      >
+        <AnimatedDropdown
+          isOpen={openColors}
+          onClose={() => setOpenColors(false)}
+          trigger={
             <button
               type="button"
-              onClick={() => setOpenMaterialAr((prev) => !prev)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black text-right bg-transparent min-h-7 flex items-center justify-between flex-row-reverse"
-            >
-              <svg
-                className={`w-3 h-3 transition-transform shrink-0 ${openMaterialAr ? "rotate-180" : ""}`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-              <span
-                className={`text-xs ${formData.materialAr ? "text-black" : "text-black/60"}`}
-              >
-                {formData.materialAr
-                  ? materialOptionsAr.find(
-                      (o) => o.value === formData.materialAr,
-                    )?.label || formData.materialAr
-                  : "اختر النوع"}
-              </span>
-            </button>
-            <AnimatePresence>
-              {openMaterialAr && (
-                <motion.div
-                  key="material-ar-dropdown"
-                  variants={dropdownVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onFieldChange("materialAr", "");
-                      setOpenMaterialAr(false);
-                    }}
-                    className={`w-full text-right px-3 py-2 text-xs hover:bg-gray-50 ${!formData.materialAr ? "bg-gray-50 font-medium" : ""}`}
-                  >
-                    اختر النوع
-                  </button>
-                  {materialOptionsAr.map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => {
-                        onFieldChange("materialAr", opt.value);
-                        setOpenMaterialAr(false);
-                      }}
-                      className={`w-full text-right px-3 py-2 text-xs hover:bg-gray-50 ${formData.materialAr === opt.value ? "bg-gray-50 font-medium" : ""}`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </FormField>
-
-        {/* Colors */}
-        <FormField
-          label="Colors"
-          name="colors"
-          required
-          error={fieldErrors.color}
-        >
-          <div className="relative" ref={colorDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setIsColorDropdownOpen((prev) => !prev)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center"
+              onClick={() => setOpenColors(!openColors)}
+              className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center hover:cursor-pointer"
             >
               {selectedColors.length === 0 ? (
-                <span className="text-xs text-black/60 leading-none">
+                <span className="text-[10px] sm:text-xs text-black/60 leading-none">
                   Select colors
                 </span>
               ) : (
-                <div className="flex flex-wrap gap-2 items-center">
+                <div className="flex flex-wrap gap-1 sm:gap-1.5 items-center">
                   {COLOR_OPTIONS.filter((c) =>
                     selectedColors.includes(c.value),
                   ).map((c) => (
@@ -510,58 +408,47 @@ export default function FabricAdminFormFields({
                       title={c.en}
                     >
                       <span
-                        className="w-5 h-5 rounded-full border border-gray-200"
-                        style={{ backgroundColor: c.value }}
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-gray-200 shrink-0"
+                        style={{ background: c.hex }}
                       />
                     </span>
                   ))}
                 </div>
               )}
             </button>
-
-            <AnimatePresence>
-              {isColorDropdownOpen && (
-                <motion.div
-                  key="color-dropdown"
-                  variants={dropdownVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3 z-50 origin-top"
+          }
+          dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 p-1.5 sm:p-3 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full"
+          position="bottom-left"
+        >
+          <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-2 sm:gap-1">
+            {COLOR_OPTIONS.map((opt) => {
+              const selected = selectedColors.includes(opt.value);
+              return (
+                <label
+                  key={opt.value}
+                  className="flex items-center gap-1 sm:gap-1.5 cursor-pointer px-1 py-0.5 hover:bg-gray-50 rounded hover:cursor-pointer"
                 >
-                  <div className="max-h-44 overflow-auto flex flex-col gap-2">
-                    {COLOR_OPTIONS.map((opt) => {
-                      const selected = selectedColors.includes(opt.value);
-                      return (
-                        <label
-                          key={opt.value}
-                          className="flex items-center gap-2 cursor-pointer"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selected}
-                            onChange={() => toggleColor(opt.value)}
-                            className="accent-black"
-                          />
-                          <span className="inline-flex items-center gap-2">
-                            <span
-                              className="w-4 h-4 rounded-full border border-gray-200"
-                              style={{ backgroundColor: opt.value }}
-                            />
-                            <span className="text-xs">
-                              {opt.en} / {opt.ar}
-                            </span>
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => toggleColor(opt.value)}
+                    className="accent-black w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 hover:cursor-pointer"
+                  />
+                  <span className="inline-flex items-center gap-1 sm:gap-1.5 min-w-0">
+                    <span
+                      className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full border border-gray-200 shrink-0"
+                      style={{ background: opt.hex }}
+                    />
+                    <span className="text-[8px] sm:text-[10px] lg:text-xs truncate hover:cursor-pointer">
+                      {opt.en} / {opt.ar}
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
           </div>
-        </FormField>
-      </div>
+        </AnimatedDropdown>
+      </FormField>
 
       {/* Store Partner */}
       <div className="md:col-span-2">
@@ -577,260 +464,161 @@ export default function FabricAdminFormFields({
         />
       </div>
 
-      {/* Tag (EN) – optional dropdown */}
+      {/* Tag (EN) - from DB */}
       <FormField label="Tag (EN)" name="tag" error={fieldErrors.tag}>
-        <div className="relative" ref={tagEnRef}>
-          <button
-            type="button"
-            onClick={() => setOpenTagEn((prev) => !prev)}
-            className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between"
-          >
-            <span
-              className={`text-xs ${formData.tag ? "text-black" : "text-black/60"}`}
-            >
-              {formData.tag
-                ? tagOptionsEn.find((o) => o.value === formData.tag)?.label ||
-                  formData.tag
-                : "Select tag (optional)"}
-            </span>
-            <svg
-              className={`w-3 h-3 transition-transform ${openTagEn ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-          </button>
-          <AnimatePresence>
-            {openTagEn && (
-              <motion.div
-                key="tag-en-dropdown"
-                variants={dropdownVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    onFieldChange("tag", "");
-                    setOpenTagEn(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${!formData.tag ? "bg-gray-50 font-medium" : ""}`}
-                >
-                  Select tag (optional)
-                </button>
-                {tagOptionsEn.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      onFieldChange("tag", opt.value);
-                      setOpenTagEn(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.tag === opt.value ? "bg-gray-50 font-medium" : ""}`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </FormField>
-
-      {/* Tag (AR) – optional dropdown with Arabic labels */}
-      <FormField label="Tag (AR)" name="tagAr" error={fieldErrors.tagAr}>
-        <div className="relative" ref={tagArRef}>
-          <button
-            type="button"
-            onClick={() => setOpenTagAr((prev) => !prev)}
-            className="w-full py-1 border-b border-gray-300 focus:border-black text-right bg-transparent min-h-7 flex items-center justify-between flex-row-reverse"
-          >
-            <svg
-              className={`w-3 h-3 transition-transform shrink-0 ${openTagAr ? "rotate-180" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 9l-7 7-7-7"
-              />
-            </svg>
-            <span
-              className={`text-xs ${formData.tagAr ? "text-black" : "text-black/60"}`}
-            >
-              {formData.tagAr
-                ? tagOptionsAr.find((o) => o.value === formData.tagAr)?.label ||
-                  formData.tagAr
-                : "اختر الوسم (اختياري)"}
-            </span>
-          </button>
-          <AnimatePresence>
-            {openTagAr && (
-              <motion.div
-                key="tag-ar-dropdown"
-                variants={dropdownVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
-              >
-                <button
-                  type="button"
-                  onClick={() => {
-                    onFieldChange("tagAr", "");
-                    setOpenTagAr(false);
-                  }}
-                  className={`w-full text-right px-3 py-2 text-xs hover:bg-gray-50 ${!formData.tagAr ? "bg-gray-50 font-medium" : ""}`}
-                >
-                  اختر الوسم (اختياري)
-                </button>
-                {tagOptionsAr.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => {
-                      onFieldChange("tagAr", opt.value);
-                      setOpenTagAr(false);
-                    }}
-                    className={`w-full text-right px-3 py-2 text-xs hover:bg-gray-50 ${formData.tagAr === opt.value ? "bg-gray-50 font-medium" : ""}`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </FormField>
-
-      {/* Fabric Unit, Price, Stock in one row */}
-      <div className="md:col-span-2">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          {/* Fabric Unit */}
-          <FormField label="Unit" name="fabricUnit">
-            <div className="relative" ref={unitRef}>
+        <AnimatedDropdown
+          isOpen={openTagEn}
+          onClose={() => setOpenTagEn(false)}
+          trigger={
+            <SelectTrigger
+              value={formData.tag}
+              placeholder={tagsLoading ? "Loading..." : "Select tag (optional)"}
+              displayValue={
+                tagOptionsEn.find((o) => o.value === formData.tag)?.label || ""
+              }
+              onClick={() => setOpenTagEn(!openTagEn)}
+            />
+          }
+          dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+          position="bottom-left"
+        >
+          {tagsLoading ? (
+            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-500">
+              Loading tags...
+            </div>
+          ) : tagOptionsEn.length === 0 ? (
+            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-500">
+              No tags found
+            </div>
+          ) : (
+            <>
               <button
                 type="button"
-                onClick={() => setOpenUnit((prev) => !prev)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between"
+                onClick={() => {
+                  onFieldChange("tag", "");
+                  setOpenTagEn(false);
+                }}
+                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
               >
-                <span className="text-xs">
-                  {formData.fabricUnit === "meters" ? "Meters" : "Wara"}
-                </span>
-                <svg
-                  className={`w-3 h-3 transition-transform ${openUnit ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                Select tag (optional)
               </button>
-              <AnimatePresence>
-                {openUnit && (
-                  <motion.div
-                    key="unit-dropdown"
-                    variants={dropdownVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 origin-top"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleUnitChange("meters" as FabricUnitValue);
-                        setOpenUnit(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.fabricUnit === "meters" ? "bg-gray-50 font-medium" : ""}`}
-                    >
-                      Meters
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleUnitChange("wara" as FabricUnitValue);
-                        setOpenUnit(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.fabricUnit === "wara" ? "bg-gray-50 font-medium" : ""}`}
-                    >
-                      Wara
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </FormField>
+              {tagOptionsEn.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onFieldChange("tag", opt.value);
+                    setOpenTagEn(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </>
+          )}
+        </AnimatedDropdown>
+      </FormField>
 
-          {/* Price Per Unit */}
+      {/* Tag (AR) - from DB */}
+      <FormField label="Tag (AR)" name="tagAr" error={fieldErrors.tagAr}>
+        <AnimatedDropdown
+          isOpen={openTagAr}
+          onClose={() => setOpenTagAr(false)}
+          trigger={
+            <button
+              type="button"
+              onClick={() => setOpenTagAr(!openTagAr)}
+              className="w-full py-1 border-b border-gray-300 focus:border-black text-right bg-transparent text-xs sm:text-[14px] flex items-center justify-between flex-row-reverse hover:cursor-pointer"
+            >
+              <span className={formData.tagAr ? "text-black" : "text-gray-400"}>
+                {tagOptionsAr.find((o) => o.value === formData.tagAr)?.label ||
+                  (tagsLoading ? "جاري التحميل..." : "اختر الوسم (اختياري)")}
+              </span>
+              <span className="text-gray-400">▾</span>
+            </button>
+          }
+          dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+          position="bottom-left"
+        >
+          {tagsLoading ? (
+            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm text-gray-500">
+              جاري التحميل...
+            </div>
+          ) : tagOptionsAr.length === 0 ? (
+            <div className="px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm text-gray-500">
+              لا توجد وسوم
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  onFieldChange("tagAr", "");
+                  setOpenTagAr(false);
+                }}
+                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+              >
+                اختر الوسم (اختياري)
+              </button>
+              {tagOptionsAr.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    onFieldChange("tagAr", opt.value);
+                    setOpenTagAr(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </>
+          )}
+        </AnimatedDropdown>
+      </FormField>
+
+      {/* Price & Stock */}
+      <div className="md:col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 items-end">
           <FormField
-            label="Price Per (meter / wara)"
-            name="pricePerUnit"
+            label="Price Per Meter (AED)"
+            name="pricePerMeter"
             required
-            error={fieldErrors.pricePerUnit}
+            error={fieldErrors.pricePerMeter}
           >
-            <div>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={formData.pricePerUnit}
-                onChange={handlePriceChange}
-                className={`w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none ${
-                  fieldErrors.pricePerUnit ? "border-red-500" : ""
-                }`}
-                placeholder="150.00"
-              />
-              {fieldErrors.pricePerUnit && (
-                <p className="mt-1 text-sm text-red-500">
-                  {fieldErrors.pricePerUnit}
-                </p>
-              )}
-            </div>
+            <input
+              type="number"
+              inputMode="decimal"
+              step={0.1}
+              value={formData.pricePerMeter === 0 ? "" : formData.pricePerMeter}
+              onChange={handlePriceChange}
+              className={`w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none hover:cursor-text text-xs sm:text-sm ${
+                fieldErrors.pricePerMeter ? "border-red-500" : ""
+              }`}
+              placeholder="150.00"
+            />
           </FormField>
 
-          {/* Stock */}
           <FormField
-            label="Stock"
+            label="Stock in Meters"
             name="stockInMeters"
             required
             error={fieldErrors.stockInMeters}
           >
-            <div>
-              <input
-                type="text"
-                step={0.1}
-                min={0}
-                inputMode="decimal"
-                value={formData.stockInMeters}
-                onChange={handleStockChange}
-                className={`w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none ${
-                  fieldErrors.stockInMeters ? "border-red-500" : ""
-                }`}
-                placeholder="100.00"
-              />
-              {fieldErrors.stockInMeters && (
-                <p className="mt-1 text-sm text-red-500">
-                  {fieldErrors.stockInMeters}
-                </p>
-              )}
-            </div>
+            <input
+              type="number"
+              step={0.01}
+              min={0}
+              inputMode="decimal"
+              value={formData.stockInMeters === 0 ? "" : formData.stockInMeters}
+              onChange={handleStockChange}
+              className={`w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none hover:cursor-text text-xs sm:text-sm ${
+                fieldErrors.stockInMeters ? "border-red-500" : ""
+              }`}
+              placeholder="100.00"
+            />
           </FormField>
         </div>
       </div>
@@ -840,84 +628,57 @@ export default function FabricAdminFormFields({
         <h3 className="text-sm font-medium text-gray-700 mb-3">
           Store Pickup Address
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           <FormField
             label="Emirate"
             name="pickupAddress.emirate"
             required
             error={fieldErrors["pickupAddress.emirate"]}
           >
-            <div className="relative" ref={emirateRef}>
+            <AnimatedDropdown
+              isOpen={openEmirate}
+              onClose={() => setOpenEmirate(false)}
+              trigger={
+                <SelectTrigger
+                  value={formData.pickupAddress.emirate}
+                  placeholder="Select emirate"
+                  displayValue={
+                    UAE_EMIRATES.find(
+                      (e) => e.value === formData.pickupAddress.emirate,
+                    )?.en || ""
+                  }
+                  onClick={() => setOpenEmirate(!openEmirate)}
+                />
+              }
+              dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+              position="bottom-left"
+            >
               <button
                 type="button"
-                onClick={() => setOpenEmirate((prev) => !prev)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between"
+                onClick={() => {
+                  onPickupChange("emirate", "");
+                  setOpenEmirate(false);
+                }}
+                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
               >
-                <span
-                  className={`text-xs ${formData.pickupAddress.emirate ? "text-black" : "text-black/60"}`}
-                >
-                  {formData.pickupAddress.emirate
-                    ? UAE_EMIRATES.find(
-                        (e) => e.value === formData.pickupAddress.emirate,
-                      )?.en +
-                      " / " +
-                      UAE_EMIRATES.find(
-                        (e) => e.value === formData.pickupAddress.emirate,
-                      )?.ar
-                    : "Select emirate"}
-                </span>
-                <svg
-                  className={`w-3 h-3 transition-transform ${openEmirate ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                Select emirate
               </button>
-              <AnimatePresence>
-                {openEmirate && (
-                  <motion.div
-                    key="emirate-dropdown"
-                    variants={dropdownVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm z-50 max-h-44 overflow-auto origin-top"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onPickupChange("emirate", "");
-                        setOpenEmirate(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${!formData.pickupAddress.emirate ? "bg-gray-50 font-medium" : ""}`}
-                    >
-                      Select emirate
-                    </button>
-                    {UAE_EMIRATES.map((emirate) => (
-                      <button
-                        key={emirate.value}
-                        type="button"
-                        onClick={() => {
-                          onPickupChange("emirate", emirate.value);
-                          setOpenEmirate(false);
-                        }}
-                        className={`w-full text-left px-3 py-2 text-xs hover:bg-gray-50 ${formData.pickupAddress.emirate === emirate.value ? "bg-gray-50 font-medium" : ""}`}
-                      >
-                        {emirate.en} / {emirate.ar}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+              {UAE_EMIRATES.map((emirate) => (
+                <button
+                  key={emirate.value}
+                  type="button"
+                  onClick={() => {
+                    onPickupChange("emirate", emirate.value);
+                    setOpenEmirate(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
+                  {emirate.en} / {emirate.ar}
+                </button>
+              ))}
+            </AnimatedDropdown>
           </FormField>
+
           <FormField
             label="City"
             name="pickupAddress.city"
@@ -928,28 +689,31 @@ export default function FabricAdminFormFields({
               type="text"
               value={formData.pickupAddress.city}
               onChange={(e) => onPickupChange("city", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
+              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none hover:cursor-text text-xs sm:text-sm"
               placeholder="e.g., Deira"
             />
           </FormField>
+
           <FormField label="Street" name="pickupAddress.street" required>
             <input
               type="text"
               value={formData.pickupAddress.street}
               onChange={(e) => onPickupChange("street", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
+              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none hover:cursor-text text-xs sm:text-sm"
               placeholder="e.g., Al Maktoum Street"
             />
           </FormField>
+
           <FormField label="Building" name="pickupAddress.building" required>
             <input
               type="text"
               value={formData.pickupAddress.building}
               onChange={(e) => onPickupChange("building", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none"
+              className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none hover:cursor-text text-xs sm:text-sm"
               placeholder="e.g., Al Fattan Tower"
             />
           </FormField>
+
           <FormField
             label="Phone"
             name="pickupAddress.phone"
@@ -957,7 +721,7 @@ export default function FabricAdminFormFields({
             required
           >
             <div className="flex items-center border-b border-gray-300 focus-within:border-black bg-transparent">
-              <span className="inline-flex items-center px-3 py-1 bg-neutral-50 text-neutral-400 text-[14px] [font-family:var(--font-ui)] select-none border-r border-gray-200">
+              <span className="inline-flex items-center px-3 py-1 bg-neutral-50 text-neutral-400 text-xs sm:text-[14px] select-none border-r border-gray-200">
                 +971
               </span>
               <input
@@ -969,7 +733,7 @@ export default function FabricAdminFormFields({
                     onPickupChange("phone", val);
                   }
                 }}
-                className="w-full py-1 pl-3 bg-transparent text-[14px] focus:outline-none"
+                className="w-full py-1 pl-3 bg-transparent text-xs sm:text-[14px] focus:outline-none hover:cursor-text"
                 placeholder="123456777"
               />
             </div>
@@ -980,14 +744,14 @@ export default function FabricAdminFormFields({
       {/* Images */}
       <div className="md:col-span-2">
         <div className="mb-2 flex justify-between items-center">
-          <span className="font-label-sm text-[11px] text-black/60 uppercase tracking-[0.2em]">
+          <span className="font-label-sm text-[10px] sm:text-[11px] text-black/60 uppercase tracking-[0.2em]">
             Images (max 5) *
           </span>
           {formData.images.length < 5 && (
             <button
               type="button"
               onClick={onAddImage}
-              className="text-xs text-black underline"
+              className="text-[10px] sm:text-xs text-black underline hover:cursor-pointer"
             >
               + Add Image
             </button>
@@ -1010,7 +774,7 @@ export default function FabricAdminFormFields({
               <button
                 type="button"
                 onClick={() => onRemoveImage(idx)}
-                className="text-xs text-red-500 mt-1"
+                className="text-[10px] sm:text-xs text-red-500 mt-1 hover:cursor-pointer"
               >
                 Remove
               </button>
@@ -1028,11 +792,11 @@ export default function FabricAdminFormFields({
               id="isActive"
               checked={formData.isActive}
               onChange={(e) => onFieldChange("isActive", e.target.checked)}
-              className="w-4 h-4 cursor-pointer"
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 hover:cursor-pointer"
             />
             <label
               htmlFor="isActive"
-              className="text-sm text-gray-700 cursor-pointer"
+              className="text-xs sm:text-sm text-gray-700 hover:cursor-pointer"
             >
               Product is active (visible to customers)
             </label>
@@ -1042,13 +806,14 @@ export default function FabricAdminFormFields({
 
       {/* Variations Section */}
       <div className="md:col-span-2 pt-6 mt-6 border-t border-gray-200 space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
             <h3 className="text-sm font-semibold text-black tracking-wider uppercase">
               Fabric Variations
             </h3>
             <p className="text-gray-500 text-xs mt-1">
-              Add different variations of this fabric (e.g., other colors, stock levels)
+              Add different variations of this fabric (e.g., other colors, stock
+              levels)
             </p>
           </div>
           <button
@@ -1068,17 +833,21 @@ export default function FabricAdminFormFields({
                   colors: [],
                   tag: "",
                   tagAr: "",
-                  fabricUnit: formData.fabricUnit || "meters",
-                  pricePerUnit: formData.pricePerUnit || 0,
                   pricePerMeter: formData.pricePerMeter || 0,
                   stockInMeters: 0,
                   listedByStore: formData.listedByStore || "",
-                  pickupAddress: formData.pickupAddress || { emirate: "", city: "", street: "", building: "", phone: "" },
+                  pickupAddress: formData.pickupAddress || {
+                    emirate: "",
+                    city: "",
+                    street: "",
+                    building: "",
+                    phone: "",
+                  },
                   isActive: true,
                 },
               ]);
             }}
-            className="px-4 py-2 border border-black text-xs uppercase tracking-wider hover:bg-black hover:text-white transition font-medium cursor-pointer"
+            className="px-3 sm:px-4 py-1.5 sm:py-2 border border-black text-xs uppercase tracking-wider hover:bg-black hover:text-white transition font-medium hover:cursor-pointer"
           >
             + Add Variant
           </button>
@@ -1091,9 +860,9 @@ export default function FabricAdminFormFields({
               return (
                 <div
                   key={index}
-                  className="p-6 border border-gray-200 bg-[#FAF9F5] space-y-6 relative rounded-none animate-fadeIn"
+                  className="p-4 sm:p-6 border border-gray-200 bg-[#FAF9F5] space-y-6 relative rounded-none animate-fadeIn"
                 >
-                  <div className="flex justify-between items-center pb-3 border-b border-gray-200">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-3 border-b border-gray-200 gap-2">
                     <span className="font-label-sm text-xs text-black/60 uppercase tracking-widest font-semibold">
                       Variant #{index + 1}
                     </span>
@@ -1102,16 +871,18 @@ export default function FabricAdminFormFields({
                       onClick={() => {
                         onFieldChange(
                           "variants",
-                          (formData.variants || []).filter((_, i) => i !== index),
+                          (formData.variants || []).filter(
+                            (_, i) => i !== index,
+                          ),
                         );
                       }}
-                      className="text-xs text-red-600 hover:underline font-medium cursor-pointer"
+                      className="text-xs text-red-600 hover:underline font-medium hover:cursor-pointer"
                     >
                       Remove Variant
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                     <FormField
                       label="Name (EN)"
                       name={`${prefix}.name`}
@@ -1124,7 +895,10 @@ export default function FabricAdminFormFields({
                         onChange={(e) => {
                           const val = e.target.value;
                           const nextVariants = [...(formData.variants || [])];
-                          nextVariants[index] = { ...nextVariants[index], name: val };
+                          nextVariants[index] = {
+                            ...nextVariants[index],
+                            name: val,
+                          };
                           if (!nextVariants[index].slug) {
                             const slugBase = val
                               .toLowerCase()
@@ -1136,7 +910,7 @@ export default function FabricAdminFormFields({
                           }
                           onFieldChange("variants", nextVariants);
                         }}
-                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs"
+                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs sm:text-sm hover:cursor-text"
                         placeholder="e.g. Red Silk"
                       />
                     </FormField>
@@ -1152,10 +926,13 @@ export default function FabricAdminFormFields({
                         value={variant.nameAr}
                         onChange={(e) => {
                           const nextVariants = [...(formData.variants || [])];
-                          nextVariants[index] = { ...nextVariants[index], nameAr: e.target.value };
+                          nextVariants[index] = {
+                            ...nextVariants[index],
+                            nameAr: e.target.value,
+                          };
                           onFieldChange("variants", nextVariants);
                         }}
-                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-right text-xs"
+                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-right text-xs sm:text-sm hover:cursor-text"
                         placeholder="مثال: حرير أحمر"
                         dir="rtl"
                       />
@@ -1172,15 +949,17 @@ export default function FabricAdminFormFields({
                         value={variant.slug}
                         onChange={(e) => {
                           const nextVariants = [...(formData.variants || [])];
-                          nextVariants[index] = { ...nextVariants[index], slug: e.target.value };
+                          nextVariants[index] = {
+                            ...nextVariants[index],
+                            slug: e.target.value,
+                          };
                           onFieldChange("variants", nextVariants);
                         }}
-                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs"
+                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs sm:text-sm hover:cursor-text"
                         placeholder="e.g. red-silk"
                       />
                     </FormField>
 
-                    {/* VARIANT MATERIAL */}
                     <FormField
                       label="Material"
                       name={`${prefix}.material`}
@@ -1192,26 +971,23 @@ export default function FabricAdminFormFields({
                         onChange={(e) => {
                           const val = e.target.value;
                           const nextVariants = [...(formData.variants || [])];
-                          const found = (dbMaterials.length > 0 ? dbMaterials : FABRIC_MATERIALS).find(
-                            (m) => ("value" in m ? m.value === val : m.name === val)
+                          const found = dbMaterials.find(
+                            (m) => m.name === val || m.nameAr === val,
                           );
-                          const nameAr = found ? ("nameAr" in found ? found.nameAr : (found as any).ar) : "";
+                          const nameAr = found ? found.nameAr : "";
                           nextVariants[index] = {
                             ...nextVariants[index],
-                            material: val as FabricMaterialValue | "",
+                            material: val,
                             materialAr: nameAr || "",
                           };
                           onFieldChange("variants", nextVariants);
                         }}
-                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs"
+                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs sm:text-sm hover:cursor-pointer"
                       >
                         <option value="">Select material</option>
-                        {(dbMaterials.length > 0
-                          ? dbMaterials.map(m => ({ value: m.name, label: m.name }))
-                          : FABRIC_MATERIALS.map(m => ({ value: m.value, label: m.en }))
-                        ).map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
+                        {dbMaterials.map((m) => (
+                          <option key={m._id} value={m.name}>
+                            {m.name}
                           </option>
                         ))}
                       </select>
@@ -1228,15 +1004,19 @@ export default function FabricAdminFormFields({
                         <div className="relative">
                           <button
                             type="button"
-                            onClick={() => setOpenVariantColorDropdown(prev => prev === index ? null : index)}
-                            className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between gap-2 cursor-pointer"
+                            onClick={() =>
+                              setOpenVariantColorDropdown((prev) =>
+                                prev === index ? null : index,
+                              )
+                            }
+                            className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center justify-between gap-2 hover:cursor-pointer"
                           >
                             {!variant.colors || variant.colors.length === 0 ? (
-                              <span className="text-xs text-black/60 leading-none">
+                              <span className="text-[10px] sm:text-xs text-black/60 leading-none">
                                 Select colors
                               </span>
                             ) : (
-                              <div className="flex flex-wrap gap-2 items-center">
+                              <div className="flex flex-wrap gap-1 sm:gap-1.5 items-center">
                                 {COLOR_OPTIONS.filter((c) =>
                                   variant.colors?.includes(c.value),
                                 ).map((c) => (
@@ -1246,8 +1026,8 @@ export default function FabricAdminFormFields({
                                     title={c.en}
                                   >
                                     <span
-                                      className="w-5 h-5 rounded-full border border-gray-200"
-                                      style={{ backgroundColor: c.value }}
+                                      className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-gray-200 shrink-0"
+                                      style={{ background: c.hex }}
                                     />
                                   </span>
                                 ))}
@@ -1256,7 +1036,9 @@ export default function FabricAdminFormFields({
                             <ChevronDown
                               size={14}
                               className={`shrink-0 text-black/40 transition-transform duration-200 ${
-                                openVariantColorDropdown === index ? "rotate-180" : ""
+                                openVariantColorDropdown === index
+                                  ? "rotate-180"
+                                  : ""
                               }`}
                             />
                           </button>
@@ -1268,36 +1050,50 @@ export default function FabricAdminFormFields({
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: -8, scale: 0.96 }}
                                 transition={{ duration: 0.15, ease: "easeOut" }}
-                                className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3 z-50 origin-top"
+                                className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-1.5 sm:p-3 z-50 origin-top max-h-60 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full"
                               >
-                                <div className="max-h-44 overflow-auto flex flex-col gap-2">
+                                <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-2 sm:gap-1">
                                   {COLOR_OPTIONS.map((opt) => {
-                                    const isSelected = variant.colors?.includes(opt.value);
+                                    const isSelected = variant.colors?.includes(
+                                      opt.value,
+                                    );
                                     return (
                                       <label
                                         key={opt.value}
-                                        className="flex items-center gap-2 cursor-pointer"
+                                        className="flex items-center gap-1 sm:gap-1.5 cursor-pointer px-1 py-0.5 hover:bg-gray-50 rounded hover:cursor-pointer"
                                       >
                                         <input
                                           type="checkbox"
                                           checked={isSelected}
                                           onChange={() => {
-                                            const currentColors = variant.colors || [];
-                                            const nextColors = currentColors.includes(opt.value)
-                                              ? currentColors.filter((col) => col !== opt.value)
-                                              : [...currentColors, opt.value];
-                                            const nextVariants = [...(formData.variants || [])];
-                                            nextVariants[index] = { ...nextVariants[index], colors: nextColors };
-                                            onFieldChange("variants", nextVariants);
+                                            const currentColors =
+                                              variant.colors || [];
+                                            const nextColors =
+                                              currentColors.includes(opt.value)
+                                                ? currentColors.filter(
+                                                    (col) => col !== opt.value,
+                                                  )
+                                                : [...currentColors, opt.value];
+                                            const nextVariants = [
+                                              ...(formData.variants || []),
+                                            ];
+                                            nextVariants[index] = {
+                                              ...nextVariants[index],
+                                              colors: nextColors,
+                                            };
+                                            onFieldChange(
+                                              "variants",
+                                              nextVariants,
+                                            );
                                           }}
-                                          className="accent-black"
+                                          className="accent-black w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 hover:cursor-pointer"
                                         />
-                                        <span className="inline-flex items-center gap-2">
+                                        <span className="inline-flex items-center gap-1 sm:gap-1.5 min-w-0">
                                           <span
-                                            className="w-4 h-4 rounded-full border border-gray-200"
-                                            style={{ backgroundColor: opt.value }}
+                                            className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full border border-gray-200 shrink-0"
+                                            style={{ background: opt.hex }}
                                           />
-                                          <span className="text-xs">
+                                          <span className="text-[8px] sm:text-[10px] lg:text-xs truncate hover:cursor-pointer">
                                             {opt.en} / {opt.ar}
                                           </span>
                                         </span>
@@ -1319,9 +1115,14 @@ export default function FabricAdminFormFields({
                       required
                     >
                       <input
-                        type="text"
+                        type="number"
                         inputMode="decimal"
-                        value={variant.pricePerMeter === 0 ? "" : variant.pricePerMeter}
+                        step={0.1}
+                        value={
+                          variant.pricePerMeter === 0
+                            ? ""
+                            : variant.pricePerMeter
+                        }
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val === "" || /^\d*\.?\d*$/.test(val)) {
@@ -1329,12 +1130,11 @@ export default function FabricAdminFormFields({
                             nextVariants[index] = {
                               ...nextVariants[index],
                               pricePerMeter: val,
-                              pricePerUnit: val,
                             };
                             onFieldChange("variants", nextVariants);
                           }
                         }}
-                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs"
+                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs sm:text-sm hover:cursor-text"
                         placeholder="0.00"
                       />
                     </FormField>
@@ -1346,23 +1146,34 @@ export default function FabricAdminFormFields({
                       required
                     >
                       <input
-                        type="text"
+                        type="number"
                         inputMode="numeric"
-                        value={variant.stockInMeters === 0 ? "" : variant.stockInMeters}
+                        step={0.01}
+                        value={
+                          variant.stockInMeters === 0
+                            ? ""
+                            : variant.stockInMeters
+                        }
                         onChange={(e) => {
                           const val = e.target.value;
                           if (val === "" || /^\d*$/.test(val)) {
                             const nextVariants = [...(formData.variants || [])];
-                            nextVariants[index] = { ...nextVariants[index], stockInMeters: val };
+                            nextVariants[index] = {
+                              ...nextVariants[index],
+                              stockInMeters: val,
+                            };
                             onFieldChange("variants", nextVariants);
                           }
                         }}
-                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs"
+                        className="w-full py-1 border-b border-gray-300 focus:border-black focus:outline-none bg-transparent text-xs sm:text-sm hover:cursor-text"
                         placeholder="e.g. 50"
                       />
                     </FormField>
 
-                    <FormField label="Active Status" name={`${prefix}.isActive`}>
+                    <FormField
+                      label="Active Status"
+                      name={`${prefix}.isActive`}
+                    >
                       <div className="flex items-center gap-2 mt-2">
                         <input
                           type="checkbox"
@@ -1370,14 +1181,17 @@ export default function FabricAdminFormFields({
                           checked={variant.isActive}
                           onChange={(e) => {
                             const nextVariants = [...(formData.variants || [])];
-                            nextVariants[index] = { ...nextVariants[index], isActive: e.target.checked };
+                            nextVariants[index] = {
+                              ...nextVariants[index],
+                              isActive: e.target.checked,
+                            };
                             onFieldChange("variants", nextVariants);
                           }}
-                          className="w-4 h-4 cursor-pointer"
+                          className="w-3.5 h-3.5 sm:w-4 sm:h-4 hover:cursor-pointer"
                         />
                         <label
                           htmlFor={`${prefix}.isActive`}
-                          className="text-xs text-gray-700 cursor-pointer"
+                          className="text-[10px] sm:text-xs text-gray-700 hover:cursor-pointer"
                         >
                           Active (visible to customers)
                         </label>
@@ -1385,7 +1199,7 @@ export default function FabricAdminFormFields({
                     </FormField>
 
                     <div className="md:col-span-2 space-y-2">
-                      <div className="flex justify-between items-center mb-2">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
                         <span className="font-label-sm text-[10px] text-black/60 uppercase tracking-widest font-semibold">
                           Images (Max 5)
                         </span>
@@ -1393,31 +1207,43 @@ export default function FabricAdminFormFields({
                           <button
                             type="button"
                             onClick={() => {
-                              const nextVariants = [...(formData.variants || [])];
+                              const nextVariants = [
+                                ...(formData.variants || []),
+                              ];
                               nextVariants[index] = {
                                 ...nextVariants[index],
                                 images: [...nextVariants[index].images, ""],
                               };
                               onFieldChange("variants", nextVariants);
                             }}
-                            className="text-xs text-black underline hover:text-neutral-700 font-medium"
+                            className="text-[10px] sm:text-xs text-black underline hover:text-neutral-700 font-medium hover:cursor-pointer"
                           >
                             + Add Image
                           </button>
                         )}
                       </div>
                       {fieldErrors[`${prefix}.images`] && (
-                        <p className="text-xs text-red-500 mb-2">{fieldErrors[`${prefix}.images`]}</p>
+                        <p className="text-[10px] sm:text-xs text-red-500 mb-2">
+                          {fieldErrors[`${prefix}.images`]}
+                        </p>
                       )}
                       {variant.images.map((imgUrl, imgIdx) => (
-                        <div key={imgIdx} className="p-4 border border-gray-100 bg-white rounded-none space-y-2">
+                        <div
+                          key={imgIdx}
+                          className="p-3 sm:p-4 border border-gray-100 bg-white rounded-none space-y-2"
+                        >
                           <FabricImageUpload
                             value={imgUrl}
                             onChange={(val) => {
-                              const nextVariants = [...(formData.variants || [])];
+                              const nextVariants = [
+                                ...(formData.variants || []),
+                              ];
                               const nextImgs = [...nextVariants[index].images];
                               nextImgs[imgIdx] = val;
-                              nextVariants[index] = { ...nextVariants[index], images: nextImgs };
+                              nextVariants[index] = {
+                                ...nextVariants[index],
+                                images: nextImgs,
+                              };
                               onFieldChange("variants", nextVariants);
                             }}
                             chooseFileLabel="Upload Image"
@@ -1429,12 +1255,19 @@ export default function FabricAdminFormFields({
                             <button
                               type="button"
                               onClick={() => {
-                                const nextVariants = [...(formData.variants || [])];
-                                const nextImgs = nextVariants[index].images.filter((_, i) => i !== imgIdx);
-                                nextVariants[index] = { ...nextVariants[index], images: nextImgs };
+                                const nextVariants = [
+                                  ...(formData.variants || []),
+                                ];
+                                const nextImgs = nextVariants[
+                                  index
+                                ].images.filter((_, i) => i !== imgIdx);
+                                nextVariants[index] = {
+                                  ...nextVariants[index],
+                                  images: nextImgs,
+                                };
                                 onFieldChange("variants", nextVariants);
                               }}
-                              className="text-[10px] text-red-500 hover:underline block mt-2"
+                              className="text-[10px] sm:text-xs text-red-500 hover:underline hover:cursor-pointer"
                             >
                               Remove image from list
                             </button>

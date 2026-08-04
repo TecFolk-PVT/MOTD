@@ -11,6 +11,7 @@ import {
 } from "@/lib/tailors";
 import { ImageModal } from "@/components/shared/ImageModal";
 import ZoomImageEffect from "@/components/shared/ZoomImageEffect";
+import { useMeasurementUnit } from "@/hooks/useMeasurementUnit";
 
 const CATEGORY_COLORS: Record<string, string> = {
   "hand-embroidered": "#8B6B4D",
@@ -77,6 +78,7 @@ export default function DesignDetailView({
   labels,
 }: DesignDetailViewProps) {
   const isAr = locale === "ar";
+  const { unit, formatLength } = useMeasurementUnit();
   const { name, description, category } = getDesignDisplayFields(
     design,
     locale,
@@ -367,6 +369,7 @@ export default function DesignDetailView({
                     design.basePrice,
                     locale,
                     design.priceType,
+                    unit,
                   )}
                 </p>
               </motion.div>
@@ -401,7 +404,7 @@ export default function DesignDetailView({
                     {labels.estimatedMeters}
                   </p>
                   <p className="[font-family:var(--font-body)] text-base text-black mt-1 font-normal">
-                    {design.estimatedMeters}m
+                    {formatLength(design.estimatedMeters)}
                   </p>
                 </div>
                 <div>

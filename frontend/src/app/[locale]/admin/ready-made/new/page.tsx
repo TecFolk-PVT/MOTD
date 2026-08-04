@@ -13,132 +13,10 @@ import {
 } from "@/lib/readyMadeAdmin";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/AuthContext";
+import colors from "@/components/shared/colors";
+import AnimatedDropdown from "@/components/shared/AnimatedDropdown";
 
-const TAG_OPTIONS = [
-  { value: "new", en: "New", ar: "جديد" },
-  { value: "bestseller", en: "Bestseller", ar: "الأكثر مبيعاً" },
-  { value: "premium", en: "Premium", ar: "ممتاز" },
-  { value: "limited", en: "Limited", ar: "محدود" },
-  { value: "exclusive", en: "Exclusive", ar: "حصري" },
-  { value: "trending", en: "Trending", ar: "رائج" },
-  { value: "handmade", en: "Handmade", ar: "يدوي" },
-];
-
-const COLOR_OPTIONS = [
-  { value: "aqua", en: "Aqua", ar: "أزرق مائي" },
-  { value: "aquamarine", en: "Aquamarine", ar: "أزرق بحري" },
-  { value: "beige", en: "Beige", ar: "بيج" },
-  { value: "bisque", en: "Bisque", ar: "بسكويتي" },
-  { value: "black", en: "Black", ar: "أسود" },
-  { value: "blue", en: "Blue", ar: "أزرق" },
-  { value: "blueviolet", en: "Blue Violet", ar: "بنفسجي مزرق" },
-  { value: "brown", en: "Brown", ar: "بني" },
-  { value: "burlywood", en: "Burlywood", ar: "بني فاتح" },
-  { value: "cadetblue", en: "Cadet Blue", ar: "أزرق كاديت" },
-  { value: "chocolate", en: "Chocolate", ar: "شوكولاتة" },
-  { value: "coral", en: "Coral", ar: "مرجاني" },
-  { value: "cornflowerblue", en: "Cornflower Blue", ar: "أزرق ردة الذرة" },
-  { value: "cornsilk", en: "Cornsilk", ar: "حرير الذرة" },
-  { value: "crimson", en: "Crimson", ar: "قرمزي" },
-  { value: "cyan", en: "Cyan", ar: "سيان" },
-  { value: "darkblue", en: "Dark Blue", ar: "أزرق غامق" },
-  { value: "darkcyan", en: "Dark Cyan", ar: "سيان غامق" },
-  { value: "darkgoldenrod", en: "Dark Goldenrod", ar: "ذهبي غامق" },
-  { value: "darkgray", en: "Dark Gray", ar: "رمادي غامق" },
-  { value: "darkgreen", en: "Dark Green", ar: "أخضر غامق" },
-  { value: "darkkhaki", en: "Dark Khaki", ar: "كاكي غامق" },
-  { value: "darkmagenta", en: "Dark Magenta", ar: "أرجواني غامق" },
-  { value: "darkorchid", en: "Dark Orchid", ar: "أوركيد غامق" },
-  { value: "darkred", en: "Dark Red", ar: "أحمر غامق" },
-  { value: "darksalmon", en: "Dark Salmon", ar: "سلمون غامق" },
-  { value: "darkseagreen", en: "Dark Sea Green", ar: "أخضر بحري غامق" },
-  { value: "darkslateblue", en: "Dark Slate Blue", ar: "أزرق أردوازي غامق" },
-  { value: "darkslategray", en: "Dark Slate Gray", ar: "رمادي أردوازي غامق" },
-  { value: "darkturquoise", en: "Dark Turquoise", ar: "فيروزي غامق" },
-  { value: "darkviolet", en: "Dark Violet", ar: "بنفسجي غامق" },
-  { value: "deeppink", en: "Deep Pink", ar: "وردي غامق" },
-  { value: "deepskyblue", en: "Deep Sky Blue", ar: "أزرق سماوي غامق" },
-  { value: "dimgray", en: "Dim Gray", ar: "رمادي خافت" },
-  { value: "dodgerblue", en: "Dodger Blue", ar: "أزرق دودجر" },
-  { value: "firebrick", en: "Firebrick", ar: "أحمر طوب" },
-  { value: "fuchsia", en: "Fuchsia", ar: "فوشيا" },
-  { value: "gainsboro", en: "Gainsboro", ar: "رمادي فاتح" },
-  { value: "gold", en: "Gold", ar: "ذهبي" },
-  { value: "goldenrod", en: "Goldenrod", ar: "ذهبي محمر" },
-  { value: "gray", en: "Gray", ar: "رمادي" },
-  { value: "green", en: "Green", ar: "أخضر" },
-  { value: "greenyellow", en: "Green Yellow", ar: "أصفر مخضر" },
-  { value: "grey", en: "Grey", ar: "رمادي" },
-  { value: "hotpink", en: "Hot Pink", ar: "وردي ساخن" },
-  { value: "indianred", en: "Indian Red", ar: "أحمر هندي" },
-  { value: "indigo", en: "Indigo", ar: "نيلي" },
-  { value: "ivory", en: "Ivory", ar: "عاجي" },
-  { value: "khaki", en: "Khaki", ar: "كاكي" },
-  { value: "lavender", en: "Lavender", ar: "لافندر" },
-  { value: "lightblue", en: "Light Blue", ar: "أزرق فاتح" },
-  { value: "lightgray", en: "Light Gray", ar: "رمادي فاتح" },
-  { value: "lightgreen", en: "Light Green", ar: "أخضر فاتح" },
-  { value: "lightpink", en: "Light Pink", ar: "وردي فاتح" },
-  { value: "lightsalmon", en: "Light Salmon", ar: "سلمون فاتح" },
-  { value: "lightseagreen", en: "Light Sea Green", ar: "أخضر بحري فاتح" },
-  { value: "lightskyblue", en: "Light Sky Blue", ar: "أزرق سماوي فاتح" },
-  { value: "lightslategray", en: "Light Slate Gray", ar: "رمادي أردوازي فاتح" },
-  { value: "lightsteelblue", en: "Light Steel Blue", ar: "أزرق فولاذي فاتح" },
-  { value: "maroon", en: "Maroon", ar: "كستنائي" },
-  { value: "mediumblue", en: "Medium Blue", ar: "أزرق متوسط" },
-  { value: "mediumpurple", en: "Medium Purple", ar: "بنفسجي متوسط" },
-  { value: "mediumseagreen", en: "Medium Sea Green", ar: "أخضر بحري متوسط" },
-  {
-    value: "mediumslateblue",
-    en: "Medium Slate Blue",
-    ar: "أزرق أردوازي متوسط",
-  },
-  { value: "mediumturquoise", en: "Medium Turquoise", ar: "فيروزي متوسط" },
-  {
-    value: "mediumvioletred",
-    en: "Medium Violet Red",
-    ar: "أحمر بنفسجي متوسط",
-  },
-  { value: "midnightblue", en: "Midnight Blue", ar: "أزرق منتصف الليل" },
-  { value: "moccasin", en: "Moccasin", ar: "موكاسين" },
-  { value: "navy", en: "Navy Blue", ar: "كحلي" },
-  { value: "olive", en: "Olive", ar: "زيتوني" },
-  { value: "olivedrab", en: "Olive Drab", ar: "زيتوني باهت" },
-  { value: "orange", en: "Orange", ar: "برتقالي" },
-  { value: "orchid", en: "Orchid", ar: "أوركيد" },
-  { value: "palegoldenrod", en: "Pale Goldenrod", ar: "ذهبي باهت" },
-  { value: "palegreen", en: "Pale Green", ar: "أخضر باهت" },
-  { value: "paleturquoise", en: "Pale Turquoise", ar: "فيروزي باهت" },
-  { value: "palevioletred", en: "Pale Violet Red", ar: "أحمر بنفسجي باهت" },
-  { value: "peachpuff", en: "Peach Puff", ar: "خوخي" },
-  { value: "pink", en: "Pink", ar: "وردي" },
-  { value: "plum", en: "Plum", ar: "برقوقي" },
-  { value: "powderblue", en: "Powder Blue", ar: "أزرق بودرة" },
-  { value: "purple", en: "Purple", ar: "بنفسجي" },
-  { value: "rebeccapurple", en: "Rebecca Purple", ar: "بنفسجي ريبيكا" },
-  { value: "red", en: "Red", ar: "أحمر" },
-  { value: "rosybrown", en: "Rosy Brown", ar: "بني وردي" },
-  { value: "royalblue", en: "Royal Blue", ar: "أزرق ملكي" },
-  { value: "saddlebrown", en: "Saddle Brown", ar: "بني السرج" },
-  { value: "salmon", en: "Salmon", ar: "سلمون" },
-  { value: "sandybrown", en: "Sandy Brown", ar: "بني رملي" },
-  { value: "seagreen", en: "Sea Green", ar: "أخضر بحري" },
-  { value: "silver", en: "Silver", ar: "فضي" },
-  { value: "skyblue", en: "Sky Blue", ar: "أزرق سماوي" },
-  { value: "slateblue", en: "Slate Blue", ar: "أزرق أردوازي" },
-  { value: "slategray", en: "Slate Gray", ar: "رمادي أردوازي" },
-  { value: "steelblue", en: "Steel Blue", ar: "أزرق فولاذي" },
-  { value: "tan", en: "Tan", ar: "سمراء" },
-  { value: "teal", en: "Teal", ar: "بطي" },
-  { value: "thistle", en: "Thistle", ar: "شوكي" },
-  { value: "tomato", en: "Tomato", ar: "طماطمي" },
-  { value: "turquoise", en: "Turquoise", ar: "فيروزي" },
-  { value: "violet", en: "Violet", ar: "بنفسجي" },
-  { value: "wheat", en: "Wheat", ar: "قمحي" },
-  { value: "white", en: "White", ar: "أبيض" },
-  { value: "yellow", en: "Yellow", ar: "أصفر" },
-  { value: "yellowgreen", en: "Yellow Green", ar: "أصفر مخضر" },
-];
+const COLOR_OPTIONS = colors;
 
 const sanitizeName = (value: string) =>
   value.replace(/[^a-zA-Z\u0600-\u06FF\s\-']/g, "");
@@ -146,7 +24,6 @@ const sanitizeName = (value: string) =>
 export default function NewReadyMadePage() {
   const { user } = useAuth();
   const userName = user?.name || "MOTD Admin";
-  const colorsDetailsRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
   const params = useParams();
   const localeParam = params.locale as string;
@@ -159,14 +36,21 @@ export default function NewReadyMadePage() {
     defaultReadyMadeForm(),
   );
   const [fabricWidth, setFabricWidth] = useState<"single" | "double">("single");
+
+  // Dropdown states
+  const [fabricShopOpen, setFabricShopOpen] = useState(false);
+  const [fabricOpen, setFabricOpen] = useState(false);
+  const [tailorShopOpen, setTailorShopOpen] = useState(false);
+  const [designOpen, setDesignOpen] = useState(false);
+  const [tagOpen, setTagOpen] = useState(false);
+  const [tagArOpen, setTagArOpen] = useState(false);
   const [colorsOpen, setColorsOpen] = useState(false);
-  const colorsDropdownRef = useRef<HTMLDivElement>(null);
 
   const [fabricShops, setFabricShops] = useState<any[]>([]);
   const [allFabrics, setAllFabrics] = useState<any[]>([]);
   const [tailorShops, setTailorShops] = useState<any[]>([]);
   const [allDesigns, setAllDesigns] = useState<any[]>([]);
-  const [allTags, setAllTags] = useState<any[]>(TAG_OPTIONS);
+  const [allTags, setAllTags] = useState<any[]>([]);
 
   useEffect(() => {
     const loadDropdownData = async () => {
@@ -222,21 +106,6 @@ export default function NewReadyMadePage() {
       return shopId === formData.tailorShopId;
     });
   }, [allDesigns, formData.tailorShopId]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        colorsDropdownRef.current &&
-        !colorsDropdownRef.current.contains(event.target as Node)
-      ) {
-        setColorsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const handleChange = (field: keyof ReadyMadeFormData, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -320,25 +189,8 @@ export default function NewReadyMadePage() {
     return Object.keys(errors).length === 0;
   };
 
-  useEffect(() => {
-    const onDocMouseDown = (ev: MouseEvent) => {
-      const el = colorsDetailsRef.current;
-      if (!el) return;
-      const target = ev.target as Node | null;
-      if (!target) return;
-      if (!el.contains(target)) {
-        const detailsEl = el.closest("details") as HTMLDetailsElement | null;
-        if (detailsEl) detailsEl.open = false;
-      }
-    };
-
-    document.addEventListener("mousedown", onDocMouseDown);
-    return () => document.removeEventListener("mousedown", onDocMouseDown);
-  }, []);
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    console.log("Create Product Button Clicked");
 
     if (!validate()) {
       const errorMessages = Object.values(fieldErrors).filter(Boolean);
@@ -373,22 +225,46 @@ export default function NewReadyMadePage() {
     }
   };
 
+  // Custom dropdown trigger for select fields
+  const SelectTrigger = ({
+    value,
+    placeholder,
+    displayValue,
+    onClick,
+  }: {
+    value: string;
+    placeholder: string;
+    displayValue: string;
+    onClick: () => void;
+  }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent text-xs sm:text-[14px] flex items-center justify-between hover:cursor-pointer"
+    >
+      <span className={value ? "text-black" : "text-gray-400"}>
+        {displayValue || placeholder}
+      </span>
+      <span className="text-gray-400">▾</span>
+    </button>
+  );
+
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 px-3 sm:px-0">
       <div>
-        <h1 className="text-2xl md:text-3xl font-light text-black tracking-tight">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-light text-black tracking-tight">
           {t.adminDashboard.title}
         </h1>
-        <p className="text-gray-500 text-sm mt-1">
+        <p className="text-gray-500 text-xs sm:text-sm mt-1">
           {t.adminDashboard.subtitle}
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6"
+        className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* NAME */}
           <FormField
             label="Name (ENG)"
@@ -400,7 +276,7 @@ export default function NewReadyMadePage() {
               value={formData.name}
               onChange={(e) => handleNameChange("name", e.target.value)}
               placeholder="Chiffon Silk Mukhawar"
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start hover:cursor-text text-xs sm:text-sm"
             />
           </FormField>
 
@@ -415,40 +291,50 @@ export default function NewReadyMadePage() {
               value={formData.nameAr}
               onChange={(e) => handleNameChange("nameAr", e.target.value)}
               placeholder="مخاوير شيفون حرير"
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end hover:cursor-text text-xs sm:text-sm"
             />
           </FormField>
 
           {/* DESCRIPTION (EN) */}
           <FormField label="Description">
             <textarea
-              rows={2}
+              rows={1}
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
               placeholder="Buy our Premium Mukhawar ...."
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent resize-none overflow-hidden leading-[1.6]"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent resize-none overflow-hidden leading-[1.6] hover:cursor-text text-xs sm:text-sm min-h-10"
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = target.scrollHeight + "px";
+              }}
             />
           </FormField>
 
           {/* DESCRIPTION (AR) */}
           <FormField label="Description (AR)">
             <textarea
-              rows={2}
+              rows={1}
               value={formData.descriptionAr}
               onChange={(e) => handleChange("descriptionAr", e.target.value)}
               placeholder="... اشترِ مخورنا الفاخر"
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent resize-none overflow-hidden leading-[1.6]"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent resize-none overflow-hidden leading-[1.6] hover:cursor-text text-xs sm:text-sm min-h-10"
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = target.scrollHeight + "px";
+              }}
             />
           </FormField>
 
           {/* CODE, STOCK, MIN AGE, MAX AGE - in one row */}
-          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
             <FormField label="Code (OPTIONAL)" name="code">
               <input
                 value={formData.code}
                 onChange={(e) => handleChange("code", e.target.value)}
                 placeholder="0000"
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none hover:cursor-text text-xs sm:text-sm"
               />
             </FormField>
 
@@ -466,7 +352,7 @@ export default function NewReadyMadePage() {
                 onChange={(e) =>
                   handleNumberChange("availableFabricStock", e.target.value)
                 }
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none hover:cursor-text text-xs sm:text-sm"
               />
             </FormField>
 
@@ -479,7 +365,7 @@ export default function NewReadyMadePage() {
                 placeholder="0"
                 value={getNumberDisplay(formData.minAge)}
                 onChange={(e) => handleNumberChange("minAge", e.target.value)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none hover:cursor-text text-xs sm:text-sm"
               />
             </FormField>
 
@@ -492,7 +378,7 @@ export default function NewReadyMadePage() {
                 placeholder="0"
                 value={getNumberDisplay(formData.maxAge)}
                 onChange={(e) => handleNumberChange("maxAge", e.target.value)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none hover:cursor-text text-xs sm:text-sm"
               />
             </FormField>
           </div>
@@ -504,22 +390,49 @@ export default function NewReadyMadePage() {
             error={fieldErrors.fabricShopId}
             required
           >
-            <select
-              value={formData.fabricShopId}
-              onChange={(e) => {
-                const shopId = e.target.value;
-                handleChange("fabricShopId", shopId);
-                handleChange("fabricId", "");
-              }}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-[14px]"
+            <AnimatedDropdown
+              isOpen={fabricShopOpen}
+              onClose={() => setFabricShopOpen(false)}
+              trigger={
+                <SelectTrigger
+                  value={formData.fabricShopId}
+                  placeholder="Select Fabric Store"
+                  displayValue={
+                    fabricShops.find((s) => s._id === formData.fabricShopId)
+                      ?.name || ""
+                  }
+                  onClick={() => setFabricShopOpen(!fabricShopOpen)}
+                />
+              }
+              dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+              position="bottom-left"
             >
-              <option value="">Select Fabric Store</option>
+              <button
+                type="button"
+                onClick={() => {
+                  handleChange("fabricShopId", "");
+                  handleChange("fabricId", "");
+                  setFabricShopOpen(false);
+                }}
+                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+              >
+                Select Fabric Store
+              </button>
               {fabricShops.map((shop) => (
-                <option key={shop._id} value={shop._id}>
+                <button
+                  key={shop._id}
+                  type="button"
+                  onClick={() => {
+                    handleChange("fabricShopId", shop._id);
+                    handleChange("fabricId", "");
+                    setFabricShopOpen(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
                   {shop.name}
-                </option>
+                </button>
               ))}
-            </select>
+            </AnimatedDropdown>
           </FormField>
 
           {/* FABRIC */}
@@ -529,19 +442,47 @@ export default function NewReadyMadePage() {
             error={fieldErrors.fabricId}
             required
           >
-            <select
-              value={formData.fabricId}
-              onChange={(e) => handleChange("fabricId", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-[14px]"
-              disabled={!formData.fabricShopId}
+            <AnimatedDropdown
+              isOpen={fabricOpen}
+              onClose={() => setFabricOpen(false)}
+              trigger={
+                <SelectTrigger
+                  value={formData.fabricId}
+                  placeholder="Select Fabric"
+                  displayValue={
+                    filteredFabrics.find((f) => f._id === formData.fabricId)
+                      ?.name || ""
+                  }
+                  onClick={() => setFabricOpen(!fabricOpen)}
+                />
+              }
+              dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+              position="bottom-left"
             >
-              <option value="">Select Fabric</option>
+              <button
+                type="button"
+                onClick={() => {
+                  handleChange("fabricId", "");
+                  setFabricOpen(false);
+                }}
+                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+              >
+                Select Fabric
+              </button>
               {filteredFabrics.map((f) => (
-                <option key={f._id} value={f._id}>
+                <button
+                  key={f._id}
+                  type="button"
+                  onClick={() => {
+                    handleChange("fabricId", f._id);
+                    setFabricOpen(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
                   {localeParam === "ar" ? f.nameAr || f.name : f.name}
-                </option>
+                </button>
               ))}
-            </select>
+            </AnimatedDropdown>
           </FormField>
 
           {/* TAILOR SHOP */}
@@ -550,22 +491,49 @@ export default function NewReadyMadePage() {
             name="tailorShopId"
             error={fieldErrors.tailorShopId}
           >
-            <select
-              value={formData.tailorShopId}
-              onChange={(e) => {
-                const shopId = e.target.value;
-                handleChange("tailorShopId", shopId);
-                handleChange("designId", "");
-              }}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-[14px]"
+            <AnimatedDropdown
+              isOpen={tailorShopOpen}
+              onClose={() => setTailorShopOpen(false)}
+              trigger={
+                <SelectTrigger
+                  value={formData.tailorShopId}
+                  placeholder="Select Tailor Shop"
+                  displayValue={
+                    tailorShops.find((s) => s._id === formData.tailorShopId)
+                      ?.name || ""
+                  }
+                  onClick={() => setTailorShopOpen(!tailorShopOpen)}
+                />
+              }
+              dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+              position="bottom-left"
             >
-              <option value="">Select Tailor Shop</option>
+              <button
+                type="button"
+                onClick={() => {
+                  handleChange("tailorShopId", "");
+                  handleChange("designId", "");
+                  setTailorShopOpen(false);
+                }}
+                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+              >
+                Select Tailor Shop
+              </button>
               {tailorShops.map((shop) => (
-                <option key={shop._id} value={shop._id}>
+                <button
+                  key={shop._id}
+                  type="button"
+                  onClick={() => {
+                    handleChange("tailorShopId", shop._id);
+                    handleChange("designId", "");
+                    setTailorShopOpen(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
                   {shop.name}
-                </option>
+                </button>
               ))}
-            </select>
+            </AnimatedDropdown>
           </FormField>
 
           {/* DESIGN */}
@@ -574,19 +542,47 @@ export default function NewReadyMadePage() {
             name="designId"
             error={fieldErrors.designId}
           >
-            <select
-              value={formData.designId}
-              onChange={(e) => handleChange("designId", e.target.value)}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-transparent hover:cursor-pointer text-[14px]"
-              disabled={!formData.tailorShopId}
+            <AnimatedDropdown
+              isOpen={designOpen}
+              onClose={() => setDesignOpen(false)}
+              trigger={
+                <SelectTrigger
+                  value={formData.designId}
+                  placeholder="Select Design"
+                  displayValue={
+                    filteredDesigns.find((d) => d._id === formData.designId)
+                      ?.name || ""
+                  }
+                  onClick={() => setDesignOpen(!designOpen)}
+                />
+              }
+              dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+              position="bottom-left"
             >
-              <option value="">Select Design</option>
+              <button
+                type="button"
+                onClick={() => {
+                  handleChange("designId", "");
+                  setDesignOpen(false);
+                }}
+                className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+              >
+                Select Design
+              </button>
               {filteredDesigns.map((d) => (
-                <option key={d._id} value={d._id}>
+                <button
+                  key={d._id}
+                  type="button"
+                  onClick={() => {
+                    handleChange("designId", d._id);
+                    setDesignOpen(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
                   {localeParam === "ar" ? d.nameAr || d.name : d.name}
-                </option>
+                </button>
               ))}
-            </select>
+            </AnimatedDropdown>
           </FormField>
 
           {/* METERS */}
@@ -611,43 +607,47 @@ export default function NewReadyMadePage() {
                   }
                 }
               }}
-              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+              className="w-full py-1 border-b border-gray-300 focus:border-black outline-none hover:cursor-text text-xs sm:text-sm"
             />
           </FormField>
 
           {/* FABRIC WIDTH – radio buttons */}
           <div>
-            <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+            <label className="block text-[10px] sm:text-xs uppercase tracking-widest text-gray-500 mb-2">
               Fabric Width
             </label>
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2">
+            <div className="flex gap-4 sm:gap-6">
+              <label className="flex items-center gap-1.5 sm:gap-2 hover:cursor-pointer">
                 <input
                   type="radio"
                   name="fabricWidth"
                   value="single"
                   checked={fabricWidth === "single"}
                   onChange={() => setFabricWidth("single")}
-                  className="accent-black"
+                  className="accent-black hover:cursor-pointer w-3.5 h-3.5 sm:w-4 sm:h-4"
                 />
-                Single Width
+                <span className="text-xs sm:text-sm hover:cursor-pointer">
+                  Single Width
+                </span>
               </label>
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-1.5 sm:gap-2 hover:cursor-pointer">
                 <input
                   type="radio"
                   name="fabricWidth"
                   value="double"
                   checked={fabricWidth === "double"}
                   onChange={() => setFabricWidth("double")}
-                  className="accent-black"
+                  className="accent-black hover:cursor-pointer w-3.5 h-3.5 sm:w-4 sm:h-4"
                 />
-                Double Width
+                <span className="text-xs sm:text-sm hover:cursor-pointer">
+                  Double Width
+                </span>
               </label>
             </div>
           </div>
 
           {/* PRICES - in one row */}
-          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <FormField
               label="Fabric Price AED"
               error={fieldErrors.fabricPriceAED}
@@ -661,7 +661,7 @@ export default function NewReadyMadePage() {
                 onChange={(e) =>
                   handleNumberChange("fabricPriceAED", e.target.value)
                 }
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none hover:cursor-text text-xs sm:text-sm"
               />
             </FormField>
 
@@ -678,7 +678,7 @@ export default function NewReadyMadePage() {
                 onChange={(e) =>
                   handleNumberChange("mukhawarPriceAED", e.target.value)
                 }
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none hover:cursor-text text-xs sm:text-sm"
               />
             </FormField>
 
@@ -696,133 +696,202 @@ export default function NewReadyMadePage() {
                 onChange={(e) =>
                   handleNumberChange("finalSellingPriceAED", e.target.value)
                 }
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none hover:cursor-text text-xs sm:text-sm"
               />
             </FormField>
           </div>
 
           {/* TAG + Color + User in one row */}
-          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+            {/* TAG ENG */}
             <FormField label="Tag (ENG)" name="tag">
-              <select
-                value={formData.tag}
-                onChange={(e) => handleChange("tag", e.target.value)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-start bg-transparent"
+              <AnimatedDropdown
+                isOpen={tagOpen}
+                onClose={() => setTagOpen(false)}
+                trigger={
+                  <SelectTrigger
+                    value={formData.tag}
+                    placeholder="Select tag"
+                    displayValue={
+                      allTags.find((t) => t.value === formData.tag)?.en || ""
+                    }
+                    onClick={() => setTagOpen(!tagOpen)}
+                  />
+                }
+                dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+                position="bottom-left"
               >
-                <option value="">Select tag</option>
-                {allTags.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.en}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-
-            <FormField label="Tag (AR)" name="tagAr">
-              <select
-                value={formData.tagAr}
-                onChange={(e) => handleChange("tagAr", e.target.value)}
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none text-end bg-transparent"
-              >
-                <option value="">اختر الوسم</option>
-                {allTags.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.ar}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-
-            <FormField label="Colors" name="colors" required>
-              <div className="relative" ref={colorsDropdownRef}>
                 <button
                   type="button"
-                  onClick={() => setColorsOpen((prev) => !prev)}
-                  className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center"
+                  onClick={() => {
+                    handleChange("tag", "");
+                    setTagOpen(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
                 >
-                  {formData.colors.length === 0 ? (
-                    <span className="text-xs text-black/60 leading-none">
-                      Select colors
-                    </span>
-                  ) : (
-                    <div className="flex flex-wrap gap-2 items-center">
-                      {COLOR_OPTIONS.filter((c) =>
-                        formData.colors.includes(c.value),
-                      ).map((c) => (
-                        <span
-                          key={c.value}
-                          className="inline-flex items-center justify-center"
-                          title={c.en}
-                        >
-                          <span
-                            className="w-5 h-5 rounded-full border border-gray-200"
-                            style={{ background: c.value }}
-                          />
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  Select tag
                 </button>
-
-                {colorsOpen && (
-                  <div className="absolute left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-sm p-3 z-50">
-                    <div className="max-h-44 overflow-auto flex flex-col gap-2">
-                      {COLOR_OPTIONS.map((opt) => {
-                        const selected = formData.colors.includes(opt.value);
-
-                        return (
-                          <label
-                            key={opt.value}
-                            className="flex items-center gap-2 cursor-pointer"
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selected}
-                              onChange={() => toggleColor(opt.value)}
-                              className="accent-black"
-                            />
-
-                            <span className="inline-flex items-center gap-2">
-                              <span
-                                className="w-4 h-4 rounded-full border border-gray-200"
-                                style={{ background: opt.value }}
-                              />
-                              <span className="text-xs">
-                                {opt.en} / {opt.ar}
-                              </span>
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+                {allTags.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      handleChange("tag", opt.value);
+                      setTagOpen(false);
+                    }}
+                    className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-left text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                  >
+                    {opt.en}
+                  </button>
+                ))}
+              </AnimatedDropdown>
             </FormField>
 
+            {/* TAG AR */}
+            <FormField label="Tag (AR)" name="tagAr">
+              <AnimatedDropdown
+                isOpen={tagArOpen}
+                onClose={() => setTagArOpen(false)}
+                trigger={
+                  <button
+                    type="button"
+                    onClick={() => setTagArOpen(!tagArOpen)}
+                    className="w-full py-1 border-b border-gray-300 focus:border-black text-right bg-transparent text-xs sm:text-[14px] flex items-center justify-between flex-row-reverse hover:cursor-pointer"
+                  >
+                    <span
+                      className={
+                        formData.tagAr ? "text-black" : "text-gray-400"
+                      }
+                    >
+                      {allTags.find((t) => t.value === formData.tagAr)?.ar ||
+                        "اختر الوسم"}
+                    </span>
+                    <span className="text-gray-400">▾</span>
+                  </button>
+                }
+                dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 max-h-60 overflow-y-auto py-1"
+                position="bottom-right"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleChange("tagAr", "");
+                    setTagArOpen(false);
+                  }}
+                  className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                >
+                  اختر الوسم
+                </button>
+                {allTags.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      handleChange("tagAr", opt.value);
+                      setTagArOpen(false);
+                    }}
+                    className="w-full px-3 sm:px-4 py-1.5 sm:py-2 text-right text-xs sm:text-sm hover:bg-gray-100 hover:cursor-pointer"
+                  >
+                    {opt.ar}
+                  </button>
+                ))}
+              </AnimatedDropdown>
+            </FormField>
+
+            {/* COLORS */}
+            <FormField label="Colors" name="colors" required>
+              <AnimatedDropdown
+                isOpen={colorsOpen}
+                onClose={() => setColorsOpen(false)}
+                trigger={
+                  <button
+                    type="button"
+                    onClick={() => setColorsOpen(!colorsOpen)}
+                    className="w-full py-1 border-b border-gray-300 focus:border-black text-left bg-transparent min-h-7 flex items-center hover:cursor-pointer"
+                  >
+                    {formData.colors.length === 0 ? (
+                      <span className="text-[10px] sm:text-xs text-black/60 leading-none">
+                        Select colors
+                      </span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1 sm:gap-1.5 items-center">
+                        {COLOR_OPTIONS.filter((c) =>
+                          formData.colors.includes(c.value),
+                        ).map((c) => (
+                          <span
+                            key={c.value}
+                            className="inline-flex items-center justify-center"
+                            title={localeParam === "ar" ? c.ar : c.en}
+                          >
+                            <span
+                              className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-gray-200 shrink-0"
+                              style={{ background: c.hex }}
+                            />
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </button>
+                }
+                dropdownClassName="w-full bg-white rounded-xl shadow-lg border border-gray-200 p-1.5 sm:p-3 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-gray-100 [&::-webkit-scrollbar-thumb]:bg-gray-400 [&::-webkit-scrollbar-thumb]:rounded-full"
+                position="bottom-left"
+              >
+                <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-2 sm:gap-1">
+                  {COLOR_OPTIONS.map((opt) => {
+                    const selected = formData.colors.includes(opt.value);
+                    return (
+                      <label
+                        key={opt.value}
+                        className="flex items-center gap-1 sm:gap-1.5 cursor-pointer px-1 py-0.5 hover:bg-gray-50 rounded hover:cursor-pointer"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleColor(opt.value)}
+                          className="accent-black w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0 hover:cursor-pointer"
+                        />
+                        <span className="inline-flex items-center gap-1 sm:gap-1.5 min-w-0">
+                          <span
+                            className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 rounded-full border border-gray-200 shrink-0"
+                            style={{ background: opt.hex }}
+                          />
+                          <span className="text-[8px] sm:text-[10px] lg:text-xs truncate hover:cursor-pointer">
+                            {localeParam === "ar" ? opt.ar : opt.en}
+                          </span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </AnimatedDropdown>
+            </FormField>
+
+            {/* USER */}
             <FormField label="User" name="ownerName">
               <input
                 value={userName}
                 disabled
                 readOnly
-                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-gray-50 text-gray-500 cursor-not-allowed text-start"
+                className="w-full py-1 border-b border-gray-300 focus:border-black outline-none bg-gray-50 text-gray-500 cursor-not-allowed text-start text-xs sm:text-sm"
               />
             </FormField>
           </div>
 
           {/* IMAGES */}
           <div className="md:col-span-2">
-            <div className="mb-2 text-xs uppercase tracking-widest text-gray-500">
+            <div className="mb-2 text-[10px] sm:text-xs uppercase tracking-widest text-gray-500">
               Images (max 5) *
             </div>
             {fieldErrors.images && (
-              <p className="text-red-500 text-sm mb-2">{fieldErrors.images}</p>
+              <p className="text-red-500 text-xs sm:text-sm mb-2">
+                {fieldErrors.images}
+              </p>
             )}
 
             {formData.images.map((img, idx) => (
               <div key={idx} className="mb-3">
                 <ImageUpload
-                  value={img}
+                  value={img || ""}
                   onChange={(val) => handleImageChange(idx, val)}
                   chooseFileLabel={`Upload Image ${idx + 1}`}
                   uploadingLabel="Uploading..."
@@ -833,7 +902,7 @@ export default function NewReadyMadePage() {
                   <button
                     type="button"
                     onClick={() => removeImage(idx)}
-                    className="text-xs text-red-500 mt-1"
+                    className="text-[10px] sm:text-xs text-red-500 mt-1 hover:cursor-pointer"
                   >
                     Remove
                   </button>
@@ -845,7 +914,7 @@ export default function NewReadyMadePage() {
               <button
                 type="button"
                 onClick={addImage}
-                className="text-xs underline"
+                className="text-[10px] sm:text-xs underline hover:cursor-pointer"
               >
                 + Add Image
               </button>
@@ -854,11 +923,11 @@ export default function NewReadyMadePage() {
         </div>
 
         {/* SUBMIT */}
-        <div className="flex gap-3 pt-6 mt-3 border-t border-gray-100">
+        <div className="flex flex-col-reverse sm:flex-row-reverse gap-2 sm:gap-3 pt-6 mt-3 border-t border-gray-100">
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-black text-white rounded-lg hover:cursor-pointer"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-black text-white rounded-lg hover:cursor-pointer hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {loading ? "Saving..." : "Create Product"}
           </button>
@@ -866,7 +935,7 @@ export default function NewReadyMadePage() {
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:cursor-pointer"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 border border-gray-300 rounded-lg hover:cursor-pointer hover:bg-gray-50 transition text-sm"
           >
             Cancel
           </button>
