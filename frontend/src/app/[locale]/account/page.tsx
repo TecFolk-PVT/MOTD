@@ -24,7 +24,7 @@ import ProfileTab from "./profile/page";
 import EditProfileForm from "./profile/edit/page";
 import FamilyMembersPage from "./family-members/page";
 import CustomerReviewsView from "@/components/reviews/CustomerReviewsView";
-import ChangePasswordForm from "@/components/account/ChangePasswordForm";
+import CustomerSettings from "@/components/account/CustomerSettings";
 import BrandLoader from "@/components/shared/BrandLoader";
 import MeasurementsForm from "./measurements/page";
 import CustomerNotificationPage from "./notification/page";
@@ -122,12 +122,12 @@ function AccountSidebar({
               {item.id === "notifications" && unreadNotificationCount > 0 && (
                 <span
                   className={`min-w-5 h-5 px-1 rounded-full text-[11px] font-semibold flex items-center justify-center ${
-                    isActive
-                      ? "bg-black text-white"
-                      : "bg-white text-black"
+                    isActive ? "bg-black text-white" : "bg-white text-black"
                   } ${collapsed ? "absolute -top-1 -right-1" : "ml-auto"}`}
                 >
-                  {unreadNotificationCount > 99 ? "99+" : unreadNotificationCount}
+                  {unreadNotificationCount > 99
+                    ? "99+"
+                    : unreadNotificationCount}
                 </span>
               )}
             </button>
@@ -441,7 +441,7 @@ function AccountPageContent() {
 
               {activeTab === "family-members" && (
                 <motion.div
-                  key="orders"
+                  key="family-members"
                   variants={pageVariants}
                   initial="initial"
                   animate="animate"
@@ -463,8 +463,7 @@ function AccountPageContent() {
                   transition={{ duration: 0.25 }}
                   className="bg-white border border-gray-200 rounded-2xl p-5 sm:p-6 md:p-8 shadow-sm"
                 >
-                  <h2 className="text-xl font-semibold mb-4">Settings</h2>
-                  <ChangePasswordForm hasPassword={user.hasPassword === true} />
+                  <CustomerSettings hasPassword={user.hasPassword === true} />
                 </motion.div>
               )}
             </AnimatePresence>

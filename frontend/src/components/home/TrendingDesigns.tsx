@@ -15,6 +15,7 @@ import {
 import { Share2 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import WishlistButton from "../shared/wishlistButton";
+import { useMeasurementUnit } from "@/hooks/useMeasurementUnit";
 
 interface FilterOption {
   _id: string;
@@ -74,6 +75,7 @@ export function TrendingSection() {
   const isArabic = localParams === "ar";
   const t = getTranslation(localParams);
   const pathname = usePathname();
+  const { unit } = useMeasurementUnit();
 
   const [designs, setDesigns] = useState<TailorDesignExtended[]>([]);
   const [loading, setLoading] = useState(true);
@@ -437,6 +439,7 @@ export function TrendingSection() {
                   design.basePrice,
                   localParams as any,
                   design.priceType,
+                  unit,
                 );
 
                 const hrefPath = `/designs/${design.slug}`;

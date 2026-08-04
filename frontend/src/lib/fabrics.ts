@@ -125,6 +125,18 @@ export function formatPricePerMeter(
   return `${formatCurrency(pricePerMeter, locale)}/m`;
 }
 
+export function formatPriceWithUnit(
+  pricePerMeter: number,
+  unit: FabricUnitValue,
+  locale: Locale,
+): string {
+  if (unit === "wara") {
+    const waraPrice = pricePerMeter / WARA_TO_METERS;
+    return `${formatCurrency(waraPrice, locale)}/wara`;
+  }
+  return `${formatCurrency(pricePerMeter, locale)}/m`;
+}
+
 export function formatPricePerUnit(
   price: number,
   unit: FabricUnitValue,
