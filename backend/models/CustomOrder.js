@@ -295,6 +295,15 @@ const customOrderSchema = new mongoose.Schema(
 customOrderSchema.index({ userId: 1, createdAt: -1 });
 customOrderSchema.index({ status: 1, createdAt: -1 });
 customOrderSchema.index({ tailorShopId: 1, status: 1 });
+customOrderSchema.index(
+  { stripePaymentIntentId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      stripePaymentIntentId: { $type: "string", $gt: "" },
+    },
+  },
+);
 
 customOrderSchema.pre("validate", function validateFabricSource(next) {
   const hasItems = Array.isArray(this.items) && this.items.length > 0;

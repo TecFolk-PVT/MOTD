@@ -8,11 +8,43 @@ import { CustomOrderProvider } from "@/context/CustomOrderContext";
 import { Toaster } from "react-hot-toast";
 import { RTLProvider } from "@/components/shared/RTLProvider";
 import { WishlistProvider } from "@/context/WishlistContext";
+import {
+  DEFAULT_OG_IMAGE,
+  SITE_NAME,
+  SITE_NAME_FULL,
+  defaultDescription,
+  getSiteUrl,
+  toAbsoluteUrl,
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "MOTD — Mukhawar of the Day",
-  description:
-    "Mukhawar of the Day — bespoke Eastern luxury tailored for the modern world",
+  metadataBase: new URL(getSiteUrl()),
+  title: {
+    default: SITE_NAME_FULL,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: defaultDescription("en"),
+  applicationName: SITE_NAME,
+  openGraph: {
+    type: "website",
+    siteName: SITE_NAME,
+    title: SITE_NAME_FULL,
+    description: defaultDescription("en"),
+    images: [
+      {
+        url: toAbsoluteUrl(DEFAULT_OG_IMAGE),
+        width: 1200,
+        height: 630,
+        alt: SITE_NAME_FULL,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME_FULL,
+    description: defaultDescription("en"),
+    images: [toAbsoluteUrl(DEFAULT_OG_IMAGE)],
+  },
 };
 
 export default function RootLayout({

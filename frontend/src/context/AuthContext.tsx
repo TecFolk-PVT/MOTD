@@ -9,7 +9,7 @@ import {
 } from 'react';
 
 import { api } from '@/lib/api/client';
-import { getToken, saveToken, clearToken } from '@/lib/auth/token';
+import { clearLegacyAuthToken } from '@/lib/auth/token';
 
 /** Backend signin/profile payload (see sendUserResponse in userRoutes.js) */
 interface ApiUserResponse {
@@ -23,7 +23,6 @@ interface ApiUserResponse {
     isActive?: boolean;
     authProvider?: string;
     hasPassword?: boolean;
-    token?: string;
     perms?: Record<string, boolean>;
     isGuest?: boolean;
 }
@@ -77,7 +76,7 @@ interface AuthContextType {
     registerTailor: (name: string, email: string, password: string) => Promise<User>;
     registerFabricStore: (name: string, email: string, password: string) => Promise<User>;
     forgotPassword: (email: string) => Promise<string>;
-    logout: () => void;
+    logout: () => Promise<void>;
     isAuthenticated: boolean;
 }
 
@@ -93,13 +92,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     useEffect(() => {
         const loadUser = async () => {
-            const token = getToken();
-
-            if (!token) {
-                setUser(null);
-                setIsLoading(false);
-                return;
-            }
+            clearLegacyAuthToken();
 
             try {
                 const profile = await api.get<ApiUserResponse>('/api/users/profile');
@@ -108,7 +101,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 if ((error as any)?.status !== 401) {
                     console.error('Failed to load user profile:', (error as any)?.message || error);
                 }
-                clearToken();
                 setUser(null);
             } finally {
                 setIsLoading(false);
@@ -119,7 +111,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, []);
 
     const persistSession = (response: ApiUserResponse) => {
-        saveToken(response.token!);
         const mappedUser = mapApiUser(response);
         setUser(mappedUser);
         return mappedUser;
@@ -181,14 +172,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
             password,
         });
 
-        saveToken(response.token!);
-        const mappedUser = mapApiUser(response);
-        setUser(mappedUser);
-        return mappedUser;
+        return persistSession(response);
     };
 
-    const logout = () => {
-        clearToken();
+    const logout = async () => {
+        try {
+            await api.post('/api/users/logout');
+        } catch {
+            // Clear local session even if the API call fails
+        }
         setUser(null);
     };
 

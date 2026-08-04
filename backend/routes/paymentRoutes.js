@@ -13,6 +13,12 @@ import {
 } from '../services/pricingService.js';
 import { FABRIC_SOURCES } from '../models/CustomOrder.js';
 import AddOn from '../models/AddOn.js';
+import PendingCheckout from '../models/PendingCheckout.js';
+import {
+  savePendingCheckout,
+  fulfillPaidCheckout,
+  findExistingOrderByPaymentIntent,
+} from '../services/pendingCheckoutService.js';
 
 const paymentRoutes = express.Router();
 
@@ -114,10 +120,33 @@ async function getCustomOrderTotal(body) {
   return applyAddonsToCustomOrderPricing(pricing, addonsCost).total;
 }
 
+function validateRetailShippingAddress(shippingAddress) {
+  if (!shippingAddress || typeof shippingAddress !== 'object') {
+    throw new Error('shippingAddress is required before starting payment');
+  }
+
+  const required = ['fullName', 'phone', 'emirate', 'city'];
+  for (const key of required) {
+    if (!String(shippingAddress[key] || '').trim()) {
+      throw new Error(`shippingAddress.${key} is required before starting payment`);
+    }
+  }
+
+  return {
+    fullName: String(shippingAddress.fullName).trim(),
+    phone: String(shippingAddress.phone).trim(),
+    emirate: String(shippingAddress.emirate).trim(),
+    city: String(shippingAddress.city).trim(),
+    street: String(shippingAddress.street || '').trim(),
+    building: String(shippingAddress.building || '').trim(),
+    notes: String(shippingAddress.notes || '').trim(),
+  };
+}
+
 function paymentNotConfigured(res) {
   return res.status(503).json({
     success: false,
-    message: 'Apple Pay is not configured. Add Stripe keys to enable payments.',
+    message: 'Online payments are not configured. Add Stripe keys to enable payments.',
   });
 }
 
@@ -142,14 +171,26 @@ paymentRoutes.post(
       return paymentNotConfigured(res);
     }
 
-    const { orderItems } = req.body;
+    const { orderItems, shippingAddress } = req.body;
 
     try {
+      const normalizedShipping = validateRetailShippingAddress(shippingAddress);
       const prepared = await prepareRetailOrder(orderItems);
       const paymentIntent = await createStripePaymentIntent({
         amountAed: prepared.totalPrice,
         userId: req.user._id,
         orderType: 'retail',
+      });
+
+      await savePendingCheckout({
+        paymentIntentId: paymentIntent.id,
+        userId: req.user._id,
+        orderType: 'retail',
+        amountAed: prepared.totalPrice,
+        payload: {
+          orderItems,
+          shippingAddress: normalizedShipping,
+        },
       });
 
       res.json({
@@ -184,6 +225,21 @@ paymentRoutes.post(
         orderType: 'custom',
       });
 
+      // Persist full checkout snapshot so webhook can create the order if the browser dies.
+      const {
+        paymentIntentId: _ignored,
+        paymentMethod: _ignoredMethod,
+        ...checkoutPayload
+      } = req.body;
+
+      await savePendingCheckout({
+        paymentIntentId: paymentIntent.id,
+        userId: req.user._id,
+        orderType: 'custom',
+        amountAed: total,
+        payload: checkoutPayload,
+      });
+
       res.json({
         success: true,
         clientSecret: paymentIntent.client_secret,
@@ -202,6 +258,71 @@ paymentRoutes.post(
       res.status(400).json({
         success: false,
         message: error.message || 'Failed to create payment',
+      });
+    }
+  }),
+);
+
+/**
+ * Recover/create order after a succeeded PaymentIntent when the client POST failed
+ * or the tab closed. Idempotent — safe to call multiple times.
+ */
+paymentRoutes.post(
+  '/reconcile',
+  isAuth,
+  expressAsyncHandler(async (req, res) => {
+    if (!isStripeConfigured()) {
+      return paymentNotConfigured(res);
+    }
+
+    const { paymentIntentId, paymentMethod } = req.body;
+    if (!paymentIntentId) {
+      return res.status(400).json({
+        success: false,
+        message: 'paymentIntentId is required',
+      });
+    }
+
+    try {
+      const existing = await findExistingOrderByPaymentIntent(paymentIntentId);
+      const pending = await PendingCheckout.findOne({ paymentIntentId });
+
+      const ownerId = existing?.order?.userId || pending?.userId;
+      if (!ownerId) {
+        return res.status(404).json({
+          success: false,
+          message:
+            'No checkout found for this payment. Contact support with your payment reference.',
+        });
+      }
+
+      if (String(ownerId) !== String(req.user._id) && !req.user.isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'This payment does not belong to your account',
+        });
+      }
+
+      const result = await fulfillPaidCheckout({
+        paymentIntentId,
+        paymentMethod,
+        fulfilledBy: 'reconcile',
+      });
+
+      res.status(result.created ? 201 : 200).json({
+        success: true,
+        created: result.created,
+        orderType: result.orderType,
+        orderId: result.order._id,
+        order: result.order,
+        message: result.created
+          ? 'Order created from payment'
+          : 'Order already exists for this payment',
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Failed to reconcile payment',
       });
     }
   }),

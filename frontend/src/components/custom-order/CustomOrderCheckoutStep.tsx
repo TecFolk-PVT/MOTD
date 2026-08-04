@@ -444,15 +444,28 @@ export default function CustomOrderCheckoutStep() {
 
     try {
       const orderPayload = buildOrderPayload();
-      const response = await api.post<{
+      let response: {
         success: boolean;
         orderId: string;
         message?: string;
-      }>("/api/orders/custom", {
-        ...orderPayload,
-        paymentMethod: method,
-        paymentIntentId,
-      });
+      };
+
+      try {
+        response = await api.post("/api/orders/custom", {
+          ...orderPayload,
+          paymentMethod: method,
+          paymentIntentId,
+        });
+      } catch (orderErr) {
+        // Payment already succeeded — recover via pending checkout / webhook path.
+        response = await api.post("/api/payments/reconcile", {
+          paymentIntentId,
+          paymentMethod: method,
+        });
+        if (!response?.success) {
+          throw orderErr;
+        }
+      }
 
       if (!response?.success || !response.orderId) {
         throw new Error(response.message || t("submitError"));
@@ -472,7 +485,11 @@ export default function CustomOrderCheckoutStep() {
       const message =
         (err as ApiError)?.message ||
         (err instanceof Error ? err.message : t("submitError"));
-      setSubmitError(message);
+      const recoveryHint =
+        locale === "ar"
+          ? " إذا تم خصم المبلغ، سيُنشأ طلبك تلقائياً — راجعي حسابك أو تواصلي مع الدعم مع مرجع الدفع."
+          : " If you were charged, your order will be created automatically — check your account or contact support with the payment reference.";
+      setSubmitError(message + recoveryHint);
       toast.error(message, ERROR_TOAST);
       throw err;
     } finally {

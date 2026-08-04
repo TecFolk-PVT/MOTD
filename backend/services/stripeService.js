@@ -7,7 +7,11 @@ export function isStripeConfigured() {
   return Boolean(env.stripe.secretKey);
 }
 
-function getStripe() {
+export function isStripeWebhookConfigured() {
+  return Boolean(env.stripe.secretKey && env.stripe.webhookSecret);
+}
+
+export function getStripe() {
   if (!env.stripe.secretKey) {
     throw new Error('Stripe is not configured');
   }
@@ -92,3 +96,41 @@ export async function verifyStripePaymentIntent({
 
 // Backwards-compatible alias.
 export const verifyApplePayPaymentIntent = verifyStripePaymentIntent;
+
+export function constructStripeWebhookEvent(rawBody, signature) {
+  if (!env.stripe.webhookSecret) {
+    throw new Error('Stripe webhook secret is not configured');
+  }
+
+  const stripe = getStripe();
+  return stripe.webhooks.constructEvent(
+    rawBody,
+    signature,
+    env.stripe.webhookSecret,
+  );
+}
+
+export async function retrieveStripePaymentIntent(paymentIntentId, expand = []) {
+  const stripe = getStripe();
+  return stripe.paymentIntents.retrieve(paymentIntentId, {
+    expand,
+  });
+}
+
+/** Map Stripe PI / charge details to MOTD paymentMethod enum. */
+export function resolveStripePaymentMethod(paymentIntent) {
+  const charge =
+    typeof paymentIntent.latest_charge === 'object' && paymentIntent.latest_charge
+      ? paymentIntent.latest_charge
+      : null;
+
+  const walletType =
+    charge?.payment_method_details?.card?.wallet?.type ||
+    paymentIntent.payment_method?.card?.wallet?.type;
+
+  if (walletType === 'apple_pay') {
+    return 'apple_pay';
+  }
+
+  return 'card';
+}

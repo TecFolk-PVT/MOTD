@@ -33,7 +33,7 @@ import {
   FabricUnit,
   isDraftEmpty,
 } from "@/lib/customOrder";
-import { getToken } from "@/lib/auth/token";
+import { useAuth } from "@/context/AuthContext";
 
 type CustomOrderContextType = {
   draft: CustomOrderDraft;
@@ -71,6 +71,7 @@ const CustomOrderContext = createContext<CustomOrderContextType | undefined>(
 );
 
 export function CustomOrderProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   const [draft, setDraft] = useState<CustomOrderDraft>(
     createEmptyCustomOrderDraft,
   );
@@ -83,9 +84,9 @@ export function CustomOrderProvider({ children }: { children: ReactNode }) {
 
   // Hydrate from sessionStorage only if user is authenticated.
   useEffect(() => {
-    const token = getToken();
+    if (isAuthLoading) return;
 
-    if (!token) {
+    if (!isAuthenticated) {
       // Clear any previous draft from earlier sessions for logged-out users.
       sessionStorage.removeItem(CUSTOM_ORDER_STORAGE_KEY);
       sessionStorage.removeItem(CUSTOM_ORDER_DELIVERY_TYPE_KEY);
@@ -120,7 +121,7 @@ export function CustomOrderProvider({ children }: { children: ReactNode }) {
     }
 
     setIsHydrated(true);
-  }, []);
+  }, [isAuthLoading, isAuthenticated]);
 
   useEffect(() => {
     if (!isHydrated) return;

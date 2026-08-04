@@ -1,37 +1,13 @@
 // frontend/src/lib/auth/token.ts
+// Auth JWT is stored in an httpOnly cookie set by the API.
+// These helpers only clear any legacy localStorage token from older clients.
 
-const TOKEN_KEY = 'auth_token';
-
-/**
- * Save JWT token to localStorage
- * @param token - The JWT token string from server
- */
-export function saveToken(token: string): void {
-    if (typeof window === 'undefined') return; // Guard for SSR
-    localStorage.setItem(TOKEN_KEY, token);
-}
+const LEGACY_TOKEN_KEY = "auth_token";
 
 /**
- * Get JWT token from localStorage
- * @returns The token string or null if not found
+ * Remove legacy JWT from localStorage (pre-httpOnly cookie migration).
  */
-export function getToken(): string | null {
-    if (typeof window === 'undefined') return null; // Guard for SSR
-    return localStorage.getItem(TOKEN_KEY);
-}
-
-/**
- * Remove JWT token from localStorage (logout)
- */
-export function clearToken(): void {
-    if (typeof window === 'undefined') return; // Guard for SSR
-    localStorage.removeItem(TOKEN_KEY);
-}
-
-/**
- * Check if user is authenticated (token exists)
- * @returns true if token exists
- */
-export function isAuthenticated(): boolean {
-    return getToken() !== null;
+export function clearLegacyAuthToken(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
 }

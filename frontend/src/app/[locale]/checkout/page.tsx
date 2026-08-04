@@ -427,13 +427,14 @@ function CheckoutPageContent() {
       throw new Error("Please complete all required delivery fields.");
     }
 
-    const { orderItems } = buildOrderPayload();
+    // Include shipping so the server can fulfill the order via webhook if the tab closes after pay.
+    const payload = buildOrderPayload();
     const response = await api.post<{
       success: boolean;
       clientSecret: string;
       paymentIntentId: string;
       message?: string;
-    }>("/api/payments/intent/retail", { orderItems });
+    }>("/api/payments/intent/retail", payload);
 
     if (!response.success || !response.clientSecret) {
       throw new Error(response.message || "Failed to start Apple Pay");
@@ -454,15 +455,28 @@ function CheckoutPageContent() {
 
     try {
       const payload = buildOrderPayload();
-      const response = await api.post<{
+      let response: {
         success: boolean;
         orderId: string;
         message?: string;
-      }>("/api/orders/retail", {
-        ...payload,
-        paymentMethod: method,
-        paymentIntentId,
-      });
+      };
+
+      try {
+        response = await api.post("/api/orders/retail", {
+          ...payload,
+          paymentMethod: method,
+          paymentIntentId,
+        });
+      } catch (orderErr) {
+        // Payment already succeeded — recover order from pending checkout / webhook path.
+        response = await api.post("/api/payments/reconcile", {
+          paymentIntentId,
+          paymentMethod: method,
+        });
+        if (!response?.success) {
+          throw orderErr;
+        }
+      }
 
       if (response.success) {
         setLastOrderId(response.orderId);
@@ -480,7 +494,11 @@ function CheckoutPageContent() {
         (err instanceof Error
           ? err.message
           : "Something went wrong. Please try again.");
-      setErrorMessage(message);
+      const recoveryHint =
+        locale === "ar"
+          ? " إذا تم خصم المبلغ، سيُنشأ طلبك تلقائياً — راجعي حسابك أو تواصلي مع الدعم مع مرجع الدفع."
+          : " If you were charged, your order will be created automatically — check your account or contact support with the payment reference.";
+      setErrorMessage(message + recoveryHint);
       toast.error(message, ERROR_TOAST);
       throw err;
     } finally {
