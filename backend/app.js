@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import { env } from "./config/env.js";
 import { ensureUploadDirs, UPLOADS_ROOT } from "./utils/uploads.js";
@@ -23,6 +24,7 @@ import { notFound, errorHandler } from "./middleware/errorHandler.js";
 import customerRouter from "./routes/customerRoutes.js";
 import subAdminRouter from "./routes/subAdminRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import stripeWebhookRoutes from "./routes/stripeWebhookRoutes.js";
 import notificationRouter from "./routes/notificationRoutes.js";
 import customerNotificationRouter from "./routes/customerNotificationRoutes.js";
 import filterRoutes from "./routes/filterRoutes.js";
@@ -41,6 +43,11 @@ app.use(
     credentials: true,
   }),
 );
+app.use(cookieParser());
+
+// Stripe webhooks require the raw body for signature verification — mount BEFORE json parser.
+app.use("/api/payments/webhook", stripeWebhookRoutes);
+
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use("/uploads", async (req, res, next) => {

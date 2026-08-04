@@ -1,7 +1,5 @@
 // frontend/src/lib/api/client.ts
 
-import { getToken } from '@/lib/auth/token';
-
 interface ApiError {
     status: number;
     message: string;
@@ -37,13 +35,9 @@ class ApiClient {
             'Content-Type': 'application/json',
         };
 
-        const token = getToken();
-        if (token) {
-            defaultHeaders['Authorization'] = `Bearer ${token}`;
-        }
-
         const config: RequestInit = {
             ...options,
+            credentials: 'include',
             headers: {
                 ...defaultHeaders,
                 ...options.headers,
@@ -140,16 +134,11 @@ class ApiClient {
 
     async postFormData<T = any>(endpoint: string, formData: FormData): Promise<T> {
         const url = `${this.baseUrl}${endpoint}`;
-        const headers: Record<string, string> = {};
-        const token = getToken();
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
 
         try {
             const response = await fetch(url, {
                 method: 'POST',
-                headers,
+                credentials: 'include',
                 body: formData,
             });
 

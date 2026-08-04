@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import User from "../models/User.js";
+import { extractAuthToken } from "../utils/authCookie.js";
 
 export const generateToken = (user, isGuest = false) => {
   return jwt.sign(
@@ -18,13 +19,12 @@ export const generateToken = (user, isGuest = false) => {
 };
 
 export const isAuth = async (req, res, next) => {
-  const authorization = req.headers.authorization;
-  if (!authorization?.startsWith("Bearer ")) {
+  const token = extractAuthToken(req);
+  if (!token) {
     res.status(401).send({ message: "No Token" });
     return;
   }
 
-  const token = authorization.slice(7);
   try {
     const decode = jwt.verify(token, env.jwtSecret);
     const user = await User.findById(decode._id).select(

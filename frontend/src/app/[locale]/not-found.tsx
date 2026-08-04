@@ -1,24 +1,13 @@
-"use client";
+import { getLocale } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
-
-const SUPPORTED_LOCALES = ["en", "ar"] as const;
-
-export default function GlobalNotFound() {
-  const pathname = usePathname();
-  const segments = pathname?.split("/").filter(Boolean);
-  const firstSegment = segments?.[0] || "";
-  const locale = SUPPORTED_LOCALES.includes(
-    firstSegment as (typeof SUPPORTED_LOCALES)[number],
-  )
-    ? firstSegment
-    : "en";
+export default async function LocaleNotFound() {
+  const locale = await getLocale();
   const isAr = locale === "ar";
 
   return (
     <main
-      className="grid min-h-screen place-items-center bg-[#FFFDF9] px-4 py-16 sm:px-6"
+      className="grid min-h-[70vh] place-items-center bg-[#FFFDF9] px-4 py-16 sm:px-6"
       dir={isAr ? "rtl" : "ltr"}
     >
       <div className="w-full max-w-xl text-center">
@@ -35,7 +24,7 @@ export default function GlobalNotFound() {
         </p>
         <div className="mt-8 flex items-center justify-center">
           <Link
-            href={`/${locale}`}
+            href="/"
             className="[font-family:var(--font-ui)] bg-black px-6 py-3 text-[11px] uppercase tracking-[0.22em] text-white"
           >
             {isAr ? "الصفحة الرئيسية" : "Go home"}
