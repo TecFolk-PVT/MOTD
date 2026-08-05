@@ -12,6 +12,7 @@ import {
 import { ImageModal } from "@/components/shared/ImageModal";
 import ZoomImageEffect from "@/components/shared/ZoomImageEffect";
 import { useMeasurementUnit } from "@/hooks/useMeasurementUnit";
+import { useWishlist } from "@/context/WishlistContext";
 
 const CATEGORY_COLORS: Record<string, string> = {
   "hand-embroidered": "#8B6B4D",
@@ -83,6 +84,29 @@ export default function DesignDetailView({
     design,
     locale,
   );
+  const {
+    wishItems,
+    addItem: addToWishlist,
+    removeItem: removeFromWishlist,
+  } = useWishlist();
+
+  const liked = wishItems.some((item) => item.id === design._id);
+  const toggleWishlist = () => {
+    if (liked) {
+      removeFromWishlist(design._id);
+    } else {
+      addToWishlist({
+        id: design._id,
+        slug: design.slug,
+        name,
+        image: resolveDesignImage(design.images?.[0]),
+        price: design.basePrice,
+        size: String(design.estimatedMeters ?? ""),
+        maxStock: 1,
+        type: "design",
+      });
+    }
+  };
 
   const containerRef = useRef<HTMLDivElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
@@ -361,9 +385,30 @@ export default function DesignDetailView({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.15 }}
               >
-                <h1 className="[font-family:var(--font-display)] text-3xl sm:text-4xl text-black leading-tight mb-3 font-normal">
-                  {name}
-                </h1>
+                <div className="flex justify-between items-start gap-4 mb-2">
+                  <h1 className="[font-family:var(--font-display)] text-3xl sm:text-4xl text-black leading-tight font-normal">
+                    {name}
+                  </h1>
+                  <button
+                    onClick={toggleWishlist}
+                    className="shrink-0 p-2 rounded-full hover:bg-black/5 transition-colors duration-200"
+                    aria-label="Add to wishlist"
+                  >
+                    <svg
+                      className={`w-6 h-6 transition-colors ${
+                        liked
+                          ? "fill-red-500 stroke-red-500"
+                          : "stroke-black fill-none"
+                      }`}
+                      viewBox="0 0 24 24"
+                      strokeWidth="1.5"
+                      stroke="currentColor"
+                      fill="none"
+                    >
+                      <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                    </svg>
+                  </button>
+                </div>
                 <p className="[font-family:var(--font-ui)] text-2xl text-black">
                   {formatDesignBasePrice(
                     design.basePrice,

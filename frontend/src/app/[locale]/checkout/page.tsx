@@ -10,6 +10,7 @@ import MainLayout from "../main/layout";
 import FadeInSection from "@/components/shared/fadeInSection";
 import { getTranslation } from "@/lib/getTranslation";
 import { useLocale } from "next-intl";
+import { useMeasurementUnit } from "@/hooks/useMeasurementUnit";
 import SuccessModal from "@/components/shared/SuccessModal";
 import { api } from "@/lib/api/client";
 import type { ApiError } from "@/lib/api/client";
@@ -92,6 +93,7 @@ function CheckoutPageContent() {
   const { items, clearCart } = useCart();
   const { user, isLoading, isAuthenticated } = useAuth();
   const { clearWishlist, removeItem: removeWishlistItem } = useWishlist();
+  const { unit: measurementUnit } = useMeasurementUnit();
   const fromWishlist = searchParams.get("fromWishlist") === "true";
 
   // Fetch VAT rate from platform settings
@@ -204,7 +206,6 @@ function CheckoutPageContent() {
     deliveryNotes: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [billingAddressSame, setBillingAddressSame] = useState(true);
 
   // --- State for customer profile & loading ---
   const [customerProfile, setCustomerProfile] =
@@ -364,9 +365,10 @@ function CheckoutPageContent() {
     if (!formData.phone.trim() || formData.phone === "+971") {
       newErrors.phone = "Required";
     } else if (!validateUaePhone(formData.phone)) {
-      newErrors.phone = localeParams === "ar"
-        ? "رقم الهاتف غير صحيح. يجب أن يكون 9 أرقام بعد +971"
-        : "Invalid phone number. Must be 9 digits after +971";
+      newErrors.phone =
+        localeParams === "ar"
+          ? "رقم الهاتف غير صحيح. يجب أن يكون 9 أرقام بعد +971"
+          : "Invalid phone number. Must be 9 digits after +971";
     }
     if (!formData.emirate) newErrors.emirate = "Required";
     if (!formData.city.trim()) newErrors.city = "Required";
@@ -382,6 +384,7 @@ function CheckoutPageContent() {
       size: item.size,
       quantity: item.quantity,
       price: item.price,
+      measurementUnit,
     }));
 
     const isArabic = localeParams === "ar";
@@ -422,8 +425,10 @@ function CheckoutPageContent() {
   const createRetailPaymentIntent = async () => {
     if (!validateForm()) {
       toast.error(
-        locale === "ar" ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields.",
-        ERROR_TOAST
+        locale === "ar"
+          ? "يرجى ملء جميع الحقول المطلوبة."
+          : "Please fill in all required fields.",
+        ERROR_TOAST,
       );
       throw new Error("Please complete all required delivery fields.");
     }
@@ -514,8 +519,10 @@ function CheckoutPageContent() {
   const placeCodOrder = async () => {
     if (!validateForm()) {
       toast.error(
-        locale === "ar" ? "يرجى ملء جميع الحقول المطلوبة." : "Please fill in all required fields.",
-        ERROR_TOAST
+        locale === "ar"
+          ? "يرجى ملء جميع الحقول المطلوبة."
+          : "Please fill in all required fields.",
+        ERROR_TOAST,
       );
       return;
     }
@@ -655,11 +662,17 @@ function CheckoutPageContent() {
                           value={formData.fullName}
                           onChange={handleChange}
                           className={`w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-body-md rounded-none px-0 transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black ${
-                            user?.isGuest ? (localeParams === "ar" ? "pl-20" : "pr-20") : ""
+                            user?.isGuest
+                              ? localeParams === "ar"
+                                ? "pl-20"
+                                : "pr-20"
+                              : ""
                           }`}
                         />
                         {user?.isGuest && (
-                          <span className={`absolute ${localeParams === "ar" ? "left-0" : "right-0"} text-gray-400 select-none pointer-events-none font-medium text-[14px] md:text-[15px] pb-1`}>
+                          <span
+                            className={`absolute ${localeParams === "ar" ? "left-0" : "right-0"} text-gray-400 select-none pointer-events-none font-medium text-[14px] md:text-[15px] pb-1`}
+                          >
                             {localeParams === "ar" ? " - زائر" : " - Guest"}
                           </span>
                         )}
@@ -675,18 +688,30 @@ function CheckoutPageContent() {
                         {t.checkout.phone}*
                       </label>
                       <div className="relative flex items-center">
-                        <span className={`absolute ${localeParams === "ar" ? "right-0" : "left-0"} text-gray-500 font-mono text-[15px] md:text-[16px]`}>
+                        <span
+                          className={`absolute ${localeParams === "ar" ? "right-0" : "left-0"} text-gray-500 font-mono text-[15px] md:text-[16px]`}
+                        >
                           +971
                         </span>
                         <input
                           type="tel"
                           name="phone"
-                          value={formData.phone ? (formData.phone.replace(/\D/g, "").startsWith("971") ? formData.phone.replace(/\D/g, "").slice(3) : formData.phone.replace(/\D/g, "").slice(0, 9)) : ""}
+                          value={
+                            formData.phone
+                              ? formData.phone
+                                  .replace(/\D/g, "")
+                                  .startsWith("971")
+                                ? formData.phone.replace(/\D/g, "").slice(3)
+                                : formData.phone.replace(/\D/g, "").slice(0, 9)
+                              : ""
+                          }
                           onChange={handleChange}
                           placeholder="XXXXXXXXX"
                           maxLength={9}
                           className={`w-full h-11 md:h-12 bg-transparent border-b border-black/15 text-[15px] md:text-[16px] font-mono rounded-none transition-all focus:border-black focus:outline-none placeholder:text-black/40 text-black ${
-                            localeParams === "ar" ? "pr-11 pl-0 text-right" : "pl-11 pr-0 text-left"
+                            localeParams === "ar"
+                              ? "pr-11 pl-0 text-right"
+                              : "pl-11 pr-0 text-left"
                           }`}
                         />
                       </div>
@@ -869,7 +894,11 @@ function CheckoutPageContent() {
                   {paymentMethod === "card" && (
                     <CardPaymentForm
                       amountAed={total}
-                      cardholderName={user?.isGuest ? `${formData.fullName.trim()} - ${localeParams === "ar" ? "زائر" : "Guest"}` : formData.fullName}
+                      cardholderName={
+                        user?.isGuest
+                          ? `${formData.fullName.trim()} - ${localeParams === "ar" ? "زائر" : "Guest"}`
+                          : formData.fullName
+                      }
                       disabled={isSubmitting || displayItems.length === 0}
                       payLabel={t.checkout.payButton}
                       processingLabel={t.checkout.processing}
