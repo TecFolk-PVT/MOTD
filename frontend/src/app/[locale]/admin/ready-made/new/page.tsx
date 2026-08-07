@@ -58,13 +58,13 @@ export default function NewReadyMadePage() {
         const [shopsRes, fabricsRes, tailorsRes, designsRes, tagsRes] =
           await Promise.all([
             api.get<any>("/api/admin/fabric-shops"),
-            api.get<any[]>("/api/admin/fabrics"),
+            api.get<any>("/api/admin/fabrics"),
             api.get<any>("/api/admin/tailors"),
             api.get<any[]>("/api/admin/designs"),
             api.get<any[]>("/api/admin/tags"),
           ]);
         setFabricShops(shopsRes.items || []);
-        setAllFabrics(fabricsRes || []);
+        setAllFabrics(fabricsRes?.items || []);
         setTailorShops(tailorsRes.items || []);
         setAllDesigns(designsRes || []);
         if (Array.isArray(tagsRes) && tagsRes.length > 0) {
